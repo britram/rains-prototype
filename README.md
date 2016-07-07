@@ -1,2 +1,2 @@
-# rains-protocol
-draft-trammell-rains-protocol: RAINS, Another Internet Naming System
+# rains-prototype
+draft-trammell-rains-prototype: RAINS, Another Internet Naming System
