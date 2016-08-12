@@ -8,3 +8,5 @@
 .refcache
 venv/
 issues.json
+lib
+draft-trammell-rains-protocol.md
