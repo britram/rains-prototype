@@ -1,0 +1,672 @@
+
+
+
+
+Names and Identifiers Program                                B. Trammell
+Internet-Draft                                         ETH Zurich NetSec
+Intended status: Experimental                            August 12, 2016
+Expires: February 13, 2017
+
+
+     RAINS (Another Internet Naming Service) Protocol Specification
+                     draft-trammell-rains-protocol
+
+Abstract
+
+   This document defines an alternate protocol for Internet name
+   resolution, designed as a prototype to facilitate conversation about
+   the evolution or replacement of the Domain Name System protocol.  It
+   attempts to answer the question: "how would we design the DNS knowing
+   what we do now, with current computing power at our disposal," on the
+   background of the properties of an ideal naming service described in
+   [I-D.trammell-inip-pins].
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at http://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on February 13, 2017.
+
+Copyright Notice
+
+   Copyright (c) 2016 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (http://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Simplified BSD License text as described in Section 4.e of
+
+
+
+Trammell                Expires February 13, 2017               [Page 1]
+
+Internet-Draft                    RAINS                      August 2016
+
+
+   the Trust Legal Provisions and are provided without warranty as
+   described in the Simplified BSD License.
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
+   2.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   2
+   3.  Architecture  . . . . . . . . . . . . . . . . . . . . . . . .   3
+   4.  Information Model . . . . . . . . . . . . . . . . . . . . . .   3
+     4.1.  Assertion . . . . . . . . . . . . . . . . . . . . . . . .   3
+       4.1.1.  Context in Assertions . . . . . . . . . . . . . . . .   5
+       4.1.2.  Signatures in Assertions  . . . . . . . . . . . . . .   6
+       4.1.3.  Shards and Zones  . . . . . . . . . . . . . . . . . .   7
+     4.2.  Query . . . . . . . . . . . . . . . . . . . . . . . . . .   8
+       4.2.1.  Context in Queries  . . . . . . . . . . . . . . . . .   9
+     4.3.  Answer  . . . . . . . . . . . . . . . . . . . . . . . . .   9
+   5.  Data Model  . . . . . . . . . . . . . . . . . . . . . . . . .  10
+   6.  RAINS Protocol Definition . . . . . . . . . . . . . . . . . .  10
+   7.  RAINS Client Protocol . . . . . . . . . . . . . . . . . . . .  10
+   8.  Deployment Considerations . . . . . . . . . . . . . . . . . .  11
+     8.1.  On Confidentiality and Integrity Protection . . . . . . .  11
+     8.2.  Authority Signer Interface  . . . . . . . . . . . . . . .  11
+     8.3.  Client Resolver Interfaces  . . . . . . . . . . . . . . .  11
+     8.4.  Translation between RAINS and DNS . . . . . . . . . . . .  11
+   9.  Experimental Design and Evaluation  . . . . . . . . . . . . .  11
+   10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  11
+   11. Security Considerations . . . . . . . . . . . . . . . . . . .  11
+   12. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  11
+   13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  12
+     13.1.  Normative References . . . . . . . . . . . . . . . . . .  12
+     13.2.  Informative References . . . . . . . . . . . . . . . . .  12
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  12
+
+1.  Introduction
+
+   TODO: what is this
+
+   TODO: what is this not
+
+   TODO: why does it exist
+
+2.  Terminology
+
+   TODO
+
+   o  assertion
+
+   o  authority
+
+
+
+Trammell                Expires February 13, 2017               [Page 2]
+
+Internet-Draft                    RAINS                      August 2016
+
+
+   o  querier
+
+   o  context
+
+3.  Architecture
+
+   The RAINS architecture is simple, and resembles the architecture of
+   DNS.  A RAINS Server is an entity that provides transient and/or
+   permanent storage for assertions about names, and a lookup function
+   that finds assertions for a given query about a name, either by
+   searching local storage or by delegating to another RAINS server.
+   RAINS servers can take on any or all of three roles:
+
+   o  authority service, acting on behalf of an authority to ensure
+      properly signed assertions are made available to the system
+      (equivalent to an authoritative server in DNS);
+
+   o  query service, acting on behalf of a client to answer queries with
+      relevant assertions (equivalent to a recursive resolver in DNS),
+      and to validate assertions on the client's behalf; and/or
+
+   o  intermediary service, acting on behalf of neither but providing
+      storage and lookup for assertions with certain properties for
+      query and authority servers (partially replacing, but not really
+      equivalent to, caching resolvers in DNS).
+
+   RAINS Servers use the RAINS Protocol defined in this document to
+   exchange queries and assertions.  RAINS Clients use a subset variant
+   of the RAINS Protocol (called the RAINS Client Protocol) to interact
+   with RAINS Servers providing query services on their behalf.
+
+4.  Information Model
+
+   Messages in the RAINS Protocol are made up of two kinds of elements:
+   Assertion and Query.  A third type of element, Answer, binds a Query
+   to a set of Assertions in response to a Query.
+
+4.1.  Assertion
+
+   An Assertion is a signed statement about a mapping from a subject
+   name to an object value, and consists of the following elements:
+
+   o  Context: name of the context in which the assertion is valid; see
+      Section 4.1.1 below.
+
+   o  Subject: name about which the assertion is made.
+
+
+
+
+
+Trammell                Expires February 13, 2017               [Page 3]
+
+Internet-Draft                    RAINS                      August 2016
+
+
+   o  Zone: name of the zone in which the assertion is made.  The fully
+      qualified name of the subject is made by appending the zone name
+      to the subject name with a domain name separator ('.').
+
+   o  Type: the type of information about the Subject contained in the
+      assertion.  Each Assertion is about a single type of data.
+
+   o  Object: the data of the indicated type associated with the Subject
+
+   o  Signatures: one or more signatures generated by the authority for
+      the Assertion.  Signatures contain a time interval during which
+      they are considered valid, and may contain a revocation token
+      allowing them to be revoked before the end of the time interval.
+      See Section 4.1.2 below.
+
+   The Types supported for each assertion are:
+
+   o  Delegation: the authority associated with the zone identified by
+      the name (roughly equivalent to the DNSSEC DS RRTYPE).  The Object
+      contains a public key by which the authority can be identified.
+
+   o  Redirection: The name(s) of one or more a RAINS servers providing
+      authority service for the authority associated with the zone
+      (roughly equivalent to the DNSSEC NS RRTYPE, but not always
+      consulted directly during resolution).  The Object contains a set
+      of names.
+
+   o  Address: one or more addresses associated with the name (replaces
+      DNS A and AAAA RTYPEs).  The Object contains a set of Addresses.
+      An Address is an {address-family, value} tuple.
+
+   o  Service-Info: one or more layer 4 ports and hostnames associated
+      with a service name (replaces DNS SRV RRTYPE).  The object
+      contains a {hostname, port-number, priority tuple}.
+
+   o  Name: one or more names associated with the name (roughly
+      equivalent to DNS CNAME).  The Object contains a set of names.
+
+   o  Certificate: a certificate which must appear at a specified
+      location in the certificate chain presented on a connection
+      attempt with the named entity (roughly equivalent to DNS TLSA).
+      The details of this type will be described in a separate document.
+
+   o  Zone-Nameset: an expression of the set of names allowed within a
+      zone; e.g.  Unicode scripts or codepages in which names in the
+      zone may be issued.  This allows a zone to set policy on names in
+      support of the distinguishability property in
+      [I-D.trammell-inip-pins] that can be checked by authority and
+
+
+
+Trammell                Expires February 13, 2017               [Page 4]
+
+Internet-Draft                    RAINS                      August 2016
+
+
+      oracle servers at runtime.  An assertion about a Subject within a
+      Zone whose name is not allowed by a valid signed Zone-Nameset
+      expression is taken to be invalid, even if it has a valid
+      signature.  The details of this type will be described in a
+      separate document.
+
+   For a given {subject, type} tuple, multiple assertions can be valid
+   at a given point in time; the union of the object values of all of
+   these assertions is considered to be the set of valid values at that
+   point in time.
+
+4.1.1.  Context in Assertions
+
+   Assertion contexts are used to determine the validity of the
+   signature by the declared authority as follows:
+
+   o  The global context is identified by the special context name `.'.
+      Assertions in the global context are signed by the authority for
+      the subject name.  For example, assertions about the name
+      simplon.inf.ethz.ch in the global context are only valid if signed
+      by the relevant authority inf.ethz.ch.
+
+   o  A local context is associated with a given authority.  The
+      authority-part and the context-part of a local context name are
+      divided by a context marker ('cx-').  The authority-part directly
+      identifies the authority whose key was used to sign the assertion;
+      assertions within a local context are only valid if signed by the
+      identified authority.  Authorities have complete control over how
+      the contexts under their namespaces are arranged, and over the
+      names within those contexts.
+
+   Assertion context is the mechanism by which RAINS provides explicit
+   inconsistency (see section 5.3.2 of [I-D.trammell-inip-pins]).  Some
+   examples illustrate how context works:
+
+   o  For the common split-DNS case, an enterprise could place names for
+      machines on its local networks within a separate context.  E.g., a
+      workstation could be named simplon.cab.inf.ethz.ch within the
+      context staff-workstations.cx-.inf.ethz.ch.  Assertions about this
+      name would be signed by the authority for inf.ethz.ch.  Here, the
+      context serves simply as a marker, without enabling an alternate
+      signature chain: note that the name simplon.cab.inf.ethz.ch can be
+      validly signed by the authority for inf.ethz.ch if no delegation
+      exists for cab.inf.ethz.ch. but simply marks this assertion as
+      internal.  This allows a client making requests of local names to
+      know they are local, and for local resolvers to manage visibility
+      of assertions outside the enterprise: explicit context makes
+
+
+
+
+Trammell                Expires February 13, 2017               [Page 5]
+
+Internet-Draft                    RAINS                      August 2016
+
+
+      accidental leakage of both queries and assertions easier to detect
+      and avoid.
+
+   o  Contexts make captive-portal interactions more explicit: a captive
+      portal resolver could respond to a query for a common website
+      (e.g. www.google.ch) with a signed response directed at the
+      captive portal, but within a context identifying the location as
+      well as the ISP (e.g.  sihlquai.zurich.ch.cx-
+      .starbucks.access.some-isp.net.).  This response will be signed by
+      the authority for starbucks.access.some-isp.net.  This signature
+      achieves two things: first, the client knows the result for
+      www.google.ch is not globally valid; second, it can present the
+      user with some indication as to the identity of the captive portal
+      it is connected to.
+
+   Further examples showing how context can be used in queries as well
+   are given in Section 4.2.1 below.
+
+   Developing conventions for assertion contexts for different
+   situations will require implementation and deployment experience, and
+   is a subject for future work.
+
+4.1.2.  Signatures in Assertions
+
+   A signature over an assertion contains the following information
+   elements:
+
+   o  Algorithm: identifier of the algorithm used to generate the
+      signature.
+
+   o  Valid-Since: a timestamp of the start of validity of this
+      signature.
+
+   o  Valid-Until: a timestamp of the end of validity of this signature.
+
+   o  Signature: the cryptographic signature itself, whose format is
+      determined by the algorithm used.
+
+   o  Revocation-Token: an optional revocation token for this signature,
+      which allows a signature to be replaced or removed before the end
+      of its validity.  Revocation tokens are generally based on hash
+      chains, meaning that a signature with a revocation token "down"
+      the chain from a given token supercedes it.  The format and
+      mechanism used by the revocation token is determined by the
+      alogrithm used.
+
+
+
+
+
+
+Trammell                Expires February 13, 2017               [Page 6]
+
+Internet-Draft                    RAINS                      August 2016
+
+
+   The signature protects all the information in an assertion as well as
+   its own valid-since and valid-until values; it does not protect the
+   revocation token or other signatures on the assertion.
+
+4.1.3.  Shards and Zones
+
+   Assertions may also be grouped and signed as a group.  A shard is a
+   set of assertions subject to the same authority within the same
+   context, protected by one or more signatures over all assertions
+   within the shard.  A shard may have an additional property that given
+   a subject and an authenticated shard, it can be shown that either an
+   assertion with a given name and type exists within the shard or does
+   not exist at all.
+
+   A shard has the following information elements:
+
+   o  Context: name of the context in which the assertions in the shard
+      are valid; see Section 4.1.1 above.
+
+   o  Zone: name of the zone in which the assertions are made.
+
+   o  Content: a set of assertions sharing the context and zone.
+
+   o  Signatures: one or more signatures generated by the authority for
+      the shard; see Section 4.1.2.
+
+   o  Complete-Flag: if true, the shard is lexicographically complete,
+      and subject names that sort such that they would be within the
+      shard if they existed, but are not in the shard, can be assumed
+      not to exist.
+
+   For efficiency's sake, information elements within a shard common to
+   all assertions (zone, context, signature) within the shard may be
+   omitted from the assertions themselves.
+
+   A zone is the entire set of shards subject to a given authority
+   within a given context.  There are three kinds of zones; treating
+   these zones differently may allow lookup protocol optimizations:
+
+   o  Zones containing only delegation assertions are delegation-only
+      zones.  Delegation-only zones are not relevant as part of an
+      assertion lookup, other than for discovering and verifying
+      authority.  Top-level domains are generally delegation-only.
+
+   o  Zones containing no delegation assertions are final zones.  Final
+      zones are not relevant as part of an authority discovery.
+
+
+
+
+
+Trammell                Expires February 13, 2017               [Page 7]
+
+Internet-Draft                    RAINS                      August 2016
+
+
+   o  Zones containing at least one delegation assertion and at least
+      one assertion that is not a delegation assertion are mixed zones.
+      No optimizations are available for mixed zones.
+
+   A zone has the following information elements:
+
+   o  Context: name of the context in which the assertions in the zone
+      are valid; see Section 4.1.1 above.
+
+   o  Zone: name of the zone.
+
+   o  Content: a set of assertions and/or shards sharing the context and
+      zone.
+
+   o  Signatures: one or more signatures generated by the authority for
+      the shard; see Section 4.1.2.
+
+   o  Kind: delegation-only, final, or mixed; see above.
+
+4.2.  Query
+
+   A query is a request for a set of assertions supporting a conclusion
+   about a given subject-object mapping.  It consists of the following
+   information elements:
+
+   o  Contexts: an expression of the context(s) in which assertions
+      answering the query will be accepted; see Section 4.2.1 below.
+
+   o  Qualified-Subject: the name about which the query is made.  The
+      subject name in a query must be fully-qualified.
+
+   o  Types: a set of assertion types the querier is interested in.
+
+   o  Valid-Until: an optional client-generated timestamp for the query
+      after which it expires and should not be answered.
+
+   o  Token: an optional client-generated token for the query, which can
+      be used in the answer to refer to the query (instead of the answer
+      containing the query itself).
+
+   A query expresses interest about all the given types of assertion in
+   all the specified contexts; more complex expressions of which types
+   in which contexts must be asked using multiple queries.
+
+   TODO: provide mechanisms for privacy/performance tradeoffs in
+   queries; are infomodel changes required here?
+
+
+
+
+
+Trammell                Expires February 13, 2017               [Page 8]
+
+Internet-Draft                    RAINS                      August 2016
+
+
+4.2.1.  Context in Queries
+
+   Contexts are used in queries as they are in assertions (see
+   {{context-in- assertions}}).  Assertion contexts in an answer to a
+   query have to match some context in the query in order to respond to
+   a query.  However, there are a few additional considerations.  An
+   assertion can only exist with a specific context, while queries may
+   accept answers in multiple contexts.  The Contexts part of a query is
+   a sequence of context specifiers taken to be in order of decreasing
+   priority.  A special null context (represented by the empty string)
+   indicates that assertions in any context will be accepted.  Any
+   context in the Contexts part of a query may additionally be negated,
+   in order to note that assertions in those contexts are not
+   acceptable.  Negated context name appearing in the Contexts part of a
+   query before the null context expresses "any context except these".
+
+   Query contexts can also be used to provide additional information to
+   RAINS servers about the query.  For example, contexts can provide a
+   method for explicit selection of a CDN servers not based on either
+   the client's or the resolver's address (see [RFC7871]).  Here, the
+   CDN creates a context for each of its content zones, and an external
+   service selects appropriate contexts for the client based not just on
+   client source address but passive and active measurement of
+   performance.  Queries for names at which content resides can then be
+   made within these contexts, with the priority order of the contexts
+   reflecting the goodness of the zone for the client.  Here, a context
+   might be zrh.cx-.cdn-zones.some-cdn.com for names of servers hosting
+   content in a CDN's Zurich data center, and a client could represent
+   its desire to find content nearby by making queries in the zrh.cx-,
+   fra.cx- (Frankfurt), and ams.cx- (Amsterdam) contexts within cdn-
+   zones .some-cdn.com.  In all cases, the assertions themselves will be
+   signed by the authority for cdn-zones.some-cdn.com, accurately
+   representing that it is the CDN, not the owner of the related name in
+   the global context, that is making the assertion.
+
+   As with assertion contexts, developing conventions for query contexts
+   for different situations will require implementation and deployment
+   experience, and is a subject for future work.
+
+4.3.  Answer
+
+   An answer consists of a set of assertions, shards, and/or zones which
+   respond to a query, bound to that query.  It consists of the
+   following information elements:
+
+   o  Query: the query this answer applies to.  If the query was issued
+      with a token, the query in the answer may omit all content except
+      the token.
+
+
+
+Trammell                Expires February 13, 2017               [Page 9]
+
+Internet-Draft                    RAINS                      August 2016
+
+
+   o  Content: a set of assertions and/or shards answering the query.
+
+   The content of an answer content depends on whether the answer is
+   positive or negative.  A positive answer contains the information
+   requested in the smallest atomic container that can be found, usually
+   a single assertion.  A negative answer contains the information used
+   to verify it; either a shard with the Complete-Flag set, an entire
+   Zone, or a Zone-Nameset assertion showing the name is illegal within
+   the zone.
+
+   A query is taken to have an inconclusive answer when no answer
+   returns to the querier before the query's Valid-Until time.
+
+5.  Data Model
+
+   The RAINS data model is a relatively straightforward mapping of the
+   information model above to the Concise Binary Object Representation
+   (CBOR) [RFC7049], with an outer message type providing a mechanism
+   for future capabilities-based versioning and recognition of a message
+   as a RAINS message.  Each CBOR object in a RAINS message is
+   implemented as a map of integer keys to values, which implements a
+   good tradeoff between efficiency of representation and flexibility.
+
+   TODO: note use the key U+96A8 for versioning in messages.
+
+   TODO: explain why we don't use COSE, and what would need to happen
+   for us to be able to.
+
+6.  RAINS Protocol Definition
+
+   TODO: note CBOR is self-framing so we can use any transport we want.
+   define TLS 1.3 and TFO for now, note nice fit atop QUIC.
+
+   TODO: note further that signatures are prime in RAINS, so it really
+   doesn't matter where servers exist.
+
+   TODO: define an MTI signature algorithm that comes with hashchain
+   revocation.
+
+7.  RAINS Client Protocol
+
+   TODO: define as a subset of the full RAINS protocol, plus oracle
+   signatures and tags in answers to allow oracles to verify proof of
+   answer.  Preferences for privacy/latency tradeoffs might go here.
+
+
+
+
+
+
+
+Trammell                Expires February 13, 2017              [Page 10]
+
+Internet-Draft                    RAINS                      August 2016
+
+
+8.  Deployment Considerations
+
+8.1.  On Confidentiality and Integrity Protection
+
+   TODO: note that queries require more confidentiality than assertions.
+   use TLS for hop-by-hop confidentiality for now. point out data
+   confidentiality using COSE as a future next step.
+
+8.2.  Authority Signer Interface
+
+   TODO: need to define a way to keep authority servers from needing
+   secret keys.
+
+8.3.  Client Resolver Interfaces
+
+   TODO: note we should add RAINS resolver information to DHCP. do we
+   want a multicast address as well? do we need to add context
+   information to DHCP?
+
+8.4.  Translation between RAINS and DNS
+
+   TODO: contexts are really hard to wedge into DNS.
+
+9.  Experimental Design and Evaluation
+
+   TODO: note that this is primarily a prototype for discussion, but
+   that we do intend to implement it. how will we tell if something like
+   RAINS is ready for standardization?
+
+10.  IANA Considerations
+
+   TODO: tables of CBOR integer keys to meanings in RAINS messages.
+
+11.  Security Considerations
+
+   TODO: point at Section 4.1.2, {{on-confidentiality-and- integrity-
+   protection}}, and Section 8.2. note that shards for proving non-
+   existence of a name are equivalent to NSEC, and that there is
+   explicitly no resistance against zone enumeration.
+
+12.  Acknowledgments
+
+   Daniele Asoni, Laurent Chuat, Ted Hardie, Joe Hildebrand, Steve
+   Matsumoto, Adrian Perrig, Raphael Reischuk, Stephen Shirley, Andrew
+   Sullivan, Suzanne Woolf.
+
+
+
+
+
+
+Trammell                Expires February 13, 2017              [Page 11]
+
+Internet-Draft                    RAINS                      August 2016
+
+
+13.  References
+
+13.1.  Normative References
+
+   [I-D.trammell-inip-pins]
+              Trammell, B., "Properties of an Ideal Naming Service",
+              draft-trammell-inip-pins-01 (work in progress), March
+              2016.
+
+   [RFC7049]  Bormann, C. and P. Hoffman, "Concise Binary Object
+              Representation (CBOR)", RFC 7049, DOI 10.17487/RFC7049,
+              October 2013, <http://www.rfc-editor.org/info/rfc7049>.
+
+13.2.  Informative References
+
+   [RFC1035]  Mockapetris, P., "Domain names - implementation and
+              specification", STD 13, RFC 1035, DOI 10.17487/RFC1035,
+              November 1987, <http://www.rfc-editor.org/info/rfc1035>.
+
+   [RFC7871]  Contavalli, C., van der Gaast, W., Lawrence, D., and W.
+              Kumari, "Client Subnet in DNS Queries", RFC 7871,
+              DOI 10.17487/RFC7871, May 2016,
+              <http://www.rfc-editor.org/info/rfc7871>.
+
+Author's Address
+
+   Brian Trammell
+   ETH Zurich NetSec
+   Universitaetstrasse 6
+   Zurich  8092
+   Switzerland
+
+   Email: ietf@trammell.ch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Trammell                Expires February 13, 2017              [Page 12]
