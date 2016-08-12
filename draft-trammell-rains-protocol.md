@@ -357,7 +357,43 @@ Each CBOR object in a RAINS message is implemented as a map of integer keys to
 values, which implements a good tradeoff between efficiency of representation
 and flexibility.
 
-TODO: note use the key U+96A8 for versioning in messages.
+All interactions in RAINS take place in an outer envelope called a Message, which is a CBOR map tagged with the RAINS Message tag (hex 0xE99BA8, decimal 15309736). Each key in the message array and in the message sections in the message's content is encoded as in TODO add a table of message keys:
+
+0: content
+
+1: sectiontype
+
+2: signatures
+
+3: subject
+
+4: zone
+
+5: context
+
+6: objects
+
+7: token
+
+8: reference
+
+Message is {content, signatures, token, reference}
+
+Section type table is:
+
+0: assertion 
+
+1: incomplete-shard
+
+2: complete-shard
+
+3: zone
+
+4: query
+
+5: answer
+
+TODO: work pointer here.
 
 TODO: explain why we don't use COSE, and what would need to happen for us to be able to.
 
