@@ -1,4 +1,4 @@
-----
+---
 title: RAINS, Another Internet Naming Service: Protocol Specification
 abbrev: RAINS
 docname: draft-trammell-rains-protocol
