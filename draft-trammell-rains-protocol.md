@@ -17,7 +17,7 @@ author:
  -
     ins: B. Trammell
     name: Brian Trammell
-    organization: ETH Zurich, Network Security Group
+    organization: ETH Zurich NetSec
     street: Universitaetstrasse 6
     city: Zurich
     code: 8092
@@ -288,6 +288,9 @@ A query expresses interest about all the given types of assertion in all the
 specified contexts; more complex expressions of which types in which contexts
 must be asked using multiple queries.
 
+TODO: provide mechanisms for privacy/performance tradeoffs in queries; are
+infomodel changes required here?
+
 ### Context in Queries
 
 Contexts are used in queries as they are in assertions (see {{context-in-
@@ -368,14 +371,17 @@ TODO: define an MTI signature algorithm that comes with hashchain revocation.
 
 # RAINS Client Protocol
 
-TODO: define as a subset of the full RAINS protocol, plus oracle signatures and tags
-in answers to allow oracles to verify proof of answer.
+TODO: define as a subset of the full RAINS protocol, plus oracle signatures
+and tags in answers to allow oracles to verify proof of answer. Preferences
+for privacy/latency tradeoffs might go here.
 
 # Deployment Considerations
 
 ## On Confidentiality and Integrity Protection
 
-TODO: note that 
+TODO: note that queries require more confidentiality than assertions. use TLS
+for hop-by-hop confidentiality for now. point out data confidentiality using
+COSE as a future next step.
 
 ## Authority Signer Interface
 
@@ -392,7 +398,9 @@ TODO: contexts are really hard to wedge into DNS.
 
 # Experimental Design and Evaluation
 
-TODO: note that this is primarily a prototype for discussion, but that we do intend to implement it. how will we tell if something like RAINS is ready for standardization?
+TODO: note that this is primarily a prototype for discussion, but that we do
+intend to implement it. how will we tell if something like RAINS is ready for
+standardization?
 
 # IANA Considerations
 
@@ -400,9 +408,13 @@ TODO: tables of CBOR integer keys to meanings in RAINS messages.
 
 # Security Considerations
 
-TODO: point at {{signatures-in-assertions}}, {{on-confidentiality-and-integrity-protection}}, and {{authority-signer-interface}}. note that shards for proving non-existence of a name are equivalent to NSEC, and that there is explicitly no 
+TODO: point at {{signatures-in-assertions}}, {{on-confidentiality-and-
+integrity-protection}}, and {{authority-signer-interface}}. note that shards
+for proving non-existence of a name are equivalent to NSEC, and that there is
+explicitly no resistance against zone enumeration.
 
 # Acknowledgments
 
-Daniele Asoni, Laurent Chuat, Joe Hildebrand, Steve Matsumoto, Adrian Perrig,
-Raphael Reischuk, Stephen Shirley, Andrew Sullivan, Suzanne Woolf.
+Daniele Asoni, Laurent Chuat, Ted Hardie, Joe Hildebrand, Steve Matsumoto,
+Adrian Perrig, Raphael Reischuk, Stephen Shirley, Andrew Sullivan, Suzanne
+Woolf.
