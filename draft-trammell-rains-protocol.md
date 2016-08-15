@@ -26,6 +26,8 @@ author:
 
 normative:
     I-D.trammell-inip-pins:
+    RFC2119:
+    RFC3629:
     RFC7049:
 
 informative:
@@ -54,6 +56,8 @@ TODO: why does it exist
 # Terminology
 
 TODO
+
+2119ify!
 
 - assertion
 
@@ -350,33 +354,171 @@ querier before the query's Valid-Until time.
 # Data Model
 
 The RAINS data model is a relatively straightforward mapping of the
-information model above to the Concise Binary Object Representation (CBOR)
-{{RFC7049}}, with an outer message type providing a mechanism for future
-capabilities-based versioning and recognition of a message as a RAINS message.
-Each CBOR object in a RAINS message is implemented as a map of integer keys to
-values, which implements a good tradeoff between efficiency of representation
-and flexibility.
+information model in {{information-model}} to the Concise Binary Object
+Representation (CBOR) {{RFC7049}}, with an outer message type providing a
+mechanism for future capabilities-based versioning and recognition of a
+message as a RAINS message.
 
-All interactions in RAINS take place in an outer envelope called a Message, which is a CBOR map tagged with the RAINS Message tag (hex 0xE99BA8, decimal 15309736). Each key in the message array and in the message sections in the message's content is encoded as in TODO add a table of message keys:
+## Symbol Table {#cbor-symtab}
 
-0: content
+Each CBOR object in a RAINS message is implemented as maps of integer keys to
+values, or arrays whose first value is integer-encoded type information, which
+implements a good tradeoff between efficiency of representation and
+flexibility. The meaning of each of these integer keys is given in the symbol
+table below:
 
-1: sectiontype
+| Code | Name         | Description                                   |
+|-----:|--------------|-----------------------------------------------|
+| 0    | content      | Key: Content of a message, shard, or zone     |
+| 1    | reserved     | Reserved for future use in RAINS              |
+| 2    | signatures   | Key: Signatures on a message or section       |
+| 3    | subject-name | Key: Subject name in an assertion             |
+| 4    | subject-zone | Key: Zone name in an assertion                |
+| 5    | query-name   | Key: Qualified subject name in a query        |
+| 6    | context      | Key: Context(s) of an assertion or query      |
+| 7    | objects      | Key: Objects of an assertion                  |
+| 8    | token        | Key: Token for referring to a data item       |
+| 9    | assertion    | Section type: Assertion                       |
+| 10   | shard        | Section type: Shard                           |
+| 11   | shard-range  | Key: Lexical range of Assertions in Shard     |
+| 12   | zone         | Section type: Zone                            |
+| 13   | query        | Section type: Query                           |
+| 14   | reserved     | Reserved for future use in RAINS              |
+| 15   | reserved     | Reserved for future use in RAINS              |
+| 16   | reserved     | Reserved for future use in RAINS              |
+| 17   | reserved     | Reserved for future use in RAINS              |
+| 18   | reserved     | Reserved for future use in RAINS              |
+| 19   | name         | Object type: name associated with subject     |
+| 20   | reserved     | Reserved for future use in RAINS              |
+| 21   | ip6-addr     | Object type: IPv6 address of subject          |
+| 22   | redirection  | Object type: name of zone authority server    |
+| 23   | delegation   | Object type: public key for zone delgation    |
+| 24   | ip4-addr     | Object type: IPv4 address of subject          |
+| 25   | reserved     | Reserved for future use in RAINS              |
+| 26   | nameset      | Object type: name set expression for zone     |
+| 27   | cert-info    | Object type: certificate information for name |
+| 28   | service-info | Object type: service information for srvname  |
 
-2: signatures
+## Message
 
-3: subject
+All interactions in RAINS take place in an outer envelope called a Message,
+which is a CBOR map tagged with the RAINS Message tag (hex 0xE99BA8, decimal
+15309736). 
 
-4: zone
+A Message map MUST contain a content (0) key, whose value is an array of
+Message Sections; a Message Section is either an Assertion, Shard, Zone, or
+Query.
 
-5: context
+A Message map MAY contain a signatures (2) key, whose value is an array of
+Signatures as defined in {{cbor-signature}}. 
 
-6: objects
+A Message map MAY contain a token (8) key, whose value is either an integer or
+a UTF-8 string of maximum byte length 32.
 
-7: token
+## Message Section header
 
-8: reference
+Each Message Section in the Message's content value MUST be a two-element
+array. The first element in the array is the message section type, encoded as
+an integer as in {{cbor-symtab}}. The second element in the array is the
+message section body, defined as in {{cbor-assertion}}, {{cbor-shard}},
+{{cbor-zone}}, or {{cbor-query}}.
 
+## Assertion body {#cbor-assertion}
+
+An Assertion body is a map. The keys present in this map depend on whether the
+Assertion is contained in a Message Section or in a Shard or Zone.
+
+Assertions contained in Message Sections are "bare Assertions". Since they
+cannot inherit any values from their containers, they MUST contain the
+signatures (2), subject-name (3), subject-zone (4), context (6), and objects
+(7) keys.
+
+Assertions within a Shard or Zone are "contained Assertions", and can inherit
+values from their containers. A contained Assertion MAY contain the signatures
+(2) key and MUST contain the subject-name (3) and objects (7) keys. It MAY
+contain subject-zone (4) and context (6) keys, but in this case the values of
+these keys MUST be identical to the values in the containing Shard or Zone.
+
+The value of the signatures (2) key, if present, is an array of one or more
+Signatures as defined in {{cbor-signature}}. If not present, the containing
+Shard or Zone MUST be signed. Signatures on a contained Assertion are
+generated as if the inherited values are present in the Assertion, whether
+actually present or not.
+
+The value of the subject-name (3) key is a UTF-8 encoded {{RFC3629}} string
+containing the name of the subject of the assertion. The subject name never
+contains the zone in which the subject name; the fully-qualified name is
+obtained by joining the subject-name to the subject-zone with a '.' character.
+The subject-name must be valid according to the nameset expression for the
+zone, if any.
+
+The value of the subject-zone (4) key, if present, is a UTF-8 encoded string
+containing the name of the zone in which the assertion is made. If not
+present, the zone of the assertion is inherited from the containing Shard or Zone.
+
+The value of the context (6) key, if present, is a UTF-8 encoded string
+containing the name of the context in which the assertion is valid. If not
+present, the context of the assertion is inherited from the containing Shard
+or Zone.
+
+The value of the objects (7) key is an array of objects, as defined in {{cbor-
+object}}.
+
+## Shard body {#cbor-shard}
+
+A Shard body is a map. The keys present in the map depend on whether the Shard
+is contained in a Message Section or in a Zone.
+
+Shards contained in Message Sections are "bare Shards". Since they cannot
+inherit any values from their contained Zone, they MUST contain the content
+(0), signatures (2), subject-zone (4), and context (6) keys.
+
+Shards within a Zone are "contained Shards", and can inherit values from their
+containing Zone. A contained Shard MUST contain the content (0) key, and MAY
+contain the signatures (2) key and shard-range (11) keys. It MAY contain
+subject-zone (4) and context (6) keys, but in this case the values of these
+keys MUST be identical to the values in the containing Zone.
+
+The value of the content (0) key is an array of Assertion bodies as defined in
+{#cbor-assertion}.
+
+The value of the signatures (2) key, if present, is an array of one or more
+Signatures as defined in {{cbor-signature}}. If not present, the containing
+Zone MUST be signed. Signatures on a contained Shard are generated as if the
+inherited values are present in the Shard, whether actually present or not.
+
+The value of the subject-zone (4) key, if present, is a UTF-8 encoded string
+containing the name of the zone in which the assertion is made. If not
+present, the zone of the assertion is inherited from the containing Zone.
+
+The value of the context (6) key, if present, is a UTF-8 encoded string
+containing the name of the context in which the assertion is valid. If not
+present, the context of the assertion is inherited from the containing Zone.
+
+The value of the shard-range key, if present, is a four-element array. TODO:
+work pointer, explain how lexical ordering of shards works.
+
+## Zone Message Section body {#cbor-zone}
+
+## Query Message Section body {#cbor-query}
+
+## Object {#cbor-object}
+
+## Signature {#cbor-signature}
+
+TODO: choose an MTI algorithm and define this for it. make the structure as
+COSE-like as possible so we can move over COSE in the future if that makes
+sense.
+
+Signature algorithm identifiers are encoded in a signature as follows:
+
+| Code | Signature alg | Hash function |
+|-----:|---------------|---------------|
+| 1    | ed25516       | sha-256       |
+| 2    | ecdsa         | sha-256       |
+}
+
+ 
 Message is {content, signatures, token, reference}
 
 Section type table is:
