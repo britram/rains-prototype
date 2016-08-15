@@ -81,22 +81,22 @@ Table of Contents
      5.4.  Assertion body  . . . . . . . . . . . . . . . . . . . . .  12
      5.5.  Shard body  . . . . . . . . . . . . . . . . . . . . . . .  13
      5.6.  Zone Message Section body . . . . . . . . . . . . . . . .  14
-     5.7.  Query Message Section body  . . . . . . . . . . . . . . .  14
-     5.8.  Object  . . . . . . . . . . . . . . . . . . . . . . . . .  14
-     5.9.  Signature . . . . . . . . . . . . . . . . . . . . . . . .  14
+     5.7.  Query Message Section body  . . . . . . . . . . . . . . .  15
+     5.8.  Object  . . . . . . . . . . . . . . . . . . . . . . . . .  15
+     5.9.  Signature . . . . . . . . . . . . . . . . . . . . . . . .  15
    6.  RAINS Protocol Definition . . . . . . . . . . . . . . . . . .  15
    7.  RAINS Client Protocol . . . . . . . . . . . . . . . . . . . .  15
-   8.  Deployment Considerations . . . . . . . . . . . . . . . . . .  15
-     8.1.  On Confidentiality and Integrity Protection . . . . . . .  15
-     8.2.  Authority Signer Interface  . . . . . . . . . . . . . . .  15
-     8.3.  Client Resolver Interfaces  . . . . . . . . . . . . . . .  15
+   8.  Deployment Considerations . . . . . . . . . . . . . . . . . .  16
+     8.1.  On Confidentiality and Integrity Protection . . . . . . .  16
+     8.2.  Authority Signer Interface  . . . . . . . . . . . . . . .  16
+     8.3.  Client Resolver Interfaces  . . . . . . . . . . . . . . .  16
      8.4.  Translation between RAINS and DNS . . . . . . . . . . . .  16
    9.  Experimental Design and Evaluation  . . . . . . . . . . . . .  16
    10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  16
    11. Security Considerations . . . . . . . . . . . . . . . . . . .  16
    12. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  16
-   13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  16
-     13.1.  Normative References . . . . . . . . . . . . . . . . . .  16
+   13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  17
+     13.1.  Normative References . . . . . . . . . . . . . . . . . .  17
      13.2.  Informative References . . . . . . . . . . . . . . . . .  17
    Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  17
 
@@ -584,7 +584,7 @@ Internet-Draft                    RAINS                      August 2016
    |      |              |                                             |
    |   13 | query        | Section type: Query                         |
    |      |              |                                             |
-   |   14 | reserved     | Reserved for future use in RAINS            |
+   |   14 | query-types  | Section type: queried object types          |
    |      |              |                                             |
    |   15 | reserved     | Reserved for future use in RAINS            |
    |      |              |                                             |
@@ -735,49 +735,49 @@ Internet-Draft                    RAINS                      August 2016
    whether actually present or not.
 
    The value of the subject-zone (4) key, if present, is a UTF-8 encoded
-   string containing the name of the zone in which the assertion is
-   made.  If not present, the zone of the assertion is inherited from
-   the containing Zone.
+   string containing the name of the zone in which the Assertions within
+   the Shard is made.  If not present, the zone of the assertion is
+   inherited from the containing Zone.
 
    The value of the context (6) key, if present, is a UTF-8 encoded
-   string containing the name of the context in which the assertion is
-   valid.  If not present, the context of the assertion is inherited
-   from the containing Zone.
+   string containing the name of the context in which the Assertions
+   within the Shard are valid.  If not present, the context of the
+   assertion is inherited from the containing Zone.
 
-   The value of the shard-range key, if present, is a four-element
-   array.  TODO: work pointer, explain how lexical ordering of shards
-   works.
+   If the shard-range (11) key is present, the shard is
+   lexicographically complete within the range described in its value: a
+   mapping for a (subject- name, object-type) pair that should be
+   between the two values given in the range but is not is asserted to
+   not exist.  Lexicographic sorting is done on subject names by
+   ordering Unicode codepoints in ascending order; ordering on object
+   types is done via their code values in the symbol table in {{cbor-
+   symtab}}.
+
+   The shard-range value MUST be a four element array of (subject-name
+   A, object- type A, subject-name B, object type B) where A does not
+   necessarily need to sort before B, and the (subject-name, object-
+   type) pairs need not exist in the shard.  The shard MUST NOT contain
+   any assertions for subject-names outside the range.
+
+   If the shard-range key is not present, the shard is not
+   lexicographically complete and MUST NOT be used to make assertions
+   about nonexistance.
 
 5.6.  Zone Message Section body
 
-5.7.  Query Message Section body
+   A Zone body is a map.  Zones MUST contain the content (0), signatures
+   (2), subject-zone (4), and context (6) keys.
 
-5.8.  Object
+   The value of the content (0) key is an array of Shard bodies as
+   defined in {#cbor-shard} and/or Assertion bodies as defined in
+   {#cbor-assertion}.
 
-5.9.  Signature
+   The value of the subject-zone (4) key is a UTF-8 encoded string
+   containing the name of the Zone.
 
-   TODO: choose an MTI algorithm and define this for it. make the
-   structure as COSE-like as possible so we can move over COSE in the
-   future if that makes sense.
+   The value of the context (6) key is a UTF-8 encoded string containing
+   the name of the context for which the Zone is valid.
 
-   Signature algorithm identifiers are encoded in a signature as
-   follows:
-
-   | Code | Signature alg | Hash
-   function | |---:|----------|----------| | 1 | ed25516 | sha-256 | |
-   2 | ecdsa | sha-256 | }
-
-   Message is {content, signatures, token, reference}
-
-   Section type table is:
-
-   0: assertion
-
-   1: incomplete-shard
-
-   2: complete-shard
-
-   3: zone
 
 
 
@@ -786,31 +786,61 @@ Trammell                Expires February 16, 2017              [Page 14]
 Internet-Draft                    RAINS                      August 2016
 
 
-   4: query
+   TODO: determine if Zones MUST contain all the valid assertions within
+   the Zone.  I think so.  This leads (as with inconsistent Shards) to
+   the question of "what happens if not", and defending against
+   malicious inconsistency.
 
-   5: answer
+5.7.  Query Message Section body
 
-   TODO: work pointer here.
+   A Query body is a map.  Queries MUST contain the query-name (5),
+   context (6), and query-type (14) keys.
 
-   TODO: explain why we don't use COSE, and what would need to happen
-   for us to be able to.
+   TODO: work pointer here
+
+5.8.  Object
+
+5.9.  Signature
+
+   TODO: choose an MTI algorithm and define this for it. make the
+   structure as COSE-like as possible so we can move over COSE in the
+   future, if that makes sense.
+
+   Signature algorithm identifiers are encoded in a signature as
+   follows:
+
+                 +------+---------------+---------------+
+                 | Code | Signature alg | Hash function |
+                 +------+---------------+---------------+
+                 |    1 | ed25516       | sha-256       |
+                 |      |               |               |
+                 |    2 | ecdsa         | sha-256       |
+                 +------+---------------+---------------+
 
 6.  RAINS Protocol Definition
 
    TODO: note CBOR is self-framing so we can use any transport we want.
-   define TLS 1.3 and TFO for now, note nice fit atop QUIC.
+   define TLS 1.3 with TFO for now, note nice fit atop QUIC.
 
    TODO: note further that signatures are prime in RAINS, so it really
    doesn't matter where servers exist.
-
-   TODO: define an MTI signature algorithm that comes with hashchain
-   revocation.
 
 7.  RAINS Client Protocol
 
    TODO: define as a subset of the full RAINS protocol, plus oracle
    signatures and tags in answers to allow oracles to verify proof of
    answer.  Preferences for privacy/latency tradeoffs might go here.
+
+
+
+
+
+
+
+Trammell                Expires February 16, 2017              [Page 15]
+
+Internet-Draft                    RAINS                      August 2016
+
 
 8.  Deployment Considerations
 
@@ -830,17 +860,6 @@ Internet-Draft                    RAINS                      August 2016
    TODO: note we should add RAINS resolver information to DHCP. do we
    want a multicast address as well? do we need to add context
    information to DHCP?
-
-
-
-
-
-
-
-Trammell                Expires February 16, 2017              [Page 15]
-
-Internet-Draft                    RAINS                      August 2016
-
 
 8.4.  Translation between RAINS and DNS
 
@@ -869,6 +888,16 @@ Internet-Draft                    RAINS                      August 2016
    Matsumoto, Adrian Perrig, Raphael Reischuk, Stephen Shirley, Andrew
    Sullivan, Suzanne Woolf.
 
+
+
+
+
+
+Trammell                Expires February 16, 2017              [Page 16]
+
+Internet-Draft                    RAINS                      August 2016
+
+
 13.  References
 
 13.1.  Normative References
@@ -891,13 +920,6 @@ Internet-Draft                    RAINS                      August 2016
               Representation (CBOR)", RFC 7049, DOI 10.17487/RFC7049,
               October 2013, <http://www.rfc-editor.org/info/rfc7049>.
 
-
-
-Trammell                Expires February 16, 2017              [Page 16]
-
-Internet-Draft                    RAINS                      August 2016
-
-
 13.2.  Informative References
 
    [RFC1035]  Mockapetris, P., "Domain names - implementation and
@@ -918,28 +940,6 @@ Author's Address
    Switzerland
 
    Email: ietf@trammell.ch
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

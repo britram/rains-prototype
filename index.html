@@ -7,7 +7,7 @@
 
   <title>RAINS (Another Internet Naming Service) Protocol Specification</title>
 
-  <style type="text/css">/*<![CDATA[*/
+<style type="text/css">/*<![CDATA[*/
 @viewport {
   zoom: 1.0;
   width: extend-to-zoom;
@@ -265,7 +265,7 @@ li, p {
   .github-fork-ribbon-wrapper {
     position: fixed;
   }
-  /*]]>*/</style>
+/*]]>*/</style>
 
   <link href="#rfc.toc" rel="Contents"/>
 <link href="#rfc.section.1" rel="Chapter" title="1 Introduction"/>
@@ -632,8 +632,8 @@ li, p {
     </tr>
     <tr>
       <td class="right">14</td>
-      <td class="left">reserved</td>
-      <td class="left">Reserved for future use in RAINS</td>
+      <td class="left">query-types</td>
+      <td class="left">Section type: queried object types</td>
     </tr>
     <tr>
       <td class="right">15</td>
@@ -729,30 +729,48 @@ li, p {
 <p id="rfc.section.5.5.p.3">Shards within a Zone are &#8220;contained Shards&#8221;, and can inherit values from their containing Zone. A contained Shard MUST contain the content (0) key, and MAY contain the signatures (2) key and shard-range (11) keys. It MAY contain subject-zone (4) and context (6) keys, but in this case the values of these keys MUST be identical to the values in the containing Zone.</p>
 <p id="rfc.section.5.5.p.4">The value of the content (0) key is an array of Assertion bodies as defined in {#cbor-assertion}.</p>
 <p id="rfc.section.5.5.p.5">The value of the signatures (2) key, if present, is an array of one or more Signatures as defined in <a href="#cbor-signature">Section 5.9</a>. If not present, the containing Zone MUST be signed. Signatures on a contained Shard are generated as if the inherited values are present in the Shard, whether actually present or not.</p>
-<p id="rfc.section.5.5.p.6">The value of the subject-zone (4) key, if present, is a UTF-8 encoded string containing the name of the zone in which the assertion is made. If not present, the zone of the assertion is inherited from the containing Zone.</p>
-<p id="rfc.section.5.5.p.7">The value of the context (6) key, if present, is a UTF-8 encoded string containing the name of the context in which the assertion is valid. If not present, the context of the assertion is inherited from the containing Zone.</p>
-<p id="rfc.section.5.5.p.8">The value of the shard-range key, if present, is a four-element array. TODO: work pointer, explain how lexical ordering of shards works.</p>
+<p id="rfc.section.5.5.p.6">The value of the subject-zone (4) key, if present, is a UTF-8 encoded string containing the name of the zone in which the Assertions within the Shard is made. If not present, the zone of the assertion is inherited from the containing Zone.</p>
+<p id="rfc.section.5.5.p.7">The value of the context (6) key, if present, is a UTF-8 encoded string containing the name of the context in which the Assertions within the Shard are valid. If not present, the context of the assertion is inherited from the containing Zone.</p>
+<p id="rfc.section.5.5.p.8">If the shard-range (11) key is present, the shard is lexicographically complete within the range described in its value: a mapping for a (subject- name, object-type) pair that should be between the two values given in the range but is not is asserted to not exist. Lexicographic sorting is done on subject names by ordering Unicode codepoints in ascending order; ordering on object types is done via their code values in the symbol table in {{cbor- symtab}}.</p>
+<p id="rfc.section.5.5.p.9">The shard-range value MUST be a four element array of (subject-name A, object- type A, subject-name B, object type B) where A does not necessarily need to sort before B, and the (subject-name, object-type) pairs need not exist in the shard. The shard MUST NOT contain any assertions for subject-names outside the range.</p>
+<p id="rfc.section.5.5.p.10">If the shard-range key is not present, the shard is not lexicographically complete and MUST NOT be used to make assertions about nonexistance.</p>
 <h1 id="rfc.section.5.6"><a href="#rfc.section.5.6">5.6.</a> <a href="#cbor-zone" id="cbor-zone">Zone Message Section body</a></h1>
+<p id="rfc.section.5.6.p.1">A Zone body is a map. Zones MUST contain the content (0), signatures (2), subject-zone (4), and context (6) keys.</p>
+<p id="rfc.section.5.6.p.2">The value of the content (0) key is an array of Shard bodies as defined in {#cbor-shard} and/or Assertion bodies as defined in {#cbor-assertion}.</p>
+<p id="rfc.section.5.6.p.3">The value of the subject-zone (4) key is a UTF-8 encoded string containing the name of the Zone.</p>
+<p id="rfc.section.5.6.p.4">The value of the context (6) key is a UTF-8 encoded string containing the name of the context for which the Zone is valid.</p>
+<p id="rfc.section.5.6.p.5">TODO: determine if Zones MUST contain all the valid assertions within the Zone. I think so. This leads (as with inconsistent Shards) to the question of &#8220;what happens if not&#8221;, and defending against malicious inconsistency.</p>
 <h1 id="rfc.section.5.7"><a href="#rfc.section.5.7">5.7.</a> <a href="#cbor-query" id="cbor-query">Query Message Section body</a></h1>
+<p id="rfc.section.5.7.p.1">A Query body is a map. Queries MUST contain the query-name (5), context (6), and query-type (14) keys.</p>
+<p id="rfc.section.5.7.p.2">TODO: work pointer here</p>
 <h1 id="rfc.section.5.8"><a href="#rfc.section.5.8">5.8.</a> <a href="#cbor-object" id="cbor-object">Object</a></h1>
 <h1 id="rfc.section.5.9"><a href="#rfc.section.5.9">5.9.</a> <a href="#cbor-signature" id="cbor-signature">Signature</a></h1>
-<p id="rfc.section.5.9.p.1">TODO: choose an MTI algorithm and define this for it. make the structure as COSE-like as possible so we can move over COSE in the future if that makes sense.</p>
+<p id="rfc.section.5.9.p.1">TODO: choose an MTI algorithm and define this for it. make the structure as COSE-like as possible so we can move over COSE in the future, if that makes sense.</p>
 <p id="rfc.section.5.9.p.2">Signature algorithm identifiers are encoded in a signature as follows:</p>
-<p id="rfc.section.5.9.p.3">| Code | Signature alg | Hash function | |&#8212;&#8211;:|&#8212;&#8212;&#8212;&#8212;&#8212;|&#8212;&#8212;&#8212;&#8212;&#8212;| | 1    | ed25516       | sha-256       | | 2    | ecdsa         | sha-256       | }</p>
-<p id="rfc.section.5.9.p.4">Message is {content, signatures, token, reference}</p>
-<p id="rfc.section.5.9.p.5">Section type table is:</p>
-<p id="rfc.section.5.9.p.6">0: assertion</p>
-<p id="rfc.section.5.9.p.7">1: incomplete-shard</p>
-<p id="rfc.section.5.9.p.8">2: complete-shard</p>
-<p id="rfc.section.5.9.p.9">3: zone</p>
-<p id="rfc.section.5.9.p.10">4: query</p>
-<p id="rfc.section.5.9.p.11">5: answer</p>
-<p id="rfc.section.5.9.p.12">TODO: work pointer here.</p>
-<p id="rfc.section.5.9.p.13">TODO: explain why we don&#8217;t use COSE, and what would need to happen for us to be able to.</p>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <thead>
+    <tr>
+      <th class="right">Code</th>
+      <th class="left">Signature alg</th>
+      <th class="left">Hash function</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="right">1</td>
+      <td class="left">ed25516</td>
+      <td class="left">sha-256</td>
+    </tr>
+    <tr>
+      <td class="right">2</td>
+      <td class="left">ecdsa</td>
+      <td class="left">sha-256</td>
+    </tr>
+  </tbody>
+</table>
 <h1 id="rfc.section.6"><a href="#rfc.section.6">6.</a> <a href="#rains-protocol-definition" id="rains-protocol-definition">RAINS Protocol Definition</a></h1>
-<p id="rfc.section.6.p.1">TODO: note CBOR is self-framing so we can use any transport we want. define TLS 1.3 and TFO for now, note nice fit atop QUIC.</p>
+<p id="rfc.section.6.p.1">TODO: note CBOR is self-framing so we can use any transport we want. define TLS 1.3 with TFO for now, note nice fit atop QUIC.</p>
 <p id="rfc.section.6.p.2">TODO: note further that signatures are prime in RAINS, so it really doesn&#8217;t matter where servers exist.</p>
-<p id="rfc.section.6.p.3">TODO: define an MTI signature algorithm that comes with hashchain revocation.</p>
 <h1 id="rfc.section.7"><a href="#rfc.section.7">7.</a> <a href="#rains-client-protocol" id="rains-client-protocol">RAINS Client Protocol</a></h1>
 <p id="rfc.section.7.p.1">TODO: define as a subset of the full RAINS protocol, plus oracle signatures and tags in answers to allow oracles to verify proof of answer. Preferences for privacy/latency tradeoffs might go here.</p>
 <h1 id="rfc.section.8"><a href="#rfc.section.8">8.</a> <a href="#deployment-considerations" id="deployment-considerations">Deployment Considerations</a></h1>
