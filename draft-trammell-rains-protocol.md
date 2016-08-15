@@ -383,7 +383,7 @@ table below:
 | 11   | shard-range  | Key: Lexical range of Assertions in Shard     |
 | 12   | zone         | Section type: Zone                            |
 | 13   | query        | Section type: Query                           |
-| 14   | reserved     | Reserved for future use in RAINS              |
+| 14   | query-types  | Section type: queried object types            |
 | 15   | reserved     | Reserved for future use in RAINS              |
 | 16   | reserved     | Reserved for future use in RAINS              |
 | 17   | reserved     | Reserved for future use in RAINS              |
@@ -488,26 +488,63 @@ Zone MUST be signed. Signatures on a contained Shard are generated as if the
 inherited values are present in the Shard, whether actually present or not.
 
 The value of the subject-zone (4) key, if present, is a UTF-8 encoded string
-containing the name of the zone in which the assertion is made. If not
-present, the zone of the assertion is inherited from the containing Zone.
+containing the name of the zone in which the Assertions within the Shard is
+made. If not present, the zone of the assertion is inherited from the
+containing Zone.
 
 The value of the context (6) key, if present, is a UTF-8 encoded string
-containing the name of the context in which the assertion is valid. If not
-present, the context of the assertion is inherited from the containing Zone.
+containing the name of the context in which the Assertions within the Shard
+are valid. If not present, the context of the assertion is inherited from the
+containing Zone.
 
-The value of the shard-range key, if present, is a four-element array. TODO:
-work pointer, explain how lexical ordering of shards works.
+If the shard-range (11) key is present, the shard is lexicographically
+complete within the range described in its value: a mapping for a (subject-
+name, object-type) pair that should be between the two values given in the
+range but is not is asserted to not exist. Lexicographic sorting is done on
+subject names by ordering Unicode codepoints in ascending order; ordering on
+object types is done via their code values in the symbol table in {{cbor-
+symtab}}. 
+
+The shard-range value MUST be a four element array of (subject-name A, object-
+type A, subject-name B, object type B) where A does not necessarily need to
+sort before B, and the (subject-name, object-type) pairs need not exist in the
+shard. The shard MUST NOT contain any assertions for subject-names outside the
+range.
+
+If the shard-range key is not present, the shard is not lexicographically
+complete and MUST NOT be used to make assertions about nonexistance.
 
 ## Zone Message Section body {#cbor-zone}
 
+A Zone body is a map. Zones MUST contain the content (0), signatures (2),
+subject-zone (4), and context (6) keys.
+
+The value of the content (0) key is an array of Shard bodies as defined in
+{#cbor-shard} and/or Assertion bodies as defined in {#cbor-assertion}.
+
+The value of the subject-zone (4) key is a UTF-8 encoded string
+containing the name of the Zone.
+
+The value of the context (6) key is a UTF-8 encoded string
+containing the name of the context for which the Zone is valid.
+
+TODO: determine if Zones MUST contain all the valid assertions within the
+Zone. I think so. This leads (as with inconsistent Shards) to the question of
+"what happens if not", and defending against malicious inconsistency.
+
 ## Query Message Section body {#cbor-query}
+
+A Query body is a map. Queries MUST contain the query-name (5), context (6),
+and query-type (14) keys.
+
+TODO: work pointer here
 
 ## Object {#cbor-object}
 
 ## Signature {#cbor-signature}
 
 TODO: choose an MTI algorithm and define this for it. make the structure as
-COSE-like as possible so we can move over COSE in the future if that makes
+COSE-like as possible so we can move over COSE in the future, if that makes
 sense.
 
 Signature algorithm identifiers are encoded in a signature as follows:
@@ -516,36 +553,13 @@ Signature algorithm identifiers are encoded in a signature as follows:
 |-----:|---------------|---------------|
 | 1    | ed25516       | sha-256       |
 | 2    | ecdsa         | sha-256       |
-}
 
- 
-Message is {content, signatures, token, reference}
-
-Section type table is:
-
-0: assertion 
-
-1: incomplete-shard
-
-2: complete-shard
-
-3: zone
-
-4: query
-
-5: answer
-
-TODO: work pointer here.
-
-TODO: explain why we don't use COSE, and what would need to happen for us to be able to.
 
 # RAINS Protocol Definition
 
-TODO: note CBOR is self-framing so we can use any transport we want. define TLS 1.3 and TFO for now, note nice fit atop QUIC.
+TODO: note CBOR is self-framing so we can use any transport we want. define TLS 1.3 with TFO for now, note nice fit atop QUIC.
 
 TODO: note further that signatures are prime in RAINS, so it really doesn't matter where servers exist.
-
-TODO: define an MTI signature algorithm that comes with hashchain revocation.
 
 # RAINS Client Protocol
 
