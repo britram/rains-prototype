@@ -37,6 +37,17 @@ informative:
     RFC7231:
     RFC7696:
     RFC7871:
+    XEP0115:
+      title: XEP-0115 Entity Capababilities
+      author:
+        -
+          ins: J. Hildebrand
+        -
+          ins: P. Saint-Andre
+        -
+          ins: R. Troncon
+        - 
+          ins: J. Konieczny
 
 --- abstract
 
@@ -598,7 +609,21 @@ The value of the token (8) key, if present, is either an integer or a UTF-8
 string of maximum byte length 32. Future messages containing answers to this
 query may contain the token instead of the query itself.
 
-TODO: how do query options work?
+The value of the query-opts (30) key, if present, is an array of integers in
+priority order of the querier's preferences in tradeoffs in answering the
+query.
+
+TODO: work on these a bit more. Does this mean we're giving up on the unified
+symbol table?
+
+| Code | Description                                                    |
+|-----:|----------------------------------------------------------------|
+| 1    | Minimize end-to-end latency                                    |
+| 2    | Minimize last-hop answer size (bandwidth)                      |
+| 3    | Minimize information leakage beyond oracle                     |
+| 4    | No information leakage beyond oracle: cached answers only      |
+| 5    | Expired assertions are acceptable                              |
+
 
 ## Notification Message Section body {#cbor-notification}
 
@@ -709,7 +734,9 @@ TODO: base this on {{RFC6605}}, but use raw byte array encoding.
 
 ## Capabilities {#cbor-capabilities}
 
-TODO: URNs naming server capabilities.
+TODO: URNs naming server capabilities, currently in x-rains namespace.
+{{XEP0115}} style, using SHA256. Only present capability is "I listen on the
+RAINS port over TCP".
 
 # RAINS Protocol Definition {#protocol-def}
 
