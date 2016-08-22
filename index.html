@@ -316,7 +316,7 @@ li, p {
 
   <meta name="dct.creator" content="Trammell, B." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-trammell-rains-protocol" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-8-16" />
+  <meta name="dct.issued" scheme="ISO8601" content="2016-8-22" />
   <meta name="dct.abstract" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design the DNS knowing what we do now, with current computing power at our disposal,&#8221; on the background of the properties of an ideal naming service described in " />
   <meta name="description" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design the DNS knowing what we do now, with current computing power at our disposal,&#8221; on the background of the properties of an ideal naming service described in " />
 
@@ -337,10 +337,10 @@ li, p {
 </tr>
 <tr>
   <td class="left">Intended status: Experimental</td>
-  <td class="right">August 16, 2016</td>
+  <td class="right">August 22, 2016</td>
 </tr>
 <tr>
-  <td class="left">Expires: February 17, 2017</td>
+  <td class="left">Expires: February 23, 2017</td>
   <td class="right"></td>
 </tr>
 
@@ -361,7 +361,7 @@ li, p {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on February 17, 2017.</p>
+<p>This Internet-Draft will expire on February 23, 2017.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -821,7 +821,38 @@ li, p {
 <p id="rfc.section.5.7.p.7">An empty context array in a query is taken to be equivalent to an array containing only [&#8217;.&#8217;, &#8216;cx&#8211;any-&#8216;]; i.e. any context acceptable, global context preferred.</p>
 <p id="rfc.section.5.7.p.8">The value of the query-type (14) key is an array of integers encoding the type(s) of objects acceptable in answers to the query. All values in the query-type array are treated at equal priority: [21,24] means the querier is equally interested in both IPv4 and IPv6 addresses for the query-name.</p>
 <p id="rfc.section.5.7.p.9">The value of the token (8) key, if present, is either an integer or a UTF-8 string of maximum byte length 32. Future messages containing answers to this query may contain the token instead of the query itself.</p>
-<p id="rfc.section.5.7.p.10">TODO: how do query options work?</p>
+<p id="rfc.section.5.7.p.10">The value of the query-opts (30) key, if present, is an array of integers in priority order of the querier&#8217;s preferences in tradeoffs in answering the query.</p>
+<p id="rfc.section.5.7.p.11">TODO: work on these a bit more. Does this mean we&#8217;re giving up on the unified symbol table?</p>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <thead>
+    <tr>
+      <th class="right">Code</th>
+      <th class="left">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="right">1</td>
+      <td class="left">Minimize end-to-end latency</td>
+    </tr>
+    <tr>
+      <td class="right">2</td>
+      <td class="left">Minimize last-hop answer size (bandwidth)</td>
+    </tr>
+    <tr>
+      <td class="right">3</td>
+      <td class="left">Minimize information leakage beyond oracle</td>
+    </tr>
+    <tr>
+      <td class="right">4</td>
+      <td class="left">No information leakage beyond oracle: cached answers only</td>
+    </tr>
+    <tr>
+      <td class="right">5</td>
+      <td class="left">Expired assertions are acceptable</td>
+    </tr>
+  </tbody>
+</table>
 <h1 id="rfc.section.5.8"><a href="#rfc.section.5.8">5.8.</a> <a href="#cbor-notification" id="cbor-notification">Notification Message Section body</a></h1>
 <p id="rfc.section.5.8.p.1">Notification Message Sections contain information about the operation of the RAINS protocol itself. A Notification Message Section body is a map which MUST contain the note-type (17) key and MAY contain the note-data (30) key. The value of the note-type key is encoded as an integer as in the following table:</p>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -961,7 +992,7 @@ li, p {
 <h1 id="rfc.section.5.10.2"><a href="#rfc.section.5.10.2">5.10.2.</a> <a href="#ecdsa-format" id="ecdsa-format">ECDSA signature and public key format</a></h1>
 <p id="rfc.section.5.10.2.p.1">TODO: base this on <a href="#RFC6605">[RFC6605]</a>, but use raw byte array encoding.</p>
 <h1 id="rfc.section.5.11"><a href="#rfc.section.5.11">5.11.</a> <a href="#cbor-capabilities" id="cbor-capabilities">Capabilities</a></h1>
-<p id="rfc.section.5.11.p.1">TODO: URNs naming server capabilities.</p>
+<p id="rfc.section.5.11.p.1">TODO: URNs naming server capabilities, currently in x-rains namespace.  <a href="#XEP0115">[XEP0115]</a> style, using SHA256. Only present capability is &#8220;I listen on the RAINS port over TCP&#8221;.</p>
 <h1 id="rfc.section.6"><a href="#rfc.section.6">6.</a> <a href="#protocol-def" id="protocol-def">RAINS Protocol Definition</a></h1>
 <p id="rfc.section.6.p.1">TODO: note CBOR is self-framing so we can use any transport we want. define TLS 1.3 with TFO for now, note nice fit atop QUIC.</p>
 <p id="rfc.section.6.p.2">TODO: note further that signatures are prime in RAINS, so it really doesn&#8217;t matter where servers exist.</p>
@@ -1057,6 +1088,12 @@ li, p {
         <b id="RFC7871">[RFC7871]</b>
       </td>
       <td class="top"><a>Contavalli, C.</a>, <a>van der Gaast, W.</a>, <a>Lawrence, D.</a> and <a>W. Kumari</a>, "<a href="http://tools.ietf.org/html/rfc7871">Client Subnet in DNS Queries</a>", RFC 7871, DOI 10.17487/RFC7871, May 2016.</td>
+    </tr>
+    <tr>
+      <td class="reference">
+        <b id="XEP0115">[XEP0115]</b>
+      </td>
+      <td class="top"><a>Hildebrand, J.</a>, <a>Saint-Andre, P.</a>, <a>Troncon, R.</a> and <a>J. Konieczny</a>, "<a>XEP-0115 Entity Capababilities</a>", n.d..</td>
     </tr>
   </tbody>
 </table>

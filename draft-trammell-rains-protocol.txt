@@ -4,8 +4,8 @@
 
 Names and Identifiers Program                                B. Trammell
 Internet-Draft                                         ETH Zurich NetSec
-Intended status: Experimental                            August 16, 2016
-Expires: February 17, 2017
+Intended status: Experimental                            August 22, 2016
+Expires: February 23, 2017
 
 
      RAINS (Another Internet Naming Service) Protocol Specification
@@ -36,7 +36,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on February 17, 2017.
+   This Internet-Draft will expire on February 23, 2017.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Trammell                Expires February 17, 2017               [Page 1]
+Trammell                Expires February 23, 2017               [Page 1]
 
 Internet-Draft                    RAINS                      August 2016
 
@@ -83,9 +83,9 @@ Table of Contents
      5.6.  Zone Message Section body . . . . . . . . . . . . . . . .  15
      5.7.  Query Message Section body  . . . . . . . . . . . . . . .  15
      5.8.  Notification Message Section body . . . . . . . . . . . .  17
-     5.9.  Object  . . . . . . . . . . . . . . . . . . . . . . . . .  17
+     5.9.  Object  . . . . . . . . . . . . . . . . . . . . . . . . .  18
      5.10. Signatures and delegation keys  . . . . . . . . . . . . .  19
-       5.10.1.  Hash-chain based revocation  . . . . . . . . . . . .  19
+       5.10.1.  Hash-chain based revocation  . . . . . . . . . . . .  20
        5.10.2.  ECDSA signature and public key format  . . . . . . .  20
      5.11. Capabilities  . . . . . . . . . . . . . . . . . . . . . .  20
    6.  RAINS Protocol Definition . . . . . . . . . . . . . . . . . .  20
@@ -93,23 +93,23 @@ Table of Contents
    8.  Deployment Considerations . . . . . . . . . . . . . . . . . .  20
      8.1.  On Confidentiality and Integrity Protection . . . . . . .  20
      8.2.  Authority Signer Interface  . . . . . . . . . . . . . . .  20
-     8.3.  Client Resolver Interfaces  . . . . . . . . . . . . . . .  20
-     8.4.  Translation between RAINS and DNS . . . . . . . . . . . .  20
+     8.3.  Client Resolver Interfaces  . . . . . . . . . . . . . . .  21
+     8.4.  Translation between RAINS and DNS . . . . . . . . . . . .  21
      8.5.  Rendering RAINS messages as JSON for debugging  . . . . .  21
    9.  Experimental Design and Evaluation  . . . . . . . . . . . . .  21
    10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  21
    11. Security Considerations . . . . . . . . . . . . . . . . . . .  21
    12. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  21
-   13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  21
-     13.1.  Normative References . . . . . . . . . . . . . . . . . .  21
+   13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  22
+     13.1.  Normative References . . . . . . . . . . . . . . . . . .  22
      13.2.  Informative References . . . . . . . . . . . . . . . . .  22
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  22
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  23
 
 
 
 
 
-Trammell                Expires February 17, 2017               [Page 2]
+Trammell                Expires February 23, 2017               [Page 2]
 
 Internet-Draft                    RAINS                      August 2016
 
@@ -165,7 +165,7 @@ Internet-Draft                    RAINS                      August 2016
 
 
 
-Trammell                Expires February 17, 2017               [Page 3]
+Trammell                Expires February 23, 2017               [Page 3]
 
 Internet-Draft                    RAINS                      August 2016
 
@@ -221,7 +221,7 @@ Internet-Draft                    RAINS                      August 2016
 
 
 
-Trammell                Expires February 17, 2017               [Page 4]
+Trammell                Expires February 23, 2017               [Page 4]
 
 Internet-Draft                    RAINS                      August 2016
 
@@ -277,7 +277,7 @@ Internet-Draft                    RAINS                      August 2016
 
 
 
-Trammell                Expires February 17, 2017               [Page 5]
+Trammell                Expires February 23, 2017               [Page 5]
 
 Internet-Draft                    RAINS                      August 2016
 
@@ -333,7 +333,7 @@ Internet-Draft                    RAINS                      August 2016
 
 
 
-Trammell                Expires February 17, 2017               [Page 6]
+Trammell                Expires February 23, 2017               [Page 6]
 
 Internet-Draft                    RAINS                      August 2016
 
@@ -389,7 +389,7 @@ Internet-Draft                    RAINS                      August 2016
 
 
 
-Trammell                Expires February 17, 2017               [Page 7]
+Trammell                Expires February 23, 2017               [Page 7]
 
 Internet-Draft                    RAINS                      August 2016
 
@@ -445,7 +445,7 @@ Internet-Draft                    RAINS                      August 2016
 
 
 
-Trammell                Expires February 17, 2017               [Page 8]
+Trammell                Expires February 23, 2017               [Page 8]
 
 Internet-Draft                    RAINS                      August 2016
 
@@ -501,7 +501,7 @@ Internet-Draft                    RAINS                      August 2016
 
 
 
-Trammell                Expires February 17, 2017               [Page 9]
+Trammell                Expires February 23, 2017               [Page 9]
 
 Internet-Draft                    RAINS                      August 2016
 
@@ -557,7 +557,7 @@ Internet-Draft                    RAINS                      August 2016
 
 
 
-Trammell                Expires February 17, 2017              [Page 10]
+Trammell                Expires February 23, 2017              [Page 10]
 
 Internet-Draft                    RAINS                      August 2016
 
@@ -613,7 +613,7 @@ Internet-Draft                    RAINS                      August 2016
 
 
 
-Trammell                Expires February 17, 2017              [Page 11]
+Trammell                Expires February 23, 2017              [Page 11]
 
 Internet-Draft                    RAINS                      August 2016
 
@@ -669,7 +669,7 @@ Internet-Draft                    RAINS                      August 2016
 
 
 
-Trammell                Expires February 17, 2017              [Page 12]
+Trammell                Expires February 23, 2017              [Page 12]
 
 Internet-Draft                    RAINS                      August 2016
 
@@ -725,7 +725,7 @@ Internet-Draft                    RAINS                      August 2016
 
 
 
-Trammell                Expires February 17, 2017              [Page 13]
+Trammell                Expires February 23, 2017              [Page 13]
 
 Internet-Draft                    RAINS                      August 2016
 
@@ -781,7 +781,7 @@ Internet-Draft                    RAINS                      August 2016
 
 
 
-Trammell                Expires February 17, 2017              [Page 14]
+Trammell                Expires February 23, 2017              [Page 14]
 
 Internet-Draft                    RAINS                      August 2016
 
@@ -837,7 +837,7 @@ Internet-Draft                    RAINS                      August 2016
 
 
 
-Trammell                Expires February 17, 2017              [Page 15]
+Trammell                Expires February 23, 2017              [Page 15]
 
 Internet-Draft                    RAINS                      August 2016
 
@@ -887,16 +887,33 @@ Internet-Draft                    RAINS                      August 2016
    answers to this query may contain the token instead of the query
    itself.
 
-   TODO: how do query options work?
+   The value of the query-opts (30) key, if present, is an array of
+   integers in priority order of the querier's preferences in tradeoffs
+   in answering the query.
 
 
 
-
-
-Trammell                Expires February 17, 2017              [Page 16]
+Trammell                Expires February 23, 2017              [Page 16]
 
 Internet-Draft                    RAINS                      August 2016
 
+
+   TODO: work on these a bit more.  Does this mean we're giving up on
+   the unified symbol table?
+
+   +------+-----------------------------------------------------------+
+   | Code | Description                                               |
+   +------+-----------------------------------------------------------+
+   |    1 | Minimize end-to-end latency                               |
+   |      |                                                           |
+   |    2 | Minimize last-hop answer size (bandwidth)                 |
+   |      |                                                           |
+   |    3 | Minimize information leakage beyond oracle                |
+   |      |                                                           |
+   |    4 | No information leakage beyond oracle: cached answers only |
+   |      |                                                           |
+   |    5 | Expired assertions are acceptable                         |
+   +------+-----------------------------------------------------------+
 
 5.8.  Notification Message Section body
 
@@ -929,30 +946,18 @@ Internet-Draft                    RAINS                      August 2016
    displayed to an administrator to help debug the issue identified by
    the negotiation.
 
+
+
+
+Trammell                Expires February 23, 2017              [Page 17]
+
+Internet-Draft                    RAINS                      August 2016
+
+
 5.9.  Object
 
    Objects are encoded as arrays in CBOR, where the first element is the
    type of the object, encoded as an integer in the following table:
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Trammell                Expires February 17, 2017              [Page 17]
-
-Internet-Draft                    RAINS                      August 2016
-
 
    +------+--------------+---------------------------------------------+
    | Code | Name         | Description                                 |
@@ -997,18 +1002,18 @@ Internet-Draft                    RAINS                      August 2016
 
    A delegation (23) object contains the public key used to generate
    signatures on assertions in a named zone, and by which a delegation
+
+
+
+Trammell                Expires February 23, 2017              [Page 18]
+
+Internet-Draft                    RAINS                      August 2016
+
+
    of a name within a zone to a subordinate zone may be verified.  It is
    represented as an N-element array.  The second element is a signature
    algorithm identifier as in Section 5.10.  Additional elements are as
    defined in Section 5.10 for the given algorithm identifier.
-
-
-
-
-Trammell                Expires February 17, 2017              [Page 18]
-
-Internet-Draft                    RAINS                      August 2016
-
 
    A nameset (26) object contains an expression defining which names are
    allowed and which names are disallowed in a given zone.  It is
@@ -1053,18 +1058,18 @@ Internet-Draft                    RAINS                      August 2016
    TODO: determine MTI.  Does everyone signing 384 also have to sign
    256?
 
+
+
+
+Trammell                Expires February 23, 2017              [Page 19]
+
+Internet-Draft                    RAINS                      August 2016
+
+
 5.10.1.  Hash-chain based revocation
 
    TODO: A revocation token can optionally be generated.  To replace an
    assertion, use the next revtoken backward...
-
-
-
-
-Trammell                Expires February 17, 2017              [Page 19]
-
-Internet-Draft                    RAINS                      August 2016
-
 
 5.10.2.  ECDSA signature and public key format
 
@@ -1072,7 +1077,9 @@ Internet-Draft                    RAINS                      August 2016
 
 5.11.  Capabilities
 
-   TODO: URNs naming server capabilities.
+   TODO: URNs naming server capabilities, currently in x-rains
+   namespace.  [XEP0115] style, using SHA256.  Only present capability
+   is "I listen on the RAINS port over TCP".
 
 6.  RAINS Protocol Definition
 
@@ -1103,6 +1110,18 @@ Internet-Draft                    RAINS                      August 2016
    TODO: need to define a way to keep authority servers from needing
    secret keys.
 
+
+
+
+
+
+
+
+Trammell                Expires February 23, 2017              [Page 20]
+
+Internet-Draft                    RAINS                      August 2016
+
+
 8.3.  Client Resolver Interfaces
 
    TODO: note we should add RAINS resolver information to DHCP. do we
@@ -1112,15 +1131,6 @@ Internet-Draft                    RAINS                      August 2016
 8.4.  Translation between RAINS and DNS
 
    TODO: contexts are really hard to wedge into DNS.
-
-
-
-
-
-Trammell                Expires February 17, 2017              [Page 20]
-
-Internet-Draft                    RAINS                      August 2016
-
 
 8.5.  Rendering RAINS messages as JSON for debugging
 
@@ -1157,6 +1167,17 @@ Internet-Draft                    RAINS                      August 2016
    Andrew Sullivan, and Suzanne Woolf for the discussions leading to the
    design of this protocol.
 
+
+
+
+
+
+
+Trammell                Expires February 23, 2017              [Page 21]
+
+Internet-Draft                    RAINS                      August 2016
+
+
 13.  References
 
 13.1.  Normative References
@@ -1170,13 +1191,6 @@ Internet-Draft                    RAINS                      August 2016
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
               <http://www.rfc-editor.org/info/rfc2119>.
-
-
-
-Trammell                Expires February 17, 2017              [Page 21]
-
-Internet-Draft                    RAINS                      August 2016
-
 
    [RFC2782]  Gulbrandsen, A., Vixie, P., and L. Esibov, "A DNS RR for
               specifying the location of services (DNS SRV)", RFC 2782,
@@ -1212,10 +1226,21 @@ Internet-Draft                    RAINS                      August 2016
               BCP 201, RFC 7696, DOI 10.17487/RFC7696, November 2015,
               <http://www.rfc-editor.org/info/rfc7696>.
 
+
+
+
+Trammell                Expires February 23, 2017              [Page 22]
+
+Internet-Draft                    RAINS                      August 2016
+
+
    [RFC7871]  Contavalli, C., van der Gaast, W., Lawrence, D., and W.
               Kumari, "Client Subnet in DNS Queries", RFC 7871,
               DOI 10.17487/RFC7871, May 2016,
               <http://www.rfc-editor.org/info/rfc7871>.
+
+   [XEP0115]  Hildebrand, J., Saint-Andre, P., Troncon, R., and J.
+              Konieczny, "XEP-0115 Entity Capababilities", n.d..
 
 Author's Address
 
@@ -1229,4 +1254,35 @@ Author's Address
 
 
 
-Trammell                Expires February 17, 2017              [Page 22]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Trammell                Expires February 23, 2017              [Page 23]
