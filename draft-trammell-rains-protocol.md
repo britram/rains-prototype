@@ -108,6 +108,14 @@ Messages in the RAINS Protocol are made up of two kinds of elements: Assertion
 and Query. A third type of element, Answer, binds a Query to a set of
 Assertions in response to a Query.
 
+## Namespace Assumptions
+
+TODO: prosify: The RAINS Information Model makes a few assumptions about the
+namespaces in which assertions are made:
+
+- federated namespace with delegation a la DNS (reference?)
+- delegations can be organization-level, or sub-organization-level. an organization level name is one that someone has paid a registrar to place in a registry, and contains additional information about the registrar and the registrant (reference for this terminology?)
+
 ## Assertion
 
 An Assertion is a signed statement about a mapping from a subject name to an
@@ -791,7 +799,8 @@ the revocation token with Null.
 
 ## Capabilities {#cbor-capabilities}
 
-TODO: URNs naming server capabilities. The only one we presently support is "I listen on TCP".
+TODO: URNs naming server capabilities. The only one we presently support is "I
+listen on TCP".
 
 # RAINS Protocol Definition {#protocol-def}
 
@@ -846,11 +855,20 @@ standardization?
 
 # IANA Considerations
 
-The present revision of this document 
+The present revision of this document has no actions for IANA.
 
-The authors have registered the CBOR tag 15309736 to identify RAINS messages in the CBOR tag registry at https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml. 
+The authors have registered the CBOR tag 15309736 to identify RAINS messages
+in the CBOR tag registry at 
+https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml.
 
-The symbol table in this document in {{cbor-symtab}}, the notification code table in {{cbor-notification}}, and the 
+The symbol table in this document in {{cbor-symtab}}, the notification code
+table in {{cbor-notification}}, and the signature algorithm table in 
+{{cbor-signature}} may be candidates for IANA registries in future revisions 
+of this document.
+
+The urn:x-rains namespace used by the RAINS capability mechanism in {{cbor-
+capabilities}} may be a candidate for replacement with an IANA-registered
+namespace in a future revision of this document.
 
 # Security Considerations
 
