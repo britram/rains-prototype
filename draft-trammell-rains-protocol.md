@@ -30,6 +30,13 @@ normative:
     RFC2782:
     RFC3629:
     RFC7049:
+    FIPS-186-3:
+      author:
+        -
+          ins: NIST
+      title: Digital Signature Standard FIPS 186-3
+      date: June 2009
+
 
 informative:
     RFC1035:
@@ -54,9 +61,9 @@ informative:
 This document defines an alternate protocol for Internet name resolution,
 designed as a prototype to facilitate conversation about the evolution or
 replacement of the Domain Name System protocol. It attempts to answer the
-question: "how would we design the DNS knowing what we do now, with current
-computing power at our disposal," on the background of the properties of an
-ideal naming service described in {{I-D.trammell-inip-pins}}.
+question: "how would we design the DNS knowing what we do now," on the
+background of the properties of an ideal naming service described in 
+{{I-D.trammell-inip-pins}}.
 
 --- middle
 
@@ -112,6 +119,14 @@ Messages in the RAINS Protocol are made up of two kinds of elements: Assertion
 and Query. A third type of element, Answer, binds a Query to a set of
 Assertions in response to a Query.
 
+## Namespace Assumptions
+
+TODO: prosify: The RAINS Information Model makes a few assumptions about the
+namespaces in which assertions are made:
+
+- federated namespace with delegation a la DNS (reference?)
+- delegations can be organization-level, or sub-organization-level. an organization level name is one that someone has paid a registrar to place in a registry, and contains additional information about the registrar and the registrant (reference for this terminology?)
+
 ## Assertion
 
 An Assertion is a signed statement about a mapping from a subject name to an
@@ -160,6 +175,10 @@ The Types supported for each assertion are:
   name is not allowed by a valid signed Zone-Nameset expression is taken to be
   invalid, even if it has a valid signature. The details of this type will be
   described in a separate document.
+- Registrar: Information about the organization that caused a Subject name 
+  to exist, for organization-level names.
+- Registrant: Information about the organization responsible for a Subject name, 
+  for organization-level names.
 
 For a given {subject, type} tuple, multiple assertions can be valid at a given
 point in time; the union of the object values of all of these assertions is
@@ -415,6 +434,8 @@ table below:
 | 28   | service-info | Object type: service information for srvname  |
 | 29   | query-opts   | Key: set of query options requested           |
 | 30   | note-data    | Key: additional notification data             |
+| 31   | registrar    | Object type: registrar information            |
+| 32   | registrant   | Object type: registrant information           |
 
 ## Message
 
@@ -634,13 +655,14 @@ value of the note-type key is encoded as an integer as in the following table:
 
 | Code | Description                                                    |
 |-----:|----------------------------------------------------------------|
+| 100  | Connection heartbeat                                           |
 | 400  | Malformed message received                                     |
 | 403  | Inconsistent message received                                  |
 | 404  | No assertion available                                         |
 | 500  | Unspecified server error                                       |
 | 501  | Server not capable                                             |
 
-Note that the status codes are designed to be mnemonically similar to status
+Note that the status codes are chosen to be mnemonically similar to status
 codes for HTTP {{RFC7231}}. Details of the meaning of each status code are
 given in {{protocol-def}}.
 
@@ -663,6 +685,8 @@ the object, encoded as an integer in the following table:
 | 26   | nameset      | Object type: name set expression for zone     |
 | 27   | cert-info    | Object type: certificate information for name |
 | 28   | service-info | Object type: service information for srvname  |
+| 31   | registrar    | Object type: registrar information            |
+| 32   | registrant   | Object type: registrant information           |
 
 A name (19) object contains a name associated with a name as an alias. It is
 represented as a two-element array. The second element is a fully-qualified
@@ -705,32 +729,98 @@ as a UTF-8 string. The third element is a transport port number as a positive
 integer in the range 0-65535. The fourth element is a priority as a positive
 integer, with lower numbers having higher priority.
 
+A registrar (31) object gives the name and other identifying information of
+the registrar (the organization which caused the name to be added to the
+namespace) for organization-level names. It is represented as a UTF-8 string
+containing identifying information chosen by the registrar according to the
+registry's policy.
+
+A registrant (32) object gives information about the registrant of an
+organization-level name. It is represented as a UTF-8 string containing this
+information, with a format chosen by the registrar according to the registry's
+policy.
+
 ## Signatures and delegation keys {#cbor-signature}
 
 RAINS supports multiple signature algorithms and hash functions for signing
 assertions for cryptographic algorithm agility {{RFC7696}}. A RAINS signature
 algorithm identifier specifies the signature algorithm; a hash function for
-generating the HMAC; a method for generating and verifying revocation tokens
-in signatures; and the format of the encodings of the signature values in
-Assertions, Shards, Zones, and Messages, as well as of public key values in
-delegation objects.
+generating the HMAC; a method for generating, verifying, and interpreting hash
+chain tokens in signatures; and the format of the encodings of the signature
+values in Assertions, Shards, Zones, and Messages, as well as of public key
+values in delegation objects.
+
+RAINS signatures have four common elements: the algorithm identifier, a valid-
+since timestamp, a valid-until timestamp, and a hash chain token. Signatures
+are represented as an array of these four tokens followed by additional
+elements containing the signature data itself, according to the algorithm
+identifier.
+
+Valid-since and valid-until timestamps are represented as CBOR integers
+counting seconds since the UNIX epoch UTC, idenfied with tag value 1 and
+encoded as in section 2.4.1 of {{RFC7049}}. A signature MUST have a valid-
+until timestamp. If a signature has no specified valid-since time (i.e., is
+valid from the beginning of time until its valid-until timestamp), the valid-
+since time MAY be null (as in Table 2 in Section 2.3 of {{RFC7049}}).
+
+Hash chain tokens and their use are specified in the appropriate subsection of
+this section for the given algorithm identifier.
+
+TODO: specify exactly how to generate the byte stream to be signed from a
+given section. Thing serialized as CBOR with only the signature to be added,
+its signature-specific elements replaced with Null. Open question: should we
+remove signatures within the contents too? To verify: regenerate the object to be
+signed.
 
 The following algorithms are supported:
 
-| Code | Signatures | Hash/HMAC | Revocation      | Formats            |
-|-----:|------------|-----------|-----------------|--------------------|
-| 2    | ecdsa-256  | sha-256   | {{hash-chain}}  | {{ecdsa-format}}   |
-| 3    | ecdsa-384  | sha-384   | {{hash-chain}}  | {{ecdsa-format}}   |
-
-TODO: determine MTI. Does everyone signing 384 also have to sign 256?
-
-### Hash-chain based revocation {#hash-chain}
-
-TODO: A revocation token can optionally be generated. To replace an assertion, use the next revtoken backward...
+| Code | Signatures | Hash/HMAC | Hash Chain Token       | Format               |
+|-----:|------------|-----------|------------------------|----------------------|
+| 2    | ecdsa-256  | sha-256   | See {{hash-chain-rev}} | See {{ecdsa-format}} |
 
 ### ECDSA signature and public key format {#ecdsa-format}
 
-TODO: base this on {{RFC6605}}, but use raw byte array encoding.
+ECDSA public keys consist of a single value, called "Q" in {{FIPS-186-3}}. Q
+is a simple bit string that represents the uncompressed form of a curve point,
+concatenated together as "x | y". The third element in a RAINS delegation
+object is the Q bit string encoded as a CBOR byte array; RAINS delegation
+objects for ECDSA-256 signatures are therefore represented as the array [23, 2, Q].
+
+ECDSA signatures are a combination of two non-negative integers, called "r"
+and "s" in {{FIPS-186-3}}. A Signature using ECDSA is represented using a six
+element CBOR array, with the fifth element being r represented as a byte array
+as described in Section C.2 of {{FIPS-186-3}}, and the sixth being s
+represented as a byte array as described in Section C.2 of {{FIPS-186-3}}. For
+ECDSA-256 signatures, each integer MUST be represented as a 32-byte array.
+RAINS signatures using ECDSA-256 are therefore the array [2, valid-from,
+valid-until, token, r, s].
+
+ECDSA-256 signatures and public keys use the P-256 curve as defined in {{FIPS-186-3}}.
+
+### Hash-chain based revocation {#hash-chain-rev}
+
+Hash-chain based revocation allows a signature (and the Assertion, Shard, or
+Zone it protects) to be replaced before it expires. To use hash-chain based
+revocation, a signing entity generates a hash chain from a known seed using
+the hash function specified by the signature algorithm in use, and places the
+Nth value derived therefrom in the hash chain revocation token on a signature.
+
+A revocation can be issued by generating a new section and signing it,
+revealing the N-1st value from the hash chain in the revocation token. To
+allow a recipient of a revoked section to verify the revocation, the following
+restrictions on what can replace what apply:
+
+- An Assertion can only be replaced by another Assertion with the same 
+  Subject within the same Context and Zone, containing an Objects array 
+  of the same length containing the same types of Objects. To delete Object 
+  values, those values can be replaced with Null in the replacing Assertion.
+- A Shard can only be replaced by another Shard with an identical shard-range 
+  key, within the same Context and Zone. Incomplete Shards cannot be replaced.
+- A Zone can only be replaced by another Zone with an identical name within 
+  the same Context.
+
+Signing entities can decline to use hash-chain based revocation by replacing
+the revocation token with Null.
 
 ## Capabilities {#cbor-capabilities}
 
@@ -753,6 +843,12 @@ for privacy/latency tradeoffs might go here.
 TODO: add cx--link- and cx--site- link- and site-local contexts.
 
 # Deployment Considerations
+
+## Runtime consistency checking
+
+TODO: note that the mechanisms allow inconsistent information to exist. define
+algorithms for maintaining consistency at any given RAINS server. evaluate
+global inconsistency of these algorithms.
 
 ## On Confidentiality and Integrity Protection
 
@@ -785,11 +881,20 @@ standardization?
 
 # IANA Considerations
 
-The present revision of this document 
+The present revision of this document has no actions for IANA.
 
-The authors have registered the CBOR tag 15309736 to identify RAINS messages in the CBOR tag registry at https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml. 
+The authors have registered the CBOR tag 15309736 to identify RAINS messages
+in the CBOR tag registry at 
+https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml.
 
-The symbol table in this document in {{cbor-symtab}}, the notification code table in {{cbor-notification}}, and the 
+The symbol table in this document in {{cbor-symtab}}, the notification code
+table in {{cbor-notification}}, and the signature algorithm table in 
+{{cbor-signature}} may be candidates for IANA registries in future revisions 
+of this document.
+
+The urn:x-rains namespace used by the RAINS capability mechanism in {{cbor-
+capabilities}} may be a candidate for replacement with an IANA-registered
+namespace in a future revision of this document.
 
 # Security Considerations
 
