@@ -396,46 +396,37 @@ message as a RAINS message.
 ## Symbol Table {#cbor-symtab}
 
 Each CBOR object in a RAINS message is implemented as maps of integer keys to
-values, or arrays whose first value is integer-encoded type information, which
+values, which
 implements a good tradeoff between efficiency of representation and
-flexibility. The meaning of each of these integer keys is given in the symbol
+flexibility. The meaning of each of the integer keys is given in the symbol
 table below:
 
 | Code | Name         | Description                                   |
 |-----:|--------------|-----------------------------------------------|
-| 0    | content      | Key: Content of a message, shard, or zone     |
-| 1    | capabilities | Key: Capabilities of server sending message   |
-| 2    | signatures   | Key: Signatures on a message or section       |
-| 3    | subject-name | Key: Subject name in an assertion             |
-| 4    | subject-zone | Key: Zone name in an assertion                |
-| 5    | query-name   | Key: Qualified subject name in a query        |
-| 6    | context      | Key: Context(s) of an assertion or query      |
-| 7    | objects      | Key: Objects of an assertion                  |
-| 8    | token        | Key: Token for referring to a data item       |
-| 9    | assertion    | Section type: Assertion                       |
-| 10   | shard        | Section type: Shard                           |
-| 11   | shard-range  | Key: Lexical range of Assertions in Shard     |
-| 12   | zone         | Section type: Zone                            |
-| 13   | query        | Section type: Query                           |
-| 14   | query-types  | Key: acceptable object types for query        |
+| 0    | content      | Content of a message, shard, or zone          |
+| 1    | capabilities | Capabilities of server sending message        |
+| 2    | signatures   | Signatures on a message or section            |
+| 3    | subject-name | Subject name in an assertion                  |
+| 4    | subject-zone | Zone name in an assertion                     |
+| 5    | query-name   | Qualified subject name in a query             |
+| 6    | context      | Context(s) of an assertion or query           |
+| 7    | objects      | Objects of an assertion                       |
+| 8    | token        | Token for referring to a data item            |
+| 9    | reserved     | Reserved for future use in RAINS              |
+| 10   | reserved     | Reserved for future use in RAINS              |
+| 11   | shard-range  | Lexical range of Assertions in Shard          |
+| 12   | reserved     | Reserved for future use in RAINS              |
+| 13   | reserved     | Reserved for future use in RAINS              |
+| 14   | query-types  | acceptable object types for query             |
 | 15   | reserved     | Reserved for future use in RAINS              |
 | 16   | reserved     | Reserved for future use in RAINS              |
-| 17   | note-type    | Key: Notification type                        |
-| 18   | notification | Section type: Notification                    |
-| 19   | name         | Object type: name associated with subject     |
+| 17   | note-type    | Notification type                             |
+| 18   | reserved     | Reserved for future use in RAINS              |
+| 19   | reserved     | Reserved for future use in RAINS              |
 | 20   | reserved     | Reserved for future use in RAINS              |
-| 21   | ip6-addr     | Object type: IPv6 address of subject          |
-| 22   | redirection  | Object type: name of zone authority server    |
-| 23   | delegation   | Object type: public key for zone delgation    |
-| 24   | ip4-addr     | Object type: IPv4 address of subject          |
-| 25   | reserved     | Reserved for future use in RAINS              |
-| 26   | nameset      | Object type: name set expression for zone     |
-| 27   | cert-info    | Object type: certificate information for name |
-| 28   | service-info | Object type: service information for srvname  |
-| 29   | query-opts   | Key: set of query options requested           |
-| 30   | note-data    | Key: additional notification data             |
-| 31   | registrar    | Object type: registrar information            |
-| 32   | registrant   | Object type: registrant information           |
+| 21   | reserved     | Reserved for future use in RAINS              |
+| 22   | query-opts   | Set of query options requested                |
+| 23   | note-data    | Additional notification data                  |
 
 ## Message
 
@@ -470,11 +461,11 @@ Section types are as in the following table, taken from {{cbor-symtab}}:
 
 | Code | Name         | Description                                   |
 |-----:|--------------|-----------------------------------------------|
-| 9    | assertion    | Section type: Assertion                       |
-| 10   | shard        | Section type: Shard                           |
-| 12   | zone         | Section type: Zone                            |
-| 13   | query        | Section type: Query                           |
-| 18   | notification | Section type: Notification                    |
+| 1    | assertion    | Assertion (see {{cbor-assertion})             |
+| 2    | shard        | Shard (see {{cbor-shard})                     |
+| 3    | zone         | Zone (see {{cbor-zone}})                      |
+| 4    | query        | Query (see {{cbor-query}})                    |
+| 23   | notification | Notification (see {{cbor-notification}})      |
 
 ## Assertion body {#cbor-assertion}
 
@@ -588,8 +579,8 @@ Zone. I think so. This leads (as with inconsistent Shards) to the question of
 ## Query Message Section body {#cbor-query}
 
 A Query body is a map. Queries MUST contain the query-name (5), context (6),
-and query-type (14) keys. Queries MAY contain the token(8) key and the query-
-opts (30) key.
+and query-type (14) keys. Queries MAY contain the token(8) key and the 
+query-opts (22) key.
 
 The value of the query-name (5) key is a UTF-8 encoded string containing the
 fully qualified name that is the subject of the query
@@ -622,20 +613,18 @@ containing only ['.', 'cx--any-']; i.e. any context acceptable, global context
 preferred.
 
 The value of the query-type (14) key is an array of integers encoding the
-type(s) of objects acceptable in answers to the query. All values in the
-query-type array are treated at equal priority: [21,24] means the querier is
-equally interested in both IPv4 and IPv6 addresses for the query-name.
+type(s) of objects (as in {{cbor-object}}) acceptable in answers to the query.
+All values in the query-type array are treated at equal priority: [2,3] means
+the querier is equally interested in both IPv4 and IPv6 addresses for the
+query-name.
 
 The value of the token (8) key, if present, is either an integer or a UTF-8
 string of maximum byte length 32. Future messages containing answers to this
 query may contain the token instead of the query itself.
 
-The value of the query-opts (30) key, if present, is an array of integers in
+The value of the query-opts (22) key, if present, is an array of integers in
 priority order of the querier's preferences in tradeoffs in answering the
 query.
-
-TODO: work on these a bit more. Does this mean we're giving up on the unified
-symbol table?
 
 | Code | Description                                                    |
 |-----:|----------------------------------------------------------------|
@@ -645,17 +634,22 @@ symbol table?
 | 4    | No information leakage beyond oracle: cached answers only      |
 | 5    | Expired assertions are acceptable                              |
 
+Each oracle is free to determine how to minimize each performance metric
+requested; however, oracles MUST NOT generate queries to other oracles if "no
+information leakage" is specified, and oracles MUST NOT return expired
+assertions unless "expired assertions acceptable" is specified.
 
 ## Notification Message Section body {#cbor-notification}
 
 Notification Message Sections contain information about the operation of the
 RAINS protocol itself. A Notification Message Section body is a map which MUST
-contain the note-type (17) key and MAY contain the note-data (30) key. The
+contain the note-type (17) key and MAY contain the note-data (23) key. The
 value of the note-type key is encoded as an integer as in the following table:
 
 | Code | Description                                                    |
 |-----:|----------------------------------------------------------------|
 | 100  | Connection heartbeat                                           |
+| 399  | Capability hash not understood                                 |
 | 400  | Malformed message received                                     |
 | 403  | Inconsistent message received                                  |
 | 404  | No assertion available                                         |
@@ -666,9 +660,9 @@ Note that the status codes are chosen to be mnemonically similar to status
 codes for HTTP {{RFC7231}}. Details of the meaning of each status code are
 given in {{protocol-def}}.
 
-The value of the note-data (30) key is a UTF-8 encoded string with additional
-information about the notification, intended to be displayed to an
-administrator to help debug the issue identified by the negotiation.
+The value of the note-data (23) key, if present, is a UTF-8 encoded string
+with additional information about the notification, intended to be displayed
+to an administrator to help debug the issue identified by the negotiation.
 
 ## Object {#cbor-object}
 
@@ -677,65 +671,67 @@ the object, encoded as an integer in the following table:
 
 | Code | Name         | Description                                   |
 |-----:|--------------|-----------------------------------------------|
-| 19   | name         | Object type: name associated with subject     |
-| 21   | ip6-addr     | Object type: IPv6 address of subject          |
-| 22   | redirection  | Object type: name of zone authority server    |
-| 23   | delegation   | Object type: public key for zone delgation    |
-| 24   | ip4-addr     | Object type: IPv4 address of subject          |
-| 26   | nameset      | Object type: name set expression for zone     |
-| 27   | cert-info    | Object type: certificate information for name |
-| 28   | service-info | Object type: service information for srvname  |
-| 31   | registrar    | Object type: registrar information            |
-| 32   | registrant   | Object type: registrant information           |
+| 1    | name         | name associated with subject                  |
+| 2    | ip6-addr     | IPv6 address of subject                       |
+| 3    | ip4-addr     | IPv4 address of subject                       |
+| 4    | redirection  | name of zone authority server                 |
+| 5    | delegation   | public key for zone delgation                 |
+| 6    | nameset      | name set expression for zone                  |
+| 7    | cert-info    | certificate information for name              |
+| 8    | service-info | service information for srvname               |
+| 9    | registrar    | registrar information                         |
+| 10   | registrant   | registrant information                        |
+| 11   | reserved     | Reserved for future use in RAINS              |
+| 12   | reserved     | Reserved for future use in RAINS              |
 
-A name (19) object contains a name associated with a name as an alias. It is
+A name (1) object contains a name associated with a name as an alias. It is
 represented as a two-element array. The second element is a fully-qualified
 name as a UTF-8 encoded string.
 
-An ip6-addr (21) object contains an IPv6 address associated with a name. It is
+An ip6-addr (2) object contains an IPv6 address associated with a name. It is
 represented as a two element array. The second element is a byte array of
 length 16 containing an IPv6 address in network byte order.
 
-An ip4-addr (24) object contains an IPv4 address associated with a name. It is
+An ip4-addr (3) object contains an IPv4 address associated with a name. It is
 represented as a two element array. The second element is a byte array of
 length 4 containing an IPv4 address in network byte order.
 
-A redirection (22) object contains the fully-qualified name of a RAINS
+A redirection (4) object contains the fully-qualified name of a RAINS
 authority server for a named zone. It is represented as a two-element array.
 The second element is a fully-qualified name of an RAINS authority server as a
 UTF-8 encoded string.
 
-A delegation (23) object contains the public key used to generate signatures
+A delegation (5) object contains the public key used to generate signatures
 on assertions in a named zone, and by which a delegation of a name within a
 zone to a subordinate zone may be verified. It is represented as an N-element
 array. The second element is a signature algorithm identifier as in 
 {{cbor-signature}}. Additional elements are as defined in {{cbor-signature}} 
 for the given algorithm identifier.
 
-A nameset (26) object contains an expression defining which names are allowed
+A nameset (6) object contains an expression defining which names are allowed
 and which names are disallowed in a given zone. It is represented as an N-
 element array, as defined in a future draft-trammell-rains-nameset.
 
-A cert-info (27) object contains an expression binding a certificate or
+A cert-info (7) object contains an expression binding a certificate or
 certificate authority to a name, such that connections to the name must either
 use the bound certificate or a certificate signed by a bound authority. It is
 represented as an N-element array, as defined in a future 
 draft-trammell-rains-cert-info.
 
-A service-info (28) object gives information about a named service. Services
+A service-info (8) object gives information about a named service. Services
 are named as in {{RFC2782}}. It is represented as a four-element array. The
 second element is a fully-qualified name of a host providing the named service
 as a UTF-8 string. The third element is a transport port number as a positive
 integer in the range 0-65535. The fourth element is a priority as a positive
 integer, with lower numbers having higher priority.
 
-A registrar (31) object gives the name and other identifying information of
+A registrar (9) object gives the name and other identifying information of
 the registrar (the organization which caused the name to be added to the
 namespace) for organization-level names. It is represented as a UTF-8 string
 containing identifying information chosen by the registrar according to the
 registry's policy.
 
-A registrant (32) object gives information about the registrant of an
+A registrant (10) object gives information about the registrant of an
 organization-level name. It is represented as a UTF-8 string containing this
 information, with a format chosen by the registrar according to the registry's
 policy.
@@ -752,7 +748,7 @@ values in delegation objects.
 
 RAINS signatures have four common elements: the algorithm identifier, a valid-
 since timestamp, a valid-until timestamp, and a hash chain token. Signatures
-are represented as an array of these four tokens followed by additional
+are represented as an array of these four values followed by additional
 elements containing the signature data itself, according to the algorithm
 identifier.
 
@@ -766,36 +762,53 @@ since time MAY be null (as in Table 2 in Section 2.3 of {{RFC7049}}).
 Hash chain tokens and their use are specified in the appropriate subsection of
 this section for the given algorithm identifier.
 
-TODO: specify exactly how to generate the byte stream to be signed from a
-given section. Thing serialized as CBOR with only the signature to be added,
-its signature-specific elements replaced with Null. Open question: should we
-remove signatures within the contents too? To verify: regenerate the object to be
-signed.
+Signatures in RAINS are generated over a normalized serialized CBOR object (a
+Message; or an Assertion, Shard, or Zone section body). To normalize and
+serialize an object for sigining or verifying:
+
+- Remove all signatures from the object.
+- Add a new "blank" signature to the object, containing Null in the place 
+  of any elements containing signature data. 
+- Serialize the object, emitting all keys in CBOR maps in ascending numerical
+  order. Note that when serializing anything with a Content array, the order 
+  of the content array is preserved. If the serialized object is a Message, 
+  it should be tagged with the RAINS tag.
+- Generate a signature on the resulting byte stream according to the 
+  algorithm selected, and fill the resulting values into the "blank" 
+  signature; or verify the signature of the resulting byte stream according 
+  to the algorithm selected.
 
 The following algorithms are supported:
 
-| Code | Signatures | Hash/HMAC | Hash Chain Token       | Format               |
-|-----:|------------|-----------|------------------------|----------------------|
-| 2    | ecdsa-256  | sha-256   | See {{hash-chain-rev}} | See {{ecdsa-format}} |
+| Code | Signatures | Hash/HMAC | Format               | Token                  |
+|-----:|------------|-----------|----------------------|------------------------|
+| 2    | ecdsa-256  | sha-256   | See {{ecdsa-format}} | See {{hash-chain-rev}} |
+| 3    | ecdsa-384  | sha-384   | See {{ecdsa-format}} | See {{hash-chain-rev}} |
 
 ### ECDSA signature and public key format {#ecdsa-format}
 
 ECDSA public keys consist of a single value, called "Q" in {{FIPS-186-3}}. Q
 is a simple bit string that represents the uncompressed form of a curve point,
 concatenated together as "x | y". The third element in a RAINS delegation
-object is the Q bit string encoded as a CBOR byte array; RAINS delegation
-objects for ECDSA-256 signatures are therefore represented as the array [23, 2, Q].
+object is the Q bit string encoded as a CBOR byte array. RAINS delegation
+objects for ECDSA-256 public keys are therefore represented as the array 
+[5, 2, Q]; and for ECDSA-384 public keys as [5, 3, Q].
 
 ECDSA signatures are a combination of two non-negative integers, called "r"
 and "s" in {{FIPS-186-3}}. A Signature using ECDSA is represented using a six
 element CBOR array, with the fifth element being r represented as a byte array
 as described in Section C.2 of {{FIPS-186-3}}, and the sixth being s
 represented as a byte array as described in Section C.2 of {{FIPS-186-3}}. For
-ECDSA-256 signatures, each integer MUST be represented as a 32-byte array.
+ECDSA-256 signatures, each integer MUST be represented as a 32-byte array. For
+ECDSA-384 signatures, each integer MUST be represented as a 48-byte array.
 RAINS signatures using ECDSA-256 are therefore the array [2, valid-from,
+valid-until, token, r, s]; and for ECDSA-384 the array [3, valid-from,
 valid-until, token, r, s].
 
 ECDSA-256 signatures and public keys use the P-256 curve as defined in {{FIPS-186-3}}.
+ECDSA-384 signatures and public keys use the P-384 curve as defined in {{FIPS-186-3}}.
+
+All RAINS servers MUST implement ECDSA-256 and ECDSA-384.
 
 ### Hash-chain based revocation {#hash-chain-rev}
 
@@ -824,9 +837,24 @@ the revocation token with Null.
 
 ## Capabilities {#cbor-capabilities}
 
-TODO: URNs naming server capabilities, currently in x-rains namespace.
-{{XEP0115}} style, using SHA256. Only present capability is "I listen on the
-RAINS port over TCP".
+When a RAINS server or client sends the first message in a stream to a peer, it MAY expose optional
+capabilities to its peer using the capabilities (1) key. This key contains either:
+
+- an array of uniform resource names specifying capabilities supported by the sending server, taken from the table below, with each name encoded as a UTF-8 string.
+- a SHA-256 hash of the CBOR byte stream derived from normalizing such an array by sorting it in lexicographically increasing order, then serializing it.
+
+This mechanism is inspired by {{XEP0115}}, and is intended to be used to
+reduce the overhead in exposing common sets of capabilities. Each RAINS server
+can cache a set of recently-seen or common hashes, and only request the full
+URN set (using notification code 399) on a cache miss.
+
+The following URNs are presently defined; other URNs will specify future
+optional features, support for alternate transport protocols and new signature
+algorithms, etc.
+
+| URN                | Meaning                                               |
+|--------------------|-------------------------------------------------------|
+| urn:x-rains:tcpsrv | Listens for TCP connections from other RAINS servers. |
 
 # RAINS Protocol Definition {#protocol-def}
 
