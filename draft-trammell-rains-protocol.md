@@ -26,9 +26,12 @@ author:
 
 normative:
     I-D.trammell-inip-pins:
+    RFC0793:
     RFC2119:
     RFC2782:
     RFC3629:
+    RFC4727:
+    RFC5246:
     RFC7049:
     FIPS-186-3:
       author:
@@ -37,9 +40,11 @@ normative:
       title: Digital Signature Standard FIPS 186-3
       date: June 2009
 
-
 informative:
+    I-D.hoffman-dns-over-http:
     RFC1035:
+    RFC5226:
+    RFC5905:
     RFC6605:
     RFC7231:
     RFC7696:
@@ -77,17 +82,8 @@ TODO: why does it exist
 
 # Terminology
 
-TODO
-
-2119ify!
-
-- assertion
-
-- authority
-
-- querier
-
-- context
+The terms MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY, when they appear in
+all-capitals, are to be interpreted as defined in {{RFC2119}}.
 
 # Architecture
 
@@ -119,13 +115,20 @@ Messages in the RAINS Protocol are made up of two kinds of elements: Assertion
 and Query. A third type of element, Answer, binds a Query to a set of
 Assertions in response to a Query.
 
+The information model in this section omits information elements required by
+the resolution mechanism itself; these are defined in more detail in 
+{{cbor}} and {{protocol-def}}.
+
 ## Namespace Assumptions
 
 TODO: prosify: The RAINS Information Model makes a few assumptions about the
 namespaces in which assertions are made:
 
 - federated namespace with delegation a la DNS (reference?)
-- delegations can be organization-level, or sub-organization-level. an organization level name is one that someone has paid a registrar to place in a registry, and contains additional information about the registrar and the registrant (reference for this terminology?)
+- delegations can be organization-level, or sub-organization-level. an
+  organization level name is one that someone has paid a registrar to place in
+  a registry, and contains additional information about the registrar and the
+  registrant (reference for this terminology?)
 
 ## Assertion
 
@@ -213,7 +216,7 @@ examples illustrate how context works:
   for inf.ethz.ch. Here, the context serves simply as a marker, without enabling
   an alternate signature chain: note that the name simplon.cab.inf.ethz.ch can
   be validly signed by the authority for inf.ethz.ch if no delegation exists
-  for cab.inf.ethz.ch. but simply marks this assertion as internal. This
+  for cab.inf.ethz.ch. The context simply marks this assertion as internal. This
   allows a client making requests of local names to know they are local, and
   for local resolvers to manage visibility of assertions outside the
   enterprise: explicit context makes accidental leakage of both queries and
@@ -385,7 +388,7 @@ name is illegal within the zone.
 A query is taken to have an inconclusive answer when no answer returns to the
 querier before the query's Valid-Until time.
 
-# Data Model
+# Data Model {#cbor}
 
 The RAINS data model is a relatively straightforward mapping of the
 information model in {{information-model}} to the Concise Binary Object
@@ -401,32 +404,32 @@ implements a good tradeoff between efficiency of representation and
 flexibility. The meaning of each of the integer keys is given in the symbol
 table below:
 
-| Code | Name         | Description                                   |
-|-----:|--------------|-----------------------------------------------|
-| 0    | content      | Content of a message, shard, or zone          |
-| 1    | capabilities | Capabilities of server sending message        |
-| 2    | signatures   | Signatures on a message or section            |
-| 3    | subject-name | Subject name in an assertion                  |
-| 4    | subject-zone | Zone name in an assertion                     |
-| 5    | query-name   | Qualified subject name in a query             |
-| 6    | context      | Context(s) of an assertion or query           |
-| 7    | objects      | Objects of an assertion                       |
-| 8    | token        | Token for referring to a data item            |
-| 9    | reserved     | Reserved for future use in RAINS              |
-| 10   | reserved     | Reserved for future use in RAINS              |
-| 11   | shard-range  | Lexical range of Assertions in Shard          |
-| 12   | reserved     | Reserved for future use in RAINS              |
-| 13   | reserved     | Reserved for future use in RAINS              |
-| 14   | query-types  | acceptable object types for query             |
-| 15   | reserved     | Reserved for future use in RAINS              |
-| 16   | reserved     | Reserved for future use in RAINS              |
-| 17   | note-type    | Notification type                             |
-| 18   | reserved     | Reserved for future use in RAINS              |
-| 19   | reserved     | Reserved for future use in RAINS              |
-| 20   | reserved     | Reserved for future use in RAINS              |
-| 21   | reserved     | Reserved for future use in RAINS              |
-| 22   | query-opts   | Set of query options requested                |
-| 23   | note-data    | Additional notification data                  |
+| Code | Name           | Description                                   |
+|-----:|----------------|-----------------------------------------------|
+| 0    | content        | Content of a message, shard, or zone          |
+| 1    | capabilities   | Capabilities of server sending message        |
+| 2    | signatures     | Signatures on a message or section            |
+| 3    | subject-name   | Subject name in an assertion                  |
+| 4    | subject-zone   | Zone name in an assertion                     |
+| 5    | query-name     | Qualified subject name in a query             |
+| 6    | context        | Context of an assertion                       |
+| 7    | objects        | Objects of an assertion                       |
+| 8    | token          | Token for referring to a data item            |
+| 9    | reserved       | Reserved for future use in RAINS              |
+| 10   | reserved       | Reserved for future use in RAINS              |
+| 11   | shard-range    | Lexical range of Assertions in Shard          |
+| 12   | reserved       | Reserved for future use in RAINS              |
+| 13   | query-contexts | Reserved for future use in RAINS              |
+| 14   | query-types    | acceptable object types for query             |
+| 15   | reserved       | Reserved for future use in RAINS              |
+| 16   | reserved       | Reserved for future use in RAINS              |
+| 17   | note-type      | Notification type                             |
+| 18   | reserved       | Reserved for future use in RAINS              |
+| 19   | reserved       | Reserved for future use in RAINS              |
+| 20   | reserved       | Reserved for future use in RAINS              |
+| 21   | reserved       | Reserved for future use in RAINS              |
+| 22   | query-opts     | Set of query options requested                |
+| 23   | note-data      | Additional notification data                  |
 
 ## Message
 
@@ -442,12 +445,13 @@ A Message map MAY contain a capabilities (1) key, whose value is described in
 {#cbor-capabilities}.
 
 A Message map MAY contain a signatures (2) key, whose value is an array of
-Signatures as defined in {{cbor-signature}}. 
+Signatures over the entire message as defined in {{cbor-signature}}, to be verified against the 
 
 A Message map MAY contain a token (8) key, whose value is either an integer or
 a UTF-8 string of maximum byte length 32. The token key may be used to refer
 to the message in future messages, or may refer to a past message or query by
-token.
+token. If the message is in response to a message or query containing a token,
+the message MUST contain that token.
 
 ## Message Section header
 
@@ -546,8 +550,7 @@ complete within the range described in its value: a mapping for a (subject-
 name, object-type) pair that should be between the two values given in the
 range but is not is asserted to not exist. Lexicographic sorting is done on
 subject names by ordering Unicode codepoints in ascending order; ordering on
-object types is done via their code values in the symbol table in {{cbor-
-symtab}}. 
+object types is done via their code values in {{cbor-object}} in ascending order
 
 The shard-range value MUST be a four element array of (subject-name A, object-
 type A, subject-name B, object type B) where A does not necessarily need to
@@ -578,14 +581,14 @@ Zone. I think so. This leads (as with inconsistent Shards) to the question of
 
 ## Query Message Section body {#cbor-query}
 
-A Query body is a map. Queries MUST contain the query-name (5), context (6),
+A Query body is a map. Queries MUST contain the query-name (5), query-contexts (13),
 and query-type (14) keys. Queries MAY contain the token(8) key and the 
 query-opts (22) key.
 
 The value of the query-name (5) key is a UTF-8 encoded string containing the
-fully qualified name that is the subject of the query
+fully qualified name that is the subject of the query.
 
-The value of the context (6) key is an allowable context expression, as an
+The value of the query-contexts (13) key is an allowable context expression, as an
 array of context names as UTF-8 encoded strings. The allowable context
 expression is evaluated in-order, as follows:
 
@@ -619,8 +622,8 @@ the querier is equally interested in both IPv4 and IPv6 addresses for the
 query-name.
 
 The value of the token (8) key, if present, is either an integer or a UTF-8
-string of maximum byte length 32. Future messages containing answers to this
-query may contain the token instead of the query itself.
+string of maximum byte length 32. Future messages or notifications containing
+answers to this query MUST contain this token, if present.
 
 The value of the query-opts (22) key, if present, is an array of integers in
 priority order of the querier's preferences in tradeoffs in answering the
@@ -633,17 +636,18 @@ query.
 | 3    | Minimize information leakage beyond oracle                     |
 | 4    | No information leakage beyond oracle: cached answers only      |
 | 5    | Expired assertions are acceptable                              |
+| 6    | Enable token tracing                                           |
 
-Each oracle is free to determine how to minimize each performance metric
-requested; however, oracles MUST NOT generate queries to other oracles if "no
-information leakage" is specified, and oracles MUST NOT return expired
+Each server is free to determine how to minimize each performance metric
+requested; however, servers MUST NOT generate queries to other servers if "no
+information leakage" is specified, and servers MUST NOT return expired
 assertions unless "expired assertions acceptable" is specified.
 
 ## Notification Message Section body {#cbor-notification}
 
 Notification Message Sections contain information about the operation of the
 RAINS protocol itself. A Notification Message Section body is a map which MUST
-contain the note-type (17) key and MAY contain the note-data (23) key. The
+contain the note-type (17) key and MAY contain the token (8) and note-data (23) keys. The
 value of the note-type key is encoded as an integer as in the following table:
 
 | Code | Description                                                    |
@@ -653,12 +657,17 @@ value of the note-type key is encoded as an integer as in the following table:
 | 400  | Malformed message received                                     |
 | 403  | Inconsistent message received                                  |
 | 404  | No assertion available                                         |
+| 413  | Message too large                                              |
 | 500  | Unspecified server error                                       |
 | 501  | Server not capable                                             |
 
 Note that the status codes are chosen to be mnemonically similar to status
 codes for HTTP {{RFC7231}}. Details of the meaning of each status code are
 given in {{protocol-def}}.
+
+The value of the token (8) key, if present, is either an integer or a UTF-8
+string of maximum byte length 32. If the notification is in response to a
+message or query containing a token, the notification MUST contain that token.
 
 The value of the note-data (23) key, if present, is a UTF-8 encoded string
 with additional information about the notification, intended to be displayed
@@ -669,20 +678,20 @@ to an administrator to help debug the issue identified by the negotiation.
 Objects are encoded as arrays in CBOR, where the first element is the type of
 the object, encoded as an integer in the following table:
 
-| Code | Name         | Description                                   |
-|-----:|--------------|-----------------------------------------------|
-| 1    | name         | name associated with subject                  |
-| 2    | ip6-addr     | IPv6 address of subject                       |
-| 3    | ip4-addr     | IPv4 address of subject                       |
-| 4    | redirection  | name of zone authority server                 |
-| 5    | delegation   | public key for zone delgation                 |
-| 6    | nameset      | name set expression for zone                  |
-| 7    | cert-info    | certificate information for name              |
-| 8    | service-info | service information for srvname               |
-| 9    | registrar    | registrar information                         |
-| 10   | registrant   | registrant information                        |
-| 11   | reserved     | Reserved for future use in RAINS              |
-| 12   | reserved     | Reserved for future use in RAINS              |
+| Code  | Name         | Description                                   |
+|------:|--------------|-----------------------------------------------|
+| 1     | name         | name associated with subject                  |
+| 2     | ip6-addr     | IPv6 address of subject                       |
+| 3     | ip4-addr     | IPv4 address of subject                       |
+| 4     | redirection  | name of zone authority server                 |
+| 5     | delegation   | public key for zone delgation                 |
+| 6     | nameset      | name set expression for zone                  |
+| 7     | cert-info    | certificate information for name              |
+| 8     | service-info | service information for srvname               |
+| 9     | registrar    | registrar information                         |
+| 10    | registrant   | registrant information                        |
+| 11    | infrakey     | public key for RAINS infrastructure           |
+| 12-23 | reserved     | Reserved for future use in RAINS              |
 
 A name (1) object contains a name associated with a name as an alias. It is
 represented as a two-element array. The second element is a fully-qualified
@@ -710,13 +719,12 @@ for the given algorithm identifier.
 
 A nameset (6) object contains an expression defining which names are allowed
 and which names are disallowed in a given zone. It is represented as an N-
-element array, as defined in a future draft-trammell-rains-nameset.
+element array, as defined in {{cbor-nameset}}
 
 A cert-info (7) object contains an expression binding a certificate or
 certificate authority to a name, such that connections to the name must either
 use the bound certificate or a certificate signed by a bound authority. It is
-represented as an N-element array, as defined in a future 
-draft-trammell-rains-cert-info.
+represented as an N-element array, as defined in {{cbor-certinfo}}.
 
 A service-info (8) object gives information about a named service. Services
 are named as in {{RFC2782}}. It is represented as a four-element array. The
@@ -736,7 +744,12 @@ organization-level name. It is represented as a UTF-8 string containing this
 information, with a format chosen by the registrar according to the registry's
 policy.
 
-## Signatures and delegation keys {#cbor-signature}
+An infrakey (11) object contains the public key used to generate signatures on
+messages by a named RAINS server, by which a RAINS message signature may be
+verified by a receiver. It is identical in structure to a delegation object,
+as defined in {{cbor-signature}}.
+
+## Signatures, delegation keys, and RAINS infrastructure keys {#cbor-signature}
 
 RAINS supports multiple signature algorithms and hash functions for signing
 assertions for cryptographic algorithm agility {{RFC7696}}. A RAINS signature
@@ -753,7 +766,7 @@ elements containing the signature data itself, according to the algorithm
 identifier.
 
 Valid-since and valid-until timestamps are represented as CBOR integers
-counting seconds since the UNIX epoch UTC, idenfied with tag value 1 and
+counting seconds since the UNIX epoch UTC, identified with tag value 1 and
 encoded as in section 2.4.1 of {{RFC7049}}. A signature MUST have a valid-
 until timestamp. If a signature has no specified valid-since time (i.e., is
 valid from the beginning of time until its valid-until timestamp), the valid-
@@ -810,6 +823,8 @@ ECDSA-384 signatures and public keys use the P-384 curve as defined in {{FIPS-18
 
 All RAINS servers MUST implement ECDSA-256 and ECDSA-384.
 
+[EDITOR'S NOTE: make sure this is appropriately modern, check work in CURDLE.]
+
 ### Hash-chain based revocation {#hash-chain-rev}
 
 Hash-chain based revocation allows a signature (and the Assertion, Shard, or
@@ -835,13 +850,26 @@ restrictions on what can replace what apply:
 Signing entities can decline to use hash-chain based revocation by replacing
 the revocation token with Null.
 
+## Certificate information format {#cbor-certinfo}
+
+[EDITOR'S NOTE: TODO. this should be largely in line with TLSA; determine if there's
+any guidance from implementation experience we should consider, as well.]
+
+## Name expression format {#cbor-nameset}
+
+[EDITOR'S NOTE: Write me.]
+
 ## Capabilities {#cbor-capabilities}
 
 When a RAINS server or client sends the first message in a stream to a peer, it MAY expose optional
 capabilities to its peer using the capabilities (1) key. This key contains either:
 
-- an array of uniform resource names specifying capabilities supported by the sending server, taken from the table below, with each name encoded as a UTF-8 string.
-- a SHA-256 hash of the CBOR byte stream derived from normalizing such an array by sorting it in lexicographically increasing order, then serializing it.
+- an array of uniform resource names specifying capabilities supported by the
+  sending server, taken from the table below, with each name encoded as a
+  UTF-8 string.
+- a SHA-256 hash of the CBOR byte stream derived from normalizing such an
+  array by sorting it in lexicographically increasing order, then serializing
+  it.
 
 This mechanism is inspired by {{XEP0115}}, and is intended to be used to
 reduce the overhead in exposing common sets of capabilities. Each RAINS server
@@ -852,17 +880,185 @@ The following URNs are presently defined; other URNs will specify future
 optional features, support for alternate transport protocols and new signature
 algorithms, etc.
 
-| URN                | Meaning                                               |
-|--------------------|-------------------------------------------------------|
-| urn:x-rains:tcpsrv | Listens for TCP connections from other RAINS servers. |
+| URN                | Meaning                                                           |
+|--------------------|-------------------------------------------------------------------|
+| urn:x-rains:tlssrv | Listens for connections on TLS over TCP from other RAINS servers. |
+
+Since there are only two defined capabilities at this time, RAINS servers can
+be implemented with two hard-coded hashes to determine whether a peer is
+listening or not. The hash presented by a server supporting urn:x-rains:tlssrv
+is e5365a09be554ae55b855f15264dbc837b04f5831daeb321359e18cdabab5745; the hash
+presented by a server supporting no capabilities is
+76be8b528d0075f7aae98d6fa57a6d3c83ae480a8469e668d7b0af968995ac71.
+
+A RAINS server MUST NOT assume that a peer server supports a given capability
+unless it has received a message containing that capability from that server.
+An exception are the capabilities indicating that a server listens for
+connections using a given transport protocol; servers and clients can also
+learn this information from RAINS itself (given a redirection assertion for a
+named zone) or from external configuration values.
 
 # RAINS Protocol Definition {#protocol-def}
 
-TODO: note CBOR is self-framing so we can use any transport we want. define TLS 1.3 with TFO for now, note nice fit atop QUIC.
+As noted in {{cbor}}, RAINS is a message-exchange protocol that uses
+CBOR {{RFC7049}} as its framing. Since CBOR is self-framing -- a CBOR parser
+can determine when a CBOR object is complete at the point at which it has read
+its final byte -- RAINS requires no external framing. It can therefore run
+over any streaming, multistreaming, or message-oriented transport protocol. In
+order to protect query confidentiality, and support rapid deployment over a
+ubiquitously implemented transport, RAINS is defined in this document to run
+over persistent TLS 1.2 connections {{RFC5246}} over TCP {{RFC0793}} with
+mutual authentication. The TLS certificates of RAINS server peers can be
+verified as specified in the certificate assertions for those servers.
 
-TODO: note further that signatures are prime in RAINS, so it really doesn't matter where servers exist.
+RAINS servers MUST support this transport; future transports can be negotiated
+using the capabilities mechanism after bootstrapping using TLS 1.2. As RAINS
+is an experimental protocol, RAINS servers listen on port 1022 {{RFC4727}} for
+connections from other RAINS servers and clients. RAINS servers should strive
+to keep connections open to peer servers, unless it is clear that no future
+messages will be exchanged with those peers, or in the face of resource
+limitations at either peer. If a RAINS server needs to send a message to
+another RAINS server to which it does not have an open connection, it attempts
+to open a connection with that server.
 
-# RAINS Client Protocol
+This section describes the operation of the protocol as used among oracle
+servers and authority servers. A simplified version of the protocol for client
+access is described in {{protocol-client}}.
+
+## Message processing {#protocol-processing}
+
+Once a transport is established, any server may validly send a message with
+any content to any other server. Upon receipt of a message, a server parses it, and:
+
+- notes the token on the message. If present, the token MUST be present on any
+  messages sent in reply to this message.
+- processes any capabilities present, replacing the set of capabilities known
+  for the peer with the set present in the message. If the present
+  capabilities are represented by a hash that the server does not have in its
+  cache, it prepares a notification of type 399 "Capability hash not
+  understood" to send to its peer.
+- splits the contents into its constituent message sections, processing them
+  independently.
+
+On receipt of an assertion, shard, or zone message section, the server:
+
+- verifies its consistency (see {{runtime-consistency-checking}}). If the
+  section is not consistent, it prepares to send a notification of type 403
+  Inconsistent Message to the peer, and discards the section. Otherwise, it:
+- determines whether it answers an outstanding query; if so, it prepares to
+  forward the section to the server that issued the query.
+- determines whether it replaces any information presently in its cache (see
+  {{hash-chain-rev}}). If so, it discards the old information, and caches the
+  new section.
+- determines whether it is likely to answer a future query, according to its 
+  configuration, policy, and query history; if so, it caches the section.
+
+On receipt of a query, the server:
+
+- determines whether it has a stored assertion, shard, and/or zone message
+  section which answers the query. If so, it prepares to return the most
+  specific such section with the signature of the longest remaining validity to the
+  peer that issued the query. If not, it:
+- checks to see whether the query specifies option 4 (cached answers only). If
+  so, and if option 5 (expired assertions acceptable) is also specified, it
+  then checks to see if it has any cached sections that answer the query on
+  which signatures are expired; otherwise, processing stops. If the query does
+  not specify option 4, delegation proceeds as follows:
+- determines whether it has other non-authoritative servers it can forward the
+  query to, according to its configuration and policy, and in compliance with
+  any query options (see {{cbor-query}}). If so, it prepares to forward the
+  query to those servers, noting the reply for the received query depends on
+  the replies for the forwarded query. If not, it:
+- determines the responsible authority servers for the zone containing the
+  query name in the query for contexts requested, and forwards the query to
+  those authority servers, noting the reply for the received query depends on
+  the reply for the forwarded query.
+
+If query delegation fails to return an answer within a configured timeout for
+a delegated query, the server prepares to send a 404 No assertion available
+response to the peer from which it received the query.
+
+When a server creates a new query to forward to another server in response to
+a query it received, it SHOULD NOT use the same token on the delegated query
+as on the received query, unless option 6 Enable Tracing is present in the
+received , in which case it MUST use the same token. The Enable Tracing option
+is designed to allow debugging of query processing across multiple servers,
+and MUST NOT be enabled by default.
+
+On receipt of a notification, the server's behavior depends on the notification type:
+
+- For type 100 "Connection Heartbeat", the server does nothing: these null
+  messages are used to keep long-lived connections open in the presence of
+  network behaviors that may drop state for idle connections.
+- For type 399 "Capability hash not understood", the server prepares to send a
+  full capabilities list on the next message it sends to the peer.
+- For type 404 "No assertion available", the server checks the token on the
+  message, and prepares to forward the assertion to the associated query.
+- For type 413 "Message too large" the server notes that large messages may 
+  not be sent to a peer and tries again (see {{protocol-limits}}), or logs
+  the error along with the note-data content.
+- For type 400 "Malformed message", type 403 "Inconsistent message", type 500
+  "Server error", or type 501 "Server not capable", the server logs the error
+  along with the note-data content, as these notifications generally represent
+  implementation or configuration error conditions which will require human
+  intervention to mitigate.
+
+The first message a server sends to a peer after a new connection is
+established SHOULD contain a capabilities section, if the server supports any
+optional capabilities. See {{cbor-capabilities}}.
+
+If the server is configured to keep long-running connections open, due to the
+presence of network behaviors that may drop state for idle connections, it
+SHOULD send a message containing a type 100 Connection Heartbeat notification
+after a configured idle time without any messages containing other content
+being sent.
+
+## Message Transmission
+
+As noted in {{protocol-processing}} many messages are sent in reply to messages
+received from peers. Servers may also originate messages on their own, based
+on their configuration and policy:
+
+- Proactive queries to retrieve assertions, shards, and zones for which all
+  signatures have expired or will soon expire, for cache management purposes.
+- Proactive push of assertions, shards, and zones to other servers, based on
+  query history or other information indicating those servers may query for
+  the assertions they contain.
+
+## Message Limits {#protocol-limits}
+
+RAINS servers MUST accept messages up to 65536 bytes in length, but MAY accept
+messages of greater length, subject to resource limitations of the server. A
+server with resource limitations MUST respond to a message rejected due to
+length restrictions with a notification of type 414 (Message Too Large). A
+server that receives a type 413 notification must note that the peer sending
+the message only accepts messages smaller than the largest message it's
+successfully sent that peer, or cap messages to that peer to 65536 bytes in
+length.
+
+Since a bare assertion with a single ECDSA signature requires on the order of
+180 bytes, it is clear that many full zones won't fit into a single minimum
+maximum-size message. Authorities are therefore encouraged to publish zones
+grouped into shards that will fit into 65536-byte messages, to allow servers
+to reply using these shards when full-zone transfers are not possible due to
+message size limitations.
+
+## Runtime consistency checking
+
+The data model used by the RAINS protocol allows inconsistent information to
+be asserted, all resulting from misconfigured or misbehaving authority
+servers. For example, a shard valid at a given point in time can be marked
+lexically complete, but not contain an assertion within its lexical range,
+which is also valid at that point. This would allow both proof of the presence
+and absence of an assertion at the same time, which is clearly nonsensical.
+
+RAINS relies on runtime consistency checking to mitigate this problem: each
+server receiving an assertion, shard, or zone SHOULD, subject to resource
+constraints, ensure that it is consistent with other information it has, and
+if not, discard all assertions, shards, and zones in its cache, log the error,
+and send a 403 Inconsistent Message to the source of the message.
+
+# RAINS Client Protocol {#protocol-client}
 
 TODO: define as a subset of the full RAINS protocol, plus oracle signatures
 and tags in answers to allow oracles to verify proof of answer. Preferences
@@ -872,13 +1068,24 @@ TODO: add cx--link- and cx--site- link- and site-local contexts.
 
 # Deployment Considerations
 
-## Runtime consistency checking
+TODO: frontmatter
 
-TODO: note that the mechanisms allow inconsistent information to exist. define
-algorithms for maintaining consistency at any given RAINS server. evaluate
-global inconsistency of these algorithms.
+## Assertion lifetime management
 
-## On Confidentiality and Integrity Protection
+An assertion can contain multiple signatures, each with a different lifetime.
+Signature lifetimes are equivalent to a time to live in the present DNS:
+authorities should compute a new signature for each validity period, and make
+these new signatures available when old ones are expiring.
+
+If an unexpected change to an assertion is necessary, the hash chain based
+replacement mechanism described in {{hash-chain-rev}} provides a way for an
+authority to replace signed assertions with new information or with Null
+objects, in the case of deletion.
+
+Since assertion lifetime management is based on a real-time clock expressed in
+UTC, RAINS servers MUST use a clock synchronization protocol such as NTP {{RFC5905}}.
+
+## Confidentiality and Integrity Protection
 
 TODO: note that queries require more confidentiality than assertions. use TLS
 for hop-by-hop confidentiality for now. point out data confidentiality using
@@ -893,7 +1100,7 @@ TODO: need to define a way to keep authority servers from needing secret keys.
 TODO: note we should add RAINS resolver information to DHCP. do we want a multicast
 address as well? do we need to add context information to DHCP?
 
-## Translation between RAINS and DNS
+## Translation between RAINS and DNS information models
 
 TODO: contexts are really hard to wedge into DNS.
 
@@ -915,6 +1122,10 @@ The authors have registered the CBOR tag 15309736 to identify RAINS messages
 in the CBOR tag registry at 
 https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml.
 
+RAINS servers currently listen for connections from other servers on Port
+1022. Future revisions of this document may specify a different port,
+registered with IANA via Expert Review {{RFC5226}}.
+
 The symbol table in this document in {{cbor-symtab}}, the notification code
 table in {{cbor-notification}}, and the signature algorithm table in 
 {{cbor-signature}} may be candidates for IANA registries in future revisions 
@@ -923,6 +1134,7 @@ of this document.
 The urn:x-rains namespace used by the RAINS capability mechanism in {{cbor-
 capabilities}} may be a candidate for replacement with an IANA-registered
 namespace in a future revision of this document.
+
 
 # Security Considerations
 
@@ -936,3 +1148,9 @@ explicitly no resistance against zone enumeration.
 Thanks to Daniele Asoni, Laurent Chuat, Ted Hardie, Joe Hildebrand, Steve
 Matsumoto, Adrian Perrig, Raphael Reischuk, Stephen Shirley, Andrew Sullivan,
 and Suzanne Woolf for the discussions leading to the design of this protocol.
+
+--- back
+
+# Open Issues
+
+- The format of the nameset and certinfo object types needs to be specified.
