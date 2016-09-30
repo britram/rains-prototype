@@ -290,18 +290,24 @@ li, p {
 <link href="#rfc.section.5.7" rel="Chapter" title="5.7 Query Message Section body"/>
 <link href="#rfc.section.5.8" rel="Chapter" title="5.8 Notification Message Section body"/>
 <link href="#rfc.section.5.9" rel="Chapter" title="5.9 Object"/>
-<link href="#rfc.section.5.10" rel="Chapter" title="5.10 Signatures and delegation keys"/>
+<link href="#rfc.section.5.10" rel="Chapter" title="5.10 Signatures, delegation keys, and RAINS infrastructure keys"/>
 <link href="#rfc.section.5.10.1" rel="Chapter" title="5.10.1 ECDSA signature and public key format"/>
 <link href="#rfc.section.5.10.2" rel="Chapter" title="5.10.2 Hash-chain based revocation"/>
-<link href="#rfc.section.5.11" rel="Chapter" title="5.11 Capabilities"/>
+<link href="#rfc.section.5.11" rel="Chapter" title="5.11 Certificate information format"/>
+<link href="#rfc.section.5.12" rel="Chapter" title="5.12 Name expression format"/>
+<link href="#rfc.section.5.13" rel="Chapter" title="5.13 Capabilities"/>
 <link href="#rfc.section.6" rel="Chapter" title="6 RAINS Protocol Definition"/>
+<link href="#rfc.section.6.1" rel="Chapter" title="6.1 Message processing"/>
+<link href="#rfc.section.6.2" rel="Chapter" title="6.2 Message Transmission"/>
+<link href="#rfc.section.6.3" rel="Chapter" title="6.3 Message Limits"/>
+<link href="#rfc.section.6.4" rel="Chapter" title="6.4 Runtime consistency checking"/>
 <link href="#rfc.section.7" rel="Chapter" title="7 RAINS Client Protocol"/>
 <link href="#rfc.section.8" rel="Chapter" title="8 Deployment Considerations"/>
-<link href="#rfc.section.8.1" rel="Chapter" title="8.1 Runtime consistency checking"/>
-<link href="#rfc.section.8.2" rel="Chapter" title="8.2 On Confidentiality and Integrity Protection"/>
+<link href="#rfc.section.8.1" rel="Chapter" title="8.1 Assertion lifetime management"/>
+<link href="#rfc.section.8.2" rel="Chapter" title="8.2 Confidentiality and Integrity Protection"/>
 <link href="#rfc.section.8.3" rel="Chapter" title="8.3 Authority Signer Interface"/>
 <link href="#rfc.section.8.4" rel="Chapter" title="8.4 Client Resolver Interfaces"/>
-<link href="#rfc.section.8.5" rel="Chapter" title="8.5 Translation between RAINS and DNS"/>
+<link href="#rfc.section.8.5" rel="Chapter" title="8.5 Translation between RAINS and DNS information models"/>
 <link href="#rfc.section.8.6" rel="Chapter" title="8.6 Rendering RAINS messages as JSON for debugging"/>
 <link href="#rfc.section.9" rel="Chapter" title="9 Experimental Design and Evaluation"/>
 <link href="#rfc.section.10" rel="Chapter" title="10 IANA Considerations"/>
@@ -318,7 +324,7 @@ li, p {
 
   <meta name="dct.creator" content="Trammell, B." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-trammell-rains-protocol" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-9-16" />
+  <meta name="dct.issued" scheme="ISO8601" content="2016-9-30" />
   <meta name="dct.abstract" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design the DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in " />
   <meta name="description" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design the DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in " />
 
@@ -339,10 +345,10 @@ li, p {
 </tr>
 <tr>
   <td class="left">Intended status: Experimental</td>
-  <td class="right">September 16, 2016</td>
+  <td class="right">September 30, 2016</td>
 </tr>
 <tr>
-  <td class="left">Expires: March 20, 2017</td>
+  <td class="left">Expires: April 3, 2017</td>
   <td class="right"></td>
 </tr>
 
@@ -363,7 +369,7 @@ li, p {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on March 20, 2017.</p>
+<p>This Internet-Draft will expire on April 3, 2017.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -397,18 +403,24 @@ li, p {
 <li>5.7.   <a href="#rfc.section.5.7">Query Message Section body</a></li>
 <li>5.8.   <a href="#rfc.section.5.8">Notification Message Section body</a></li>
 <li>5.9.   <a href="#rfc.section.5.9">Object</a></li>
-<li>5.10.   <a href="#rfc.section.5.10">Signatures and delegation keys</a></li>
+<li>5.10.   <a href="#rfc.section.5.10">Signatures, delegation keys, and RAINS infrastructure keys</a></li>
 <ul><li>5.10.1.   <a href="#rfc.section.5.10.1">ECDSA signature and public key format</a></li>
 <li>5.10.2.   <a href="#rfc.section.5.10.2">Hash-chain based revocation</a></li>
-</ul><li>5.11.   <a href="#rfc.section.5.11">Capabilities</a></li>
+</ul><li>5.11.   <a href="#rfc.section.5.11">Certificate information format</a></li>
+<li>5.12.   <a href="#rfc.section.5.12">Name expression format</a></li>
+<li>5.13.   <a href="#rfc.section.5.13">Capabilities</a></li>
 </ul><li>6.   <a href="#rfc.section.6">RAINS Protocol Definition</a></li>
-<li>7.   <a href="#rfc.section.7">RAINS Client Protocol</a></li>
+<ul><li>6.1.   <a href="#rfc.section.6.1">Message processing</a></li>
+<li>6.2.   <a href="#rfc.section.6.2">Message Transmission</a></li>
+<li>6.3.   <a href="#rfc.section.6.3">Message Limits</a></li>
+<li>6.4.   <a href="#rfc.section.6.4">Runtime consistency checking</a></li>
+</ul><li>7.   <a href="#rfc.section.7">RAINS Client Protocol</a></li>
 <li>8.   <a href="#rfc.section.8">Deployment Considerations</a></li>
-<ul><li>8.1.   <a href="#rfc.section.8.1">Runtime consistency checking</a></li>
-<li>8.2.   <a href="#rfc.section.8.2">On Confidentiality and Integrity Protection</a></li>
+<ul><li>8.1.   <a href="#rfc.section.8.1">Assertion lifetime management</a></li>
+<li>8.2.   <a href="#rfc.section.8.2">Confidentiality and Integrity Protection</a></li>
 <li>8.3.   <a href="#rfc.section.8.3">Authority Signer Interface</a></li>
 <li>8.4.   <a href="#rfc.section.8.4">Client Resolver Interfaces</a></li>
-<li>8.5.   <a href="#rfc.section.8.5">Translation between RAINS and DNS</a></li>
+<li>8.5.   <a href="#rfc.section.8.5">Translation between RAINS and DNS information models</a></li>
 <li>8.6.   <a href="#rfc.section.8.6">Rendering RAINS messages as JSON for debugging</a></li>
 </ul><li>9.   <a href="#rfc.section.9">Experimental Design and Evaluation</a></li>
 <li>10.   <a href="#rfc.section.10">IANA Considerations</a></li>
@@ -427,16 +439,7 @@ li, p {
 <p id="rfc.section.1.p.2">TODO: what is this not</p>
 <p id="rfc.section.1.p.3">TODO: why does it exist</p>
 <h1 id="rfc.section.2"><a href="#rfc.section.2">2.</a> <a href="#terminology" id="terminology">Terminology</a></h1>
-<p id="rfc.section.2.p.1">TODO</p>
-<p id="rfc.section.2.p.2">2119ify!</p>
-<p/>
-
-<ul>
-  <li>assertion</li>
-  <li>authority</li>
-  <li>querier</li>
-  <li>context</li>
-</ul>
+<p id="rfc.section.2.p.1">The terms MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY, when they appear in all-capitals, are to be interpreted as defined in <a href="#RFC2119">[RFC2119]</a>.</p>
 <h1 id="rfc.section.3"><a href="#rfc.section.3">3.</a> <a href="#architecture" id="architecture">Architecture</a></h1>
 <p id="rfc.section.3.p.1">The RAINS architecture is simple, and resembles the architecture of DNS. A RAINS Server is an entity that provides transient and/or permanent storage for assertions about names, and a lookup function that finds assertions for a given query about a name, either by searching local storage or by delegating to another RAINS server. RAINS servers can take on any or all of three roles:</p>
 <p/>
@@ -449,6 +452,7 @@ li, p {
 <p id="rfc.section.3.p.3">RAINS Servers use the RAINS Protocol defined in this document to exchange queries and assertions. RAINS Clients use a subset variant of the RAINS Protocol (called the RAINS Client Protocol) to interact with RAINS Servers providing query services on their behalf.</p>
 <h1 id="rfc.section.4"><a href="#rfc.section.4">4.</a> <a href="#information-model" id="information-model">Information Model</a></h1>
 <p id="rfc.section.4.p.1">Messages in the RAINS Protocol are made up of two kinds of elements: Assertion and Query. A third type of element, Answer, binds a Query to a set of Assertions in response to a Query.</p>
+<p id="rfc.section.4.p.2">The information model in this section omits information elements required by the resolution mechanism itself; these are defined in more detail in <a href="#cbor">Section 5</a> and <a href="#protocol-def">Section 6</a>.</p>
 <h1 id="rfc.section.4.1"><a href="#rfc.section.4.1">4.1.</a> <a href="#namespace-assumptions" id="namespace-assumptions">Namespace Assumptions</a></h1>
 <p id="rfc.section.4.1.p.1">TODO: prosify: The RAINS Information Model makes a few assumptions about the namespaces in which assertions are made:</p>
 <p/>
@@ -496,7 +500,7 @@ li, p {
 <p/>
 
 <ul>
-  <li>For the common split-DNS case, an enterprise could place names for machines on its local networks within a separate context. E.g., a workstation could be named simplon.cab.inf.ethz.ch within the context staff-workstations.cx&#8211;.inf.ethz.ch. Assertions about this name would be signed by the authority for inf.ethz.ch. Here, the context serves simply as a marker, without enabling an alternate signature chain: note that the name simplon.cab.inf.ethz.ch can be validly signed by the authority for inf.ethz.ch if no delegation exists for cab.inf.ethz.ch. but simply marks this assertion as internal. This allows a client making requests of local names to know they are local, and for local resolvers to manage visibility of assertions outside the enterprise: explicit context makes accidental leakage of both queries and assertions easier to detect and avoid.</li>
+  <li>For the common split-DNS case, an enterprise could place names for machines on its local networks within a separate context. E.g., a workstation could be named simplon.cab.inf.ethz.ch within the context staff-workstations.cx&#8211;.inf.ethz.ch. Assertions about this name would be signed by the authority for inf.ethz.ch. Here, the context serves simply as a marker, without enabling an alternate signature chain: note that the name simplon.cab.inf.ethz.ch can be validly signed by the authority for inf.ethz.ch if no delegation exists for cab.inf.ethz.ch. The context simply marks this assertion as internal. This allows a client making requests of local names to know they are local, and for local resolvers to manage visibility of assertions outside the enterprise: explicit context makes accidental leakage of both queries and assertions easier to detect and avoid.</li>
   <li>Contexts make captive-portal interactions more explicit: a captive portal resolver could respond to a query for a common website (e.g. www.google.ch) with a signed response directed at the captive portal, but within a context identifying the location as well as the ISP (e.g.  sihlquai.zurich.ch.cx&#8211;.starbucks.access.some-isp.net.). This response will be signed by the authority for starbucks.access.some-isp.net. This signature achieves two things: first, the client knows the result for www.google.ch is not globally valid; second, it can present the user with some indication as to the identity of the captive portal it is connected to.</li>
 </ul>
 <p id="rfc.section.4.2.1.p.5">Further examples showing how context can be used in queries as well are given in <a href="#context-in-queries">Section 4.3.1</a> below.</p>
@@ -571,7 +575,7 @@ li, p {
 </ul>
 <p id="rfc.section.4.4.p.3">The content of an answer content depends on whether the answer is positive or negative. A positive answer contains the information requested in the smallest atomic container that can be found, usually a single assertion. A negative answer contains the information used to verify it; either a shard with the Complete-Flag set, an entire Zone, or a Zone-Nameset assertion showing the name is illegal within the zone.</p>
 <p id="rfc.section.4.4.p.4">A query is taken to have an inconclusive answer when no answer returns to the querier before the query&#8217;s Valid-Until time.</p>
-<h1 id="rfc.section.5"><a href="#rfc.section.5">5.</a> <a href="#data-model" id="data-model">Data Model</a></h1>
+<h1 id="rfc.section.5"><a href="#rfc.section.5">5.</a> <a href="#cbor" id="cbor">Data Model</a></h1>
 <p id="rfc.section.5.p.1">The RAINS data model is a relatively straightforward mapping of the information model in <a href="#information-model">Section 4</a> to the Concise Binary Object Representation (CBOR) <a href="#RFC7049">[RFC7049]</a>, with an outer message type providing a mechanism for future capabilities-based versioning and recognition of a message as a RAINS message.</p>
 <h1 id="rfc.section.5.1"><a href="#rfc.section.5.1">5.1.</a> <a href="#cbor-symtab" id="cbor-symtab">Symbol Table</a></h1>
 <p id="rfc.section.5.1.p.1">Each CBOR object in a RAINS message is implemented as maps of integer keys to values, which implements a good tradeoff between efficiency of representation and flexibility. The meaning of each of the integer keys is given in the symbol table below:</p>
@@ -617,7 +621,7 @@ li, p {
     <tr>
       <td class="right">6</td>
       <td class="left">context</td>
-      <td class="left">Context(s) of an assertion or query</td>
+      <td class="left">Context of an assertion</td>
     </tr>
     <tr>
       <td class="right">7</td>
@@ -651,7 +655,7 @@ li, p {
     </tr>
     <tr>
       <td class="right">13</td>
-      <td class="left">reserved</td>
+      <td class="left">query-contexts</td>
       <td class="left">Reserved for future use in RAINS</td>
     </tr>
     <tr>
@@ -710,8 +714,8 @@ li, p {
 <p id="rfc.section.5.2.p.1">All interactions in RAINS take place in an outer envelope called a Message, which is a CBOR map tagged with the RAINS Message tag (hex 0xE99BA8, decimal 15309736).</p>
 <p id="rfc.section.5.2.p.2">A Message map MUST contain a content (0) key, whose value is an array of Message Sections; a Message Section is either an Assertion, Shard, Zone, or Query.</p>
 <p id="rfc.section.5.2.p.3">A Message map MAY contain a capabilities (1) key, whose value is described in {#cbor-capabilities}.</p>
-<p id="rfc.section.5.2.p.4">A Message map MAY contain a signatures (2) key, whose value is an array of Signatures as defined in <a href="#cbor-signature">Section 5.10</a>.</p>
-<p id="rfc.section.5.2.p.5">A Message map MAY contain a token (8) key, whose value is either an integer or a UTF-8 string of maximum byte length 32. The token key may be used to refer to the message in future messages, or may refer to a past message or query by token.</p>
+<p id="rfc.section.5.2.p.4">A Message map MAY contain a signatures (2) key, whose value is an array of Signatures over the entire message as defined in <a href="#cbor-signature">Section 5.10</a>, to be verified against the</p>
+<p id="rfc.section.5.2.p.5">A Message map MAY contain a token (8) key, whose value is either an integer or a UTF-8 string of maximum byte length 32. The token key may be used to refer to the message in future messages, or may refer to a past message or query by token. If the message is in response to a message or query containing a token, the message MUST contain that token.</p>
 <h1 id="rfc.section.5.3"><a href="#rfc.section.5.3">5.3.</a> <a href="#message-section-header" id="message-section-header">Message Section header</a></h1>
 <p id="rfc.section.5.3.p.1">Each Message Section in the Message&#8217;s content value MUST be a two-element array. The first element in the array is the message section type, encoded as an integer as in <a href="#cbor-symtab">Section 5.1</a>. The second element in the array is the message section body, defined as in <a href="#cbor-assertion">Section 5.4</a>, <a href="#cbor-shard">Section 5.5</a>, <a href="#cbor-zone">Section 5.6</a>, <a href="#cbor-query">Section 5.7</a>, or <a href="#cbor-notification">Section 5.8</a>.</p>
 <p id="rfc.section.5.3.p.2">Section types are as in the following table, taken from <a href="#cbor-symtab">Section 5.1</a>:</p>
@@ -768,7 +772,7 @@ li, p {
 <p id="rfc.section.5.5.p.5">The value of the signatures (2) key, if present, is an array of one or more Signatures as defined in <a href="#cbor-signature">Section 5.10</a>. If not present, the containing Zone MUST be signed. Signatures on a contained Shard are generated as if the inherited values are present in the Shard, whether actually present or not.</p>
 <p id="rfc.section.5.5.p.6">The value of the subject-zone (4) key, if present, is a UTF-8 encoded string containing the name of the zone in which the Assertions within the Shard is made. If not present, the zone of the assertion is inherited from the containing Zone.</p>
 <p id="rfc.section.5.5.p.7">The value of the context (6) key, if present, is a UTF-8 encoded string containing the name of the context in which the Assertions within the Shard are valid. If not present, the context of the assertion is inherited from the containing Zone.</p>
-<p id="rfc.section.5.5.p.8">If the shard-range (11) key is present, the shard is lexicographically complete within the range described in its value: a mapping for a (subject- name, object-type) pair that should be between the two values given in the range but is not is asserted to not exist. Lexicographic sorting is done on subject names by ordering Unicode codepoints in ascending order; ordering on object types is done via their code values in the symbol table in {{cbor- symtab}}.</p>
+<p id="rfc.section.5.5.p.8">If the shard-range (11) key is present, the shard is lexicographically complete within the range described in its value: a mapping for a (subject- name, object-type) pair that should be between the two values given in the range but is not is asserted to not exist. Lexicographic sorting is done on subject names by ordering Unicode codepoints in ascending order; ordering on object types is done via their code values in <a href="#cbor-object">Section 5.9</a> in ascending order</p>
 <p id="rfc.section.5.5.p.9">The shard-range value MUST be a four element array of (subject-name A, object- type A, subject-name B, object type B) where A does not necessarily need to sort before B, and the (subject-name, object-type) pairs need not exist in the shard. The shard MUST NOT contain any assertions for subject-names outside the range.</p>
 <p id="rfc.section.5.5.p.10">If the shard-range key is not present, the shard is not lexicographically complete and MUST NOT be used to make assertions about nonexistance.</p>
 <h1 id="rfc.section.5.6"><a href="#rfc.section.5.6">5.6.</a> <a href="#cbor-zone" id="cbor-zone">Zone Message Section body</a></h1>
@@ -778,9 +782,9 @@ li, p {
 <p id="rfc.section.5.6.p.4">The value of the context (6) key is a UTF-8 encoded string containing the name of the context for which the Zone is valid.</p>
 <p id="rfc.section.5.6.p.5">TODO: determine if Zones MUST contain all the valid assertions within the Zone. I think so. This leads (as with inconsistent Shards) to the question of &#8220;what happens if not&#8221;, and defending against malicious inconsistency.</p>
 <h1 id="rfc.section.5.7"><a href="#rfc.section.5.7">5.7.</a> <a href="#cbor-query" id="cbor-query">Query Message Section body</a></h1>
-<p id="rfc.section.5.7.p.1">A Query body is a map. Queries MUST contain the query-name (5), context (6), and query-type (14) keys. Queries MAY contain the token(8) key and the query-opts (22) key.</p>
-<p id="rfc.section.5.7.p.2">The value of the query-name (5) key is a UTF-8 encoded string containing the fully qualified name that is the subject of the query</p>
-<p id="rfc.section.5.7.p.3">The value of the context (6) key is an allowable context expression, as an array of context names as UTF-8 encoded strings. The allowable context expression is evaluated in-order, as follows:</p>
+<p id="rfc.section.5.7.p.1">A Query body is a map. Queries MUST contain the query-name (5), query-contexts (13), and query-type (14) keys. Queries MAY contain the token(8) key and the query-opts (22) key.</p>
+<p id="rfc.section.5.7.p.2">The value of the query-name (5) key is a UTF-8 encoded string containing the fully qualified name that is the subject of the query.</p>
+<p id="rfc.section.5.7.p.3">The value of the query-contexts (13) key is an allowable context expression, as an array of context names as UTF-8 encoded strings. The allowable context expression is evaluated in-order, as follows:</p>
 <p/>
 
 <ul>
@@ -799,7 +803,7 @@ li, p {
 </ul>
 <p id="rfc.section.5.7.p.7">An empty context array in a query is taken to be equivalent to an array containing only [&#8217;.&#8217;, &#8216;cx&#8211;any-&#8216;]; i.e. any context acceptable, global context preferred.</p>
 <p id="rfc.section.5.7.p.8">The value of the query-type (14) key is an array of integers encoding the type(s) of objects (as in <a href="#cbor-object">Section 5.9</a>) acceptable in answers to the query.  All values in the query-type array are treated at equal priority: [2,3] means the querier is equally interested in both IPv4 and IPv6 addresses for the query-name.</p>
-<p id="rfc.section.5.7.p.9">The value of the token (8) key, if present, is either an integer or a UTF-8 string of maximum byte length 32. Future messages containing answers to this query may contain the token instead of the query itself.</p>
+<p id="rfc.section.5.7.p.9">The value of the token (8) key, if present, is either an integer or a UTF-8 string of maximum byte length 32. Future messages or notifications containing answers to this query MUST contain this token, if present.</p>
 <p id="rfc.section.5.7.p.10">The value of the query-opts (22) key, if present, is an array of integers in priority order of the querier&#8217;s preferences in tradeoffs in answering the query.</p>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
@@ -829,11 +833,15 @@ li, p {
       <td class="right">5</td>
       <td class="left">Expired assertions are acceptable</td>
     </tr>
+    <tr>
+      <td class="right">6</td>
+      <td class="left">Enable token tracing</td>
+    </tr>
   </tbody>
 </table>
-<p id="rfc.section.5.7.p.11">Each oracle is free to determine how to minimize each performance metric requested; however, oracles MUST NOT generate queries to other oracles if &#8220;no information leakage&#8221; is specified, and oracles MUST NOT return expired assertions unless &#8220;expired assertions acceptable&#8221; is specified.</p>
+<p id="rfc.section.5.7.p.11">Each server is free to determine how to minimize each performance metric requested; however, servers MUST NOT generate queries to other servers if &#8220;no information leakage&#8221; is specified, and servers MUST NOT return expired assertions unless &#8220;expired assertions acceptable&#8221; is specified.</p>
 <h1 id="rfc.section.5.8"><a href="#rfc.section.5.8">5.8.</a> <a href="#cbor-notification" id="cbor-notification">Notification Message Section body</a></h1>
-<p id="rfc.section.5.8.p.1">Notification Message Sections contain information about the operation of the RAINS protocol itself. A Notification Message Section body is a map which MUST contain the note-type (17) key and MAY contain the note-data (23) key. The value of the note-type key is encoded as an integer as in the following table:</p>
+<p id="rfc.section.5.8.p.1">Notification Message Sections contain information about the operation of the RAINS protocol itself. A Notification Message Section body is a map which MUST contain the note-type (17) key and MAY contain the token (8) and note-data (23) keys. The value of the note-type key is encoded as an integer as in the following table:</p>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -863,6 +871,10 @@ li, p {
       <td class="left">No assertion available</td>
     </tr>
     <tr>
+      <td class="right">413</td>
+      <td class="left">Message too large</td>
+    </tr>
+    <tr>
       <td class="right">500</td>
       <td class="left">Unspecified server error</td>
     </tr>
@@ -873,7 +885,8 @@ li, p {
   </tbody>
 </table>
 <p id="rfc.section.5.8.p.2">Note that the status codes are chosen to be mnemonically similar to status codes for HTTP <a href="#RFC7231">[RFC7231]</a>. Details of the meaning of each status code are given in <a href="#protocol-def">Section 6</a>.</p>
-<p id="rfc.section.5.8.p.3">The value of the note-data (23) key, if present, is a UTF-8 encoded string with additional information about the notification, intended to be displayed to an administrator to help debug the issue identified by the negotiation.</p>
+<p id="rfc.section.5.8.p.3">The value of the token (8) key, if present, is either an integer or a UTF-8 string of maximum byte length 32. If the notification is in response to a message or query containing a token, the notification MUST contain that token.</p>
+<p id="rfc.section.5.8.p.4">The value of the note-data (23) key, if present, is a UTF-8 encoded string with additional information about the notification, intended to be displayed to an administrator to help debug the issue identified by the negotiation.</p>
 <h1 id="rfc.section.5.9"><a href="#rfc.section.5.9">5.9.</a> <a href="#cbor-object" id="cbor-object">Object</a></h1>
 <p id="rfc.section.5.9.p.1">Objects are encoded as arrays in CBOR, where the first element is the type of the object, encoded as an integer in the following table:</p>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -937,11 +950,11 @@ li, p {
     </tr>
     <tr>
       <td class="right">11</td>
-      <td class="left">reserved</td>
-      <td class="left">Reserved for future use in RAINS</td>
+      <td class="left">infrakey</td>
+      <td class="left">public key for RAINS infrastructure</td>
     </tr>
     <tr>
-      <td class="right">12</td>
+      <td class="right">12-23</td>
       <td class="left">reserved</td>
       <td class="left">Reserved for future use in RAINS</td>
     </tr>
@@ -952,15 +965,16 @@ li, p {
 <p id="rfc.section.5.9.p.4">An ip4-addr (3) object contains an IPv4 address associated with a name. It is represented as a two element array. The second element is a byte array of length 4 containing an IPv4 address in network byte order.</p>
 <p id="rfc.section.5.9.p.5">A redirection (4) object contains the fully-qualified name of a RAINS authority server for a named zone. It is represented as a two-element array.  The second element is a fully-qualified name of an RAINS authority server as a UTF-8 encoded string.</p>
 <p id="rfc.section.5.9.p.6">A delegation (5) object contains the public key used to generate signatures on assertions in a named zone, and by which a delegation of a name within a zone to a subordinate zone may be verified. It is represented as an N-element array. The second element is a signature algorithm identifier as in <a href="#cbor-signature">Section 5.10</a>. Additional elements are as defined in <a href="#cbor-signature">Section 5.10</a> for the given algorithm identifier.</p>
-<p id="rfc.section.5.9.p.7">A nameset (6) object contains an expression defining which names are allowed and which names are disallowed in a given zone. It is represented as an N- element array, as defined in a future draft-trammell-rains-nameset.</p>
-<p id="rfc.section.5.9.p.8">A cert-info (7) object contains an expression binding a certificate or certificate authority to a name, such that connections to the name must either use the bound certificate or a certificate signed by a bound authority. It is represented as an N-element array, as defined in a future draft-trammell-rains-cert-info.</p>
+<p id="rfc.section.5.9.p.7">A nameset (6) object contains an expression defining which names are allowed and which names are disallowed in a given zone. It is represented as an N- element array, as defined in <a href="#cbor-nameset">Section 5.12</a></p>
+<p id="rfc.section.5.9.p.8">A cert-info (7) object contains an expression binding a certificate or certificate authority to a name, such that connections to the name must either use the bound certificate or a certificate signed by a bound authority. It is represented as an N-element array, as defined in <a href="#cbor-certinfo">Section 5.11</a>.</p>
 <p id="rfc.section.5.9.p.9">A service-info (8) object gives information about a named service. Services are named as in <a href="#RFC2782">[RFC2782]</a>. It is represented as a four-element array. The second element is a fully-qualified name of a host providing the named service as a UTF-8 string. The third element is a transport port number as a positive integer in the range 0-65535. The fourth element is a priority as a positive integer, with lower numbers having higher priority.</p>
 <p id="rfc.section.5.9.p.10">A registrar (9) object gives the name and other identifying information of the registrar (the organization which caused the name to be added to the namespace) for organization-level names. It is represented as a UTF-8 string containing identifying information chosen by the registrar according to the registry&#8217;s policy.</p>
 <p id="rfc.section.5.9.p.11">A registrant (10) object gives information about the registrant of an organization-level name. It is represented as a UTF-8 string containing this information, with a format chosen by the registrar according to the registry&#8217;s policy.</p>
-<h1 id="rfc.section.5.10"><a href="#rfc.section.5.10">5.10.</a> <a href="#cbor-signature" id="cbor-signature">Signatures and delegation keys</a></h1>
+<p id="rfc.section.5.9.p.12">An infrakey (11) object contains the public key used to generate signatures on messages by a named RAINS server, by which a RAINS message signature may be verified by a receiver. It is identical in structure to a delegation object, as defined in <a href="#cbor-signature">Section 5.10</a>.</p>
+<h1 id="rfc.section.5.10"><a href="#rfc.section.5.10">5.10.</a> <a href="#cbor-signature" id="cbor-signature">Signatures, delegation keys, and RAINS infrastructure keys</a></h1>
 <p id="rfc.section.5.10.p.1">RAINS supports multiple signature algorithms and hash functions for signing assertions for cryptographic algorithm agility <a href="#RFC7696">[RFC7696]</a>. A RAINS signature algorithm identifier specifies the signature algorithm; a hash function for generating the HMAC; a method for generating, verifying, and interpreting hash chain tokens in signatures; and the format of the encodings of the signature values in Assertions, Shards, Zones, and Messages, as well as of public key values in delegation objects.</p>
 <p id="rfc.section.5.10.p.2">RAINS signatures have four common elements: the algorithm identifier, a valid- since timestamp, a valid-until timestamp, and a hash chain token. Signatures are represented as an array of these four values followed by additional elements containing the signature data itself, according to the algorithm identifier.</p>
-<p id="rfc.section.5.10.p.3">Valid-since and valid-until timestamps are represented as CBOR integers counting seconds since the UNIX epoch UTC, idenfied with tag value 1 and encoded as in section 2.4.1 of <a href="#RFC7049">[RFC7049]</a>. A signature MUST have a valid- until timestamp. If a signature has no specified valid-since time (i.e., is valid from the beginning of time until its valid-until timestamp), the valid- since time MAY be null (as in Table 2 in Section 2.3 of <a href="#RFC7049">[RFC7049]</a>).</p>
+<p id="rfc.section.5.10.p.3">Valid-since and valid-until timestamps are represented as CBOR integers counting seconds since the UNIX epoch UTC, identified with tag value 1 and encoded as in section 2.4.1 of <a href="#RFC7049">[RFC7049]</a>. A signature MUST have a valid- until timestamp. If a signature has no specified valid-since time (i.e., is valid from the beginning of time until its valid-until timestamp), the valid- since time MAY be null (as in Table 2 in Section 2.3 of <a href="#RFC7049">[RFC7049]</a>).</p>
 <p id="rfc.section.5.10.p.4">Hash chain tokens and their use are specified in the appropriate subsection of this section for the given algorithm identifier.</p>
 <p id="rfc.section.5.10.p.5">Signatures in RAINS are generated over a normalized serialized CBOR object (a Message; or an Assertion, Shard, or Zone section body). To normalize and serialize an object for sigining or verifying:</p>
 <p/>
@@ -1004,6 +1018,7 @@ li, p {
 <p id="rfc.section.5.10.1.p.2">ECDSA signatures are a combination of two non-negative integers, called &#8220;r&#8221; and &#8220;s&#8221; in <a href="#FIPS-186-3">[FIPS-186-3]</a>. A Signature using ECDSA is represented using a six element CBOR array, with the fifth element being r represented as a byte array as described in Section C.2 of <a href="#FIPS-186-3">[FIPS-186-3]</a>, and the sixth being s represented as a byte array as described in Section C.2 of <a href="#FIPS-186-3">[FIPS-186-3]</a>. For ECDSA-256 signatures, each integer MUST be represented as a 32-byte array. For ECDSA-384 signatures, each integer MUST be represented as a 48-byte array.  RAINS signatures using ECDSA-256 are therefore the array [2, valid-from, valid-until, token, r, s]; and for ECDSA-384 the array [3, valid-from, valid-until, token, r, s].</p>
 <p id="rfc.section.5.10.1.p.3">ECDSA-256 signatures and public keys use the P-256 curve as defined in <a href="#FIPS-186-3">[FIPS-186-3]</a>.  ECDSA-384 signatures and public keys use the P-384 curve as defined in <a href="#FIPS-186-3">[FIPS-186-3]</a>.</p>
 <p id="rfc.section.5.10.1.p.4">All RAINS servers MUST implement ECDSA-256 and ECDSA-384.</p>
+<p id="rfc.section.5.10.1.p.5">[EDITOR&#8217;S NOTE: make sure this is appropriately modern, check work in CURDLE.]</p>
 <h1 id="rfc.section.5.10.2"><a href="#rfc.section.5.10.2">5.10.2.</a> <a href="#hash-chain-rev" id="hash-chain-rev">Hash-chain based revocation</a></h1>
 <p id="rfc.section.5.10.2.p.1">Hash-chain based revocation allows a signature (and the Assertion, Shard, or Zone it protects) to be replaced before it expires. To use hash-chain based revocation, a signing entity generates a hash chain from a known seed using the hash function specified by the signature algorithm in use, and places the Nth value derived therefrom in the hash chain revocation token on a signature.</p>
 <p id="rfc.section.5.10.2.p.2">A revocation can be issued by generating a new section and signing it, revealing the N-1st value from the hash chain in the revocation token. To allow a recipient of a revoked section to verify the revocation, the following restrictions on what can replace what apply:</p>
@@ -1015,16 +1030,20 @@ li, p {
   <li>A Zone can only be replaced by another Zone with an identical name within the same Context.</li>
 </ul>
 <p id="rfc.section.5.10.2.p.4">Signing entities can decline to use hash-chain based revocation by replacing the revocation token with Null.</p>
-<h1 id="rfc.section.5.11"><a href="#rfc.section.5.11">5.11.</a> <a href="#cbor-capabilities" id="cbor-capabilities">Capabilities</a></h1>
-<p id="rfc.section.5.11.p.1">When a RAINS server or client sends the first message in a stream to a peer, it MAY expose optional capabilities to its peer using the capabilities (1) key. This key contains either:</p>
+<h1 id="rfc.section.5.11"><a href="#rfc.section.5.11">5.11.</a> <a href="#cbor-certinfo" id="cbor-certinfo">Certificate information format</a></h1>
+<p id="rfc.section.5.11.p.1">[EDITOR&#8217;S NOTE: TODO. this should be largely in line with TLSA; determine if there&#8217;s any guidance from implementation experience we should consider, as well.]</p>
+<h1 id="rfc.section.5.12"><a href="#rfc.section.5.12">5.12.</a> <a href="#cbor-nameset" id="cbor-nameset">Name expression format</a></h1>
+<p id="rfc.section.5.12.p.1">[EDITOR&#8217;S NOTE: Write me.]</p>
+<h1 id="rfc.section.5.13"><a href="#rfc.section.5.13">5.13.</a> <a href="#cbor-capabilities" id="cbor-capabilities">Capabilities</a></h1>
+<p id="rfc.section.5.13.p.1">When a RAINS server or client sends the first message in a stream to a peer, it MAY expose optional capabilities to its peer using the capabilities (1) key. This key contains either:</p>
 <p/>
 
 <ul>
   <li>an array of uniform resource names specifying capabilities supported by the sending server, taken from the table below, with each name encoded as a UTF-8 string.</li>
   <li>a SHA-256 hash of the CBOR byte stream derived from normalizing such an array by sorting it in lexicographically increasing order, then serializing it.</li>
 </ul>
-<p id="rfc.section.5.11.p.3">This mechanism is inspired by <a href="#XEP0115">[XEP0115]</a>, and is intended to be used to reduce the overhead in exposing common sets of capabilities. Each RAINS server can cache a set of recently-seen or common hashes, and only request the full URN set (using notification code 399) on a cache miss.</p>
-<p id="rfc.section.5.11.p.4">The following URNs are presently defined; other URNs will specify future optional features, support for alternate transport protocols and new signature algorithms, etc.</p>
+<p id="rfc.section.5.13.p.3">This mechanism is inspired by <a href="#XEP0115">[XEP0115]</a>, and is intended to be used to reduce the overhead in exposing common sets of capabilities. Each RAINS server can cache a set of recently-seen or common hashes, and only request the full URN set (using notification code 399) on a cache miss.</p>
+<p id="rfc.section.5.13.p.4">The following URNs are presently defined; other URNs will specify future optional features, support for alternate transport protocols and new signature algorithms, etc.</p>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -1034,27 +1053,88 @@ li, p {
   </thead>
   <tbody>
     <tr>
-      <td class="left">urn:x-rains:tcpsrv</td>
-      <td class="left">Listens for TCP connections from other RAINS servers.</td>
+      <td class="left">urn:x-rains:tlssrv</td>
+      <td class="left">Listens for connections on TLS over TCP from other RAINS servers.</td>
     </tr>
   </tbody>
 </table>
+<p id="rfc.section.5.13.p.5">Since there are only two defined capabilities at this time, RAINS servers can be implemented with two hard-coded hashes to determine whether a peer is listening or not. The hash presented by a server supporting urn:x-rains:tlssrv is e5365a09be554ae55b855f15264dbc837b04f5831daeb321359e18cdabab5745; the hash presented by a server supporting no capabilities is 76be8b528d0075f7aae98d6fa57a6d3c83ae480a8469e668d7b0af968995ac71.</p>
+<p id="rfc.section.5.13.p.6">A RAINS server MUST NOT assume that a peer server supports a given capability unless it has received a message containing that capability from that server.  An exception are the capabilities indicating that a server listens for connections using a given transport protocol; servers and clients can also learn this information from RAINS itself (given a redirection assertion for a named zone) or from external configuration values.</p>
 <h1 id="rfc.section.6"><a href="#rfc.section.6">6.</a> <a href="#protocol-def" id="protocol-def">RAINS Protocol Definition</a></h1>
-<p id="rfc.section.6.p.1">TODO: note CBOR is self-framing so we can use any transport we want. define TLS 1.3 with TFO for now, note nice fit atop QUIC.</p>
-<p id="rfc.section.6.p.2">TODO: note further that signatures are prime in RAINS, so it really doesn&#8217;t matter where servers exist.</p>
-<h1 id="rfc.section.7"><a href="#rfc.section.7">7.</a> <a href="#rains-client-protocol" id="rains-client-protocol">RAINS Client Protocol</a></h1>
+<p id="rfc.section.6.p.1">As noted in <a href="#cbor">Section 5</a>, RAINS is a message-exchange protocol that uses CBOR <a href="#RFC7049">[RFC7049]</a> as its framing. Since CBOR is self-framing &#8211; a CBOR parser can determine when a CBOR object is complete at the point at which it has read its final byte &#8211; RAINS requires no external framing. It can therefore run over any streaming, multistreaming, or message-oriented transport protocol. In order to protect query confidentiality, and support rapid deployment over a ubiquitously implemented transport, RAINS is defined in this document to run over persistent TLS 1.2 connections <a href="#RFC5246">[RFC5246]</a> over TCP <a href="#RFC0793">[RFC0793]</a> with mutual authentication. The TLS certificates of RAINS server peers can be verified as specified in the certificate assertions for those servers.</p>
+<p id="rfc.section.6.p.2">RAINS servers MUST support this transport; future transports can be negotiated using the capabilities mechanism after bootstrapping using TLS 1.2. As RAINS is an experimental protocol, RAINS servers listen on port 1022 <a href="#RFC4727">[RFC4727]</a> for connections from other RAINS servers and clients. RAINS servers should strive to keep connections open to peer servers, unless it is clear that no future messages will be exchanged with those peers, or in the face of resource limitations at either peer. If a RAINS server needs to send a message to another RAINS server to which it does not have an open connection, it attempts to open a connection with that server.</p>
+<p id="rfc.section.6.p.3">This section describes the operation of the protocol as used among oracle servers and authority servers. A simplified version of the protocol for client access is described in <a href="#protocol-client">Section 7</a>.</p>
+<h1 id="rfc.section.6.1"><a href="#rfc.section.6.1">6.1.</a> <a href="#protocol-processing" id="protocol-processing">Message processing</a></h1>
+<p id="rfc.section.6.1.p.1">Once a transport is established, any server may validly send a message with any content to any other server. Upon receipt of a message, a server parses it, and:</p>
+<p/>
+
+<ul>
+  <li>notes the token on the message. If present, the token MUST be present on any messages sent in reply to this message.</li>
+  <li>processes any capabilities present, replacing the set of capabilities known for the peer with the set present in the message. If the present capabilities are represented by a hash that the server does not have in its cache, it prepares a notification of type 399 &#8220;Capability hash not understood&#8221; to send to its peer.</li>
+  <li>splits the contents into its constituent message sections, processing them independently.</li>
+</ul>
+<p id="rfc.section.6.1.p.3">On receipt of an assertion, shard, or zone message section, the server:</p>
+<p/>
+
+<ul>
+  <li>verifies its consistency (see <a href="#runtime-consistency-checking">Section 6.4</a>). If the section is not consistent, it prepares to send a notification of type 403 Inconsistent Message to the peer, and discards the section. Otherwise, it:</li>
+  <li>determines whether it answers an outstanding query; if so, it prepares to forward the section to the server that issued the query.</li>
+  <li>determines whether it replaces any information presently in its cache (see <a href="#hash-chain-rev">Section 5.10.2</a>). If so, it discards the old information, and caches the new section.</li>
+  <li>determines whether it is likely to answer a future query, according to its configuration, policy, and query history; if so, it caches the section.</li>
+</ul>
+<p id="rfc.section.6.1.p.5">On receipt of a query, the server:</p>
+<p/>
+
+<ul>
+  <li>determines whether it has a stored assertion, shard, and/or zone message section which answers the query. If so, it prepares to return the most specific such section with the signature of the longest remaining validity to the peer that issued the query. If not, it:</li>
+  <li>checks to see whether the query specifies option 4 (cached answers only). If so, and if option 5 (expired assertions acceptable) is also specified, it then checks to see if it has any cached sections that answer the query on which signatures are expired; otherwise, processing stops. If the query does not specify option 4, delegation proceeds as follows:</li>
+  <li>determines whether it has other non-authoritative servers it can forward the query to, according to its configuration and policy, and in compliance with any query options (see <a href="#cbor-query">Section 5.7</a>). If so, it prepares to forward the query to those servers, noting the reply for the received query depends on the replies for the forwarded query. If not, it:</li>
+  <li>determines the responsible authority servers for the zone containing the query name in the query for contexts requested, and forwards the query to those authority servers, noting the reply for the received query depends on the reply for the forwarded query.</li>
+</ul>
+<p id="rfc.section.6.1.p.7">If query delegation fails to return an answer within a configured timeout for a delegated query, the server prepares to send a 404 No assertion available response to the peer from which it received the query.</p>
+<p id="rfc.section.6.1.p.8">When a server creates a new query to forward to another server in response to a query it received, it SHOULD NOT use the same token on the delegated query as on the received query, unless option 6 Enable Tracing is present in the received , in which case it MUST use the same token. The Enable Tracing option is designed to allow debugging of query processing across multiple servers, and MUST NOT be enabled by default.</p>
+<p id="rfc.section.6.1.p.9">On receipt of a notification, the server&#8217;s behavior depends on the notification type:</p>
+<p/>
+
+<ul>
+  <li>For type 100 &#8220;Connection Heartbeat&#8221;, the server does nothing: these null messages are used to keep long-lived connections open in the presence of network behaviors that may drop state for idle connections.</li>
+  <li>For type 399 &#8220;Capability hash not understood&#8221;, the server prepares to send a full capabilities list on the next message it sends to the peer.</li>
+  <li>For type 404 &#8220;No assertion available&#8221;, the server checks the token on the message, and prepares to forward the assertion to the associated query.</li>
+  <li>For type 413 &#8220;Message too large&#8221; the server notes that large messages may not be sent to a peer and tries again (see <a href="#protocol-limits">Section 6.3</a>), or logs the error along with the note-data content.</li>
+  <li>For type 400 &#8220;Malformed message&#8221;, type 403 &#8220;Inconsistent message&#8221;, type 500 &#8220;Server error&#8221;, or type 501 &#8220;Server not capable&#8221;, the server logs the error along with the note-data content, as these notifications generally represent implementation or configuration error conditions which will require human intervention to mitigate.</li>
+</ul>
+<p id="rfc.section.6.1.p.11">The first message a server sends to a peer after a new connection is established SHOULD contain a capabilities section, if the server supports any optional capabilities. See <a href="#cbor-capabilities">Section 5.13</a>.</p>
+<p id="rfc.section.6.1.p.12">If the server is configured to keep long-running connections open, due to the presence of network behaviors that may drop state for idle connections, it SHOULD send a message containing a type 100 Connection Heartbeat notification after a configured idle time without any messages containing other content being sent.</p>
+<h1 id="rfc.section.6.2"><a href="#rfc.section.6.2">6.2.</a> <a href="#message-transmission" id="message-transmission">Message Transmission</a></h1>
+<p id="rfc.section.6.2.p.1">As noted in <a href="#protocol-processing">Section 6.1</a> many messages are sent in reply to messages received from peers. Servers may also originate messages on their own, based on their configuration and policy:</p>
+<p/>
+
+<ul>
+  <li>Proactive queries to retrieve assertions, shards, and zones for which all signatures have expired or will soon expire, for cache management purposes.</li>
+  <li>Proactive push of assertions, shards, and zones to other servers, based on query history or other information indicating those servers may query for the assertions they contain.</li>
+</ul>
+<h1 id="rfc.section.6.3"><a href="#rfc.section.6.3">6.3.</a> <a href="#protocol-limits" id="protocol-limits">Message Limits</a></h1>
+<p id="rfc.section.6.3.p.1">RAINS servers MUST accept messages up to 65536 bytes in length, but MAY accept messages of greater length, subject to resource limitations of the server. A server with resource limitations MUST respond to a message rejected due to length restrictions with a notification of type 414 (Message Too Large). A server that receives a type 413 notification must note that the peer sending the message only accepts messages smaller than the largest message it&#8217;s successfully sent that peer, or cap messages to that peer to 65536 bytes in length.</p>
+<p id="rfc.section.6.3.p.2">Since a bare assertion with a single ECDSA signature requires on the order of 180 bytes, it is clear that many full zones won&#8217;t fit into a single minimum maximum-size message. Authorities are therefore encouraged to publish zones grouped into shards that will fit into 65536-byte messages, to allow servers to reply using these shards when full-zone transfers are not possible due to message size limitations.</p>
+<h1 id="rfc.section.6.4"><a href="#rfc.section.6.4">6.4.</a> <a href="#runtime-consistency-checking" id="runtime-consistency-checking">Runtime consistency checking</a></h1>
+<p id="rfc.section.6.4.p.1">The data model used by the RAINS protocol allows inconsistent information to be asserted, all resulting from misconfigured or misbehaving authority servers. For example, a shard valid at a given point in time can be marked lexically complete, but not contain an assertion within its lexical range, which is also valid at that point. This would allow both proof of the presence and absence of an assertion at the same time, which is clearly nonsensical.</p>
+<p id="rfc.section.6.4.p.2">RAINS relies on runtime consistency checking to mitigate this problem: each server receiving an assertion, shard, or zone SHOULD, subject to resource constraints, ensure that it is consistent with other information it has, and if not, discard all assertions, shards, and zones in its cache, log the error, and send a 403 Inconsistent Message to the source of the message.</p>
+<h1 id="rfc.section.7"><a href="#rfc.section.7">7.</a> <a href="#protocol-client" id="protocol-client">RAINS Client Protocol</a></h1>
 <p id="rfc.section.7.p.1">TODO: define as a subset of the full RAINS protocol, plus oracle signatures and tags in answers to allow oracles to verify proof of answer. Preferences for privacy/latency tradeoffs might go here.</p>
 <p id="rfc.section.7.p.2">TODO: add cx&#8211;link- and cx&#8211;site- link- and site-local contexts.</p>
 <h1 id="rfc.section.8"><a href="#rfc.section.8">8.</a> <a href="#deployment-considerations" id="deployment-considerations">Deployment Considerations</a></h1>
-<h1 id="rfc.section.8.1"><a href="#rfc.section.8.1">8.1.</a> <a href="#runtime-consistency-checking" id="runtime-consistency-checking">Runtime consistency checking</a></h1>
-<p id="rfc.section.8.1.p.1">TODO: note that the mechanisms allow inconsistent information to exist. define algorithms for maintaining consistency at any given RAINS server. evaluate global inconsistency of these algorithms.</p>
-<h1 id="rfc.section.8.2"><a href="#rfc.section.8.2">8.2.</a> <a href="#on-confidentiality-and-integrity-protection" id="on-confidentiality-and-integrity-protection">On Confidentiality and Integrity Protection</a></h1>
+<p id="rfc.section.8.p.1">TODO: frontmatter</p>
+<h1 id="rfc.section.8.1"><a href="#rfc.section.8.1">8.1.</a> <a href="#assertion-lifetime-management" id="assertion-lifetime-management">Assertion lifetime management</a></h1>
+<p id="rfc.section.8.1.p.1">An assertion can contain multiple signatures, each with a different lifetime.  Signature lifetimes are equivalent to a time to live in the present DNS: authorities should compute a new signature for each validity period, and make these new signatures available when old ones are expiring.</p>
+<p id="rfc.section.8.1.p.2">If an unexpected change to an assertion is necessary, the hash chain based replacement mechanism described in <a href="#hash-chain-rev">Section 5.10.2</a> provides a way for an authority to replace signed assertions with new information or with Null objects, in the case of deletion.</p>
+<p id="rfc.section.8.1.p.3">Since assertion lifetime management is based on a real-time clock expressed in UTC, RAINS servers MUST use a clock synchronization protocol such as NTP <a href="#RFC5905">[RFC5905]</a>.</p>
+<h1 id="rfc.section.8.2"><a href="#rfc.section.8.2">8.2.</a> <a href="#confidentiality-and-integrity-protection" id="confidentiality-and-integrity-protection">Confidentiality and Integrity Protection</a></h1>
 <p id="rfc.section.8.2.p.1">TODO: note that queries require more confidentiality than assertions. use TLS for hop-by-hop confidentiality for now. point out data confidentiality using COSE as a future next step.</p>
 <h1 id="rfc.section.8.3"><a href="#rfc.section.8.3">8.3.</a> <a href="#authority-signer-interface" id="authority-signer-interface">Authority Signer Interface</a></h1>
 <p id="rfc.section.8.3.p.1">TODO: need to define a way to keep authority servers from needing secret keys.</p>
 <h1 id="rfc.section.8.4"><a href="#rfc.section.8.4">8.4.</a> <a href="#client-resolver-interfaces" id="client-resolver-interfaces">Client Resolver Interfaces</a></h1>
 <p id="rfc.section.8.4.p.1">TODO: note we should add RAINS resolver information to DHCP. do we want a multicast address as well? do we need to add context information to DHCP?</p>
-<h1 id="rfc.section.8.5"><a href="#rfc.section.8.5">8.5.</a> <a href="#translation-between-rains-and-dns" id="translation-between-rains-and-dns">Translation between RAINS and DNS</a></h1>
+<h1 id="rfc.section.8.5"><a href="#rfc.section.8.5">8.5.</a> <a href="#translation-between-rains-and-dns-information-models" id="translation-between-rains-and-dns-information-models">Translation between RAINS and DNS information models</a></h1>
 <p id="rfc.section.8.5.p.1">TODO: contexts are really hard to wedge into DNS.</p>
 <h1 id="rfc.section.8.6"><a href="#rfc.section.8.6">8.6.</a> <a href="#rendering-rains-messages-as-json-for-debugging" id="rendering-rains-messages-as-json-for-debugging">Rendering RAINS messages as JSON for debugging</a></h1>
 <p id="rfc.section.8.6.p.1">TODO: note an algorithmic transform to replace keys with names.</p>
@@ -1063,8 +1143,9 @@ li, p {
 <h1 id="rfc.section.10"><a href="#rfc.section.10">10.</a> <a href="#iana-considerations" id="iana-considerations">IANA Considerations</a></h1>
 <p id="rfc.section.10.p.1">The present revision of this document has no actions for IANA.</p>
 <p id="rfc.section.10.p.2">The authors have registered the CBOR tag 15309736 to identify RAINS messages in the CBOR tag registry at https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml.</p>
-<p id="rfc.section.10.p.3">The symbol table in this document in <a href="#cbor-symtab">Section 5.1</a>, the notification code table in <a href="#cbor-notification">Section 5.8</a>, and the signature algorithm table in <a href="#cbor-signature">Section 5.10</a> may be candidates for IANA registries in future revisions of this document.</p>
-<p id="rfc.section.10.p.4">The urn:x-rains namespace used by the RAINS capability mechanism in {{cbor- capabilities}} may be a candidate for replacement with an IANA-registered namespace in a future revision of this document.</p>
+<p id="rfc.section.10.p.3">RAINS servers currently listen for connections from other servers on Port 1022. Future revisions of this document may specify a different port, registered with IANA via Expert Review <a href="#RFC5226">[RFC5226]</a>.</p>
+<p id="rfc.section.10.p.4">The symbol table in this document in <a href="#cbor-symtab">Section 5.1</a>, the notification code table in <a href="#cbor-notification">Section 5.8</a>, and the signature algorithm table in <a href="#cbor-signature">Section 5.10</a> may be candidates for IANA registries in future revisions of this document.</p>
+<p id="rfc.section.10.p.5">The urn:x-rains namespace used by the RAINS capability mechanism in {{cbor- capabilities}} may be a candidate for replacement with an IANA-registered namespace in a future revision of this document.</p>
 <h1 id="rfc.section.11"><a href="#rfc.section.11">11.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a></h1>
 <p id="rfc.section.11.p.1">TODO: point at <a href="#signatures-in-assertions">Section 4.2.2</a>, {{on-confidentiality-and- integrity-protection}}, and <a href="#authority-signer-interface">Section 8.3</a>. Note that shards for proving non-existence of a name are equivalent to NSEC, and that there is explicitly no resistance against zone enumeration.</p>
 <h1 id="rfc.section.12"><a href="#rfc.section.12">12.</a> <a href="#acknowledgments" id="acknowledgments">Acknowledgments</a></h1>
@@ -1083,7 +1164,13 @@ li, p {
       <td class="reference">
         <b id="I-D.trammell-inip-pins">[I-D.trammell-inip-pins]</b>
       </td>
-      <td class="top"><a>Trammell, B.</a>, "<a href="http://tools.ietf.org/html/draft-trammell-inip-pins-01">Properties of an Ideal Naming Service</a>", Internet-Draft draft-trammell-inip-pins-01, March 2016.</td>
+      <td class="top"><a>Trammell, B.</a>, "<a href="http://tools.ietf.org/html/draft-trammell-inip-pins-02">Properties of an Ideal Naming Service</a>", Internet-Draft draft-trammell-inip-pins-02, September 2016.</td>
+    </tr>
+    <tr>
+      <td class="reference">
+        <b id="RFC0793">[RFC0793]</b>
+      </td>
+      <td class="top"><a>Postel, J.</a>, "<a href="http://tools.ietf.org/html/rfc793">Transmission Control Protocol</a>", STD 7, RFC 793, DOI 10.17487/RFC0793, September 1981.</td>
     </tr>
     <tr>
       <td class="reference">
@@ -1105,6 +1192,18 @@ li, p {
     </tr>
     <tr>
       <td class="reference">
+        <b id="RFC4727">[RFC4727]</b>
+      </td>
+      <td class="top"><a>Fenner, B.</a>, "<a href="http://tools.ietf.org/html/rfc4727">Experimental Values In IPv4, IPv6, ICMPv4, ICMPv6, UDP, and TCP Headers</a>", RFC 4727, DOI 10.17487/RFC4727, November 2006.</td>
+    </tr>
+    <tr>
+      <td class="reference">
+        <b id="RFC5246">[RFC5246]</b>
+      </td>
+      <td class="top"><a>Dierks, T.</a> and <a>E. Rescorla</a>, "<a href="http://tools.ietf.org/html/rfc5246">The Transport Layer Security (TLS) Protocol Version 1.2</a>", RFC 5246, DOI 10.17487/RFC5246, August 2008.</td>
+    </tr>
+    <tr>
+      <td class="reference">
         <b id="RFC7049">[RFC7049]</b>
       </td>
       <td class="top"><a>Bormann, C.</a> and <a>P. Hoffman</a>, "<a href="http://tools.ietf.org/html/rfc7049">Concise Binary Object Representation (CBOR)</a>", RFC 7049, DOI 10.17487/RFC7049, October 2013.</td>
@@ -1116,9 +1215,27 @@ li, p {
   <tbody>
     <tr>
       <td class="reference">
+        <b id="I-D.hoffman-dns-over-http">[I-D.hoffman-dns-over-http]</b>
+      </td>
+      <td class="top"><a>Hoffman, P.</a> and <a>J. Hildebrand</a>, "<a href="http://tools.ietf.org/html/draft-hoffman-dns-over-http-00">DNS Queries over HTTPS</a>", Internet-Draft draft-hoffman-dns-over-http-00, September 2016.</td>
+    </tr>
+    <tr>
+      <td class="reference">
         <b id="RFC1035">[RFC1035]</b>
       </td>
       <td class="top"><a>Mockapetris, P.</a>, "<a href="http://tools.ietf.org/html/rfc1035">Domain names - implementation and specification</a>", STD 13, RFC 1035, DOI 10.17487/RFC1035, November 1987.</td>
+    </tr>
+    <tr>
+      <td class="reference">
+        <b id="RFC5226">[RFC5226]</b>
+      </td>
+      <td class="top"><a>Narten, T.</a> and <a>H. Alvestrand</a>, "<a href="http://tools.ietf.org/html/rfc5226">Guidelines for Writing an IANA Considerations Section in RFCs</a>", BCP 26, RFC 5226, DOI 10.17487/RFC5226, May 2008.</td>
+    </tr>
+    <tr>
+      <td class="reference">
+        <b id="RFC5905">[RFC5905]</b>
+      </td>
+      <td class="top"><a>Mills, D.</a>, <a>Martin, J.</a>, <a>Burbank, J.</a> and <a>W. Kasch</a>, "<a href="http://tools.ietf.org/html/rfc5905">Network Time Protocol Version 4: Protocol and Algorithms Specification</a>", RFC 5905, DOI 10.17487/RFC5905, June 2010.</td>
     </tr>
     <tr>
       <td class="reference">
