@@ -41,12 +41,12 @@ normative:
       date: June 2009
 
 informative:
-    I-D.hoffman-dns-over-http:
     RFC1035:
     RFC5226:
     RFC5905:
     RFC6605:
     RFC7231:
+    RFC7624:
     RFC7696:
     RFC7871:
     XEP0115:
@@ -637,6 +637,7 @@ query.
 | 4    | No information leakage beyond oracle: cached answers only      |
 | 5    | Expired assertions are acceptable                              |
 | 6    | Enable token tracing                                           |
+| 7    | Disable verification delegation (client protocol only)         |
 
 Each server is free to determine how to minimize each performance metric
 requested; however, servers MUST NOT generate queries to other servers if "no
@@ -656,10 +657,11 @@ value of the note-type key is encoded as an integer as in the following table:
 | 399  | Capability hash not understood                                 |
 | 400  | Malformed message received                                     |
 | 403  | Inconsistent message received                                  |
-| 404  | No assertion available                                         |
+| 404  | No assertion exists (client protocol only)                     |
 | 413  | Message too large                                              |
 | 500  | Unspecified server error                                       |
 | 501  | Server not capable                                             |
+| 504  | No assertion available                                         |
 
 Note that the status codes are chosen to be mnemonically similar to status
 codes for HTTP {{RFC7231}}. Details of the meaning of each status code are
@@ -975,7 +977,7 @@ On receipt of a query, the server:
   the reply for the forwarded query.
 
 If query delegation fails to return an answer within a configured timeout for
-a delegated query, the server prepares to send a 404 No assertion available
+a delegated query, the server prepares to send a 504 No assertion available
 response to the peer from which it received the query.
 
 When a server creates a new query to forward to another server in response to
@@ -992,7 +994,7 @@ On receipt of a notification, the server's behavior depends on the notification 
   network behaviors that may drop state for idle connections.
 - For type 399 "Capability hash not understood", the server prepares to send a
   full capabilities list on the next message it sends to the peer.
-- For type 404 "No assertion available", the server checks the token on the
+- For type 504 "No assertion available", the server checks the token on the
   message, and prepares to forward the assertion to the associated query.
 - For type 413 "Message too large" the server notes that large messages may 
   not be sent to a peer and tries again (see {{protocol-limits}}), or logs
@@ -1058,17 +1060,59 @@ constraints, ensure that it is consistent with other information it has, and
 if not, discard all assertions, shards, and zones in its cache, log the error,
 and send a 403 Inconsistent Message to the source of the message.
 
+## Integrity and Confidentiality Protection
+
+Assertions are not valid unless they contain at least one signature that can
+be verified from the chain of authorities specified by the name and context on
+the assertion; integrity protection is built into the information model. The
+infrastructure key object type allows keys to be associated with RAINS
+(oracle) servers in addition to zone authorities, which allows a client to
+delegate integrity verification of assertions to a trusted oracle (see
+{{protocol-client}}).
+
+Since the job of an Internet naming service is to provide publicly-available
+information mapping names to information needed to connect to the services
+they name, confidentiality protection for assertions is not a goal of the
+system. Specifically, the information model and the mechanism for proving non-
+existence of an assertion is not designed to provide resistance against zone
+enumeration.
+
+On the other hand, confidentiality protection of query information in crucial.
+Linking naming queries to a specific user can be nearly as useful to build a
+profile of that user for surveillance purposes as full access to the clear
+text of that client's communications {{RFC7624}}. In this revision, RAINS uses
+TLS to protect communications between servers and between servers and clients,
+with certificate information for RAINS infrastructure stored in RAINS itself.
+Together with hop-by-hop confidentiality protection, query options, proactive
+caching, default use of non-persistent tokens, and redirection among servers
+can be used to mix queries and reduce the linkability of query information to
+specific clients.
+
 # RAINS Client Protocol {#protocol-client}
 
-TODO: define as a subset of the full RAINS protocol, plus oracle signatures
-and tags in answers to allow oracles to verify proof of answer. Preferences
-for privacy/latency tradeoffs might go here.
+The protocol used by clients to issue queries to and receive responses from an
+oracle is a subset of the full RAINS protocol, with the following differences:
 
-TODO: add cx--link- and cx--site- link- and site-local contexts.
+- Clients only process assertion, shard, zone, and notification sections;
+  sending a query to a client results in a 400 Malformed Message notification.
+- Clients never listen for connections; a client must initiate and maintain a
+  transport session to the oracle server(s) it uses for name resolution.
+- Servers only process query and notification sections when connected to
+  clients; a client sending assertions to a server results in a 400 Malformed
+  Message notification.
+
+Since signature verification is resource-intensive, clients delegate signature
+verification to oracle servers by default. The oracle server signs the message
+containing results for a query using its own key (published as an infrakey
+object associated with the oracle's name), and a validity time corresponding
+to the signature it verified with the longest lifetime, stripping other
+signatures from the reply. This behavior can be disabled by a client by
+specifying query option 7, allowing the client to do its own verification.
 
 # Deployment Considerations
 
-TODO: frontmatter
+The following subsections discuss issues that must be considered in any
+deployment of RAINS at scale.
 
 ## Assertion lifetime management
 
@@ -1085,20 +1129,25 @@ objects, in the case of deletion.
 Since assertion lifetime management is based on a real-time clock expressed in
 UTC, RAINS servers MUST use a clock synchronization protocol such as NTP {{RFC5905}}.
 
-## Confidentiality and Integrity Protection
+## Secret Key Management
 
-TODO: note that queries require more confidentiality than assertions. use TLS
-for hop-by-hop confidentiality for now. point out data confidentiality using
-COSE as a future next step.
+The secret keys associated with public keys for each RAINS server (via
+infrakey objects) must be available on that server, whether through a hardware
+or software security device, so they can sign messages on demand; this is
+particularly important for oracle servers. In addition, the secret keys
+associated with TLS certificates for each server (published via certinfo
+objects) must be available as well in order to establish TLS sessions.
 
-## Authority Signer Interface
-
-TODO: need to define a way to keep authority servers from needing secret keys.
+However, storing zone secret keys (associated via delegation objects) on RAINS
+servers would represent a more serious operational risk. To keep this from
+being necessary, authority servers have an additional signer interface, from
+which they will accept and cache any assertion, shard, or zone for which they
+are authority servers until at least the end of validity of the last
+signature, provided the signature is verifiable.
 
 ## Client Resolver Interfaces
 
-TODO: note we should add RAINS resolver information to DHCP. do we want a multicast
-address as well? do we need to add context information to DHCP?
+TODO: Clients must be able to discover the oracle server(s) trusted for their domain. DSCP. Certificate configuration/pinning? 
 
 ## Translation between RAINS and DNS information models
 
@@ -1138,8 +1187,7 @@ namespace in a future revision of this document.
 
 # Security Considerations
 
-TODO: point at {{signatures-in-assertions}}, {{on-confidentiality-and-
-integrity-protection}}, and {{authority-signer-interface}}. Note that shards
+TODO: point at {{signatures-in-assertions}}, {{integrity-and-confidentiality-protection}}, and {{secret-key-management}}. Note that shards
 for proving non-existence of a name are equivalent to NSEC, and that there is
 explicitly no resistance against zone enumeration.
 
