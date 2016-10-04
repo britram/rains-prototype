@@ -306,9 +306,8 @@ li, p {
 <link href="#rfc.section.8" rel="Chapter" title="8 Deployment Considerations"/>
 <link href="#rfc.section.8.1" rel="Chapter" title="8.1 Assertion lifetime management"/>
 <link href="#rfc.section.8.2" rel="Chapter" title="8.2 Secret Key Management"/>
-<link href="#rfc.section.8.3" rel="Chapter" title="8.3 Client Resolver Interfaces"/>
-<link href="#rfc.section.8.4" rel="Chapter" title="8.4 Translation between RAINS and DNS information models"/>
-<link href="#rfc.section.8.5" rel="Chapter" title="8.5 Rendering RAINS messages as JSON for debugging"/>
+<link href="#rfc.section.8.3" rel="Chapter" title="8.3 Client Oracle Discovery"/>
+<link href="#rfc.section.8.4" rel="Chapter" title="8.4 Transition using translation between RAINS and DNS information models"/>
 <link href="#rfc.section.9" rel="Chapter" title="9 Experimental Design and Evaluation"/>
 <link href="#rfc.section.10" rel="Chapter" title="10 IANA Considerations"/>
 <link href="#rfc.section.11" rel="Chapter" title="11 Security Considerations"/>
@@ -316,6 +315,7 @@ li, p {
 <link href="#rfc.references" rel="Chapter" title="13 References"/>
 <link href="#rfc.references.1" rel="Chapter" title="13.1 Normative References"/>
 <link href="#rfc.references.2" rel="Chapter" title="13.2 Informative References"/>
+<link href="#rfc.appendix.A" rel="Chapter" title="A Open Issues"/>
 <link href="#rfc.authors" rel="Chapter"/>
 
 
@@ -419,9 +419,8 @@ li, p {
 <li>8.   <a href="#rfc.section.8">Deployment Considerations</a></li>
 <ul><li>8.1.   <a href="#rfc.section.8.1">Assertion lifetime management</a></li>
 <li>8.2.   <a href="#rfc.section.8.2">Secret Key Management</a></li>
-<li>8.3.   <a href="#rfc.section.8.3">Client Resolver Interfaces</a></li>
-<li>8.4.   <a href="#rfc.section.8.4">Translation between RAINS and DNS information models</a></li>
-<li>8.5.   <a href="#rfc.section.8.5">Rendering RAINS messages as JSON for debugging</a></li>
+<li>8.3.   <a href="#rfc.section.8.3">Client Oracle Discovery</a></li>
+<li>8.4.   <a href="#rfc.section.8.4">Transition using translation between RAINS and DNS information models</a></li>
 </ul><li>9.   <a href="#rfc.section.9">Experimental Design and Evaluation</a></li>
 <li>10.   <a href="#rfc.section.10">IANA Considerations</a></li>
 <li>11.   <a href="#rfc.section.11">Security Considerations</a></li>
@@ -429,7 +428,8 @@ li, p {
 <li>13.   <a href="#rfc.references">References</a></li>
 <ul><li>13.1.   <a href="#rfc.references.1">Normative References</a></li>
 <li>13.2.   <a href="#rfc.references.2">Informative References</a></li>
-</ul><li><a href="#rfc.authors">Author's Address</a></li>
+</ul><li>Appendix A.   <a href="#rfc.appendix.A">Open Issues</a></li>
+<li><a href="#rfc.authors">Author's Address</a></li>
 
 
   </ul>
@@ -1150,14 +1150,38 @@ li, p {
 <h1 id="rfc.section.8.2"><a href="#rfc.section.8.2">8.2.</a> <a href="#secret-key-management" id="secret-key-management">Secret Key Management</a></h1>
 <p id="rfc.section.8.2.p.1">The secret keys associated with public keys for each RAINS server (via infrakey objects) must be available on that server, whether through a hardware or software security device, so they can sign messages on demand; this is particularly important for oracle servers. In addition, the secret keys associated with TLS certificates for each server (published via certinfo objects) must be available as well in order to establish TLS sessions.</p>
 <p id="rfc.section.8.2.p.2">However, storing zone secret keys (associated via delegation objects) on RAINS servers would represent a more serious operational risk. To keep this from being necessary, authority servers have an additional signer interface, from which they will accept and cache any assertion, shard, or zone for which they are authority servers until at least the end of validity of the last signature, provided the signature is verifiable.</p>
-<h1 id="rfc.section.8.3"><a href="#rfc.section.8.3">8.3.</a> <a href="#client-resolver-interfaces" id="client-resolver-interfaces">Client Resolver Interfaces</a></h1>
-<p id="rfc.section.8.3.p.1">TODO: Clients must be able to discover the oracle server(s) trusted for their domain. DSCP. Certificate configuration/pinning?</p>
-<h1 id="rfc.section.8.4"><a href="#rfc.section.8.4">8.4.</a> <a href="#translation-between-rains-and-dns-information-models" id="translation-between-rains-and-dns-information-models">Translation between RAINS and DNS information models</a></h1>
-<p id="rfc.section.8.4.p.1">TODO: contexts are really hard to wedge into DNS.</p>
-<h1 id="rfc.section.8.5"><a href="#rfc.section.8.5">8.5.</a> <a href="#rendering-rains-messages-as-json-for-debugging" id="rendering-rains-messages-as-json-for-debugging">Rendering RAINS messages as JSON for debugging</a></h1>
-<p id="rfc.section.8.5.p.1">TODO: note an algorithmic transform to replace keys with names.</p>
+<h1 id="rfc.section.8.3"><a href="#rfc.section.8.3">8.3.</a> <a href="#client-oracle-discovery" id="client-oracle-discovery">Client Oracle Discovery</a></h1>
+<p id="rfc.section.8.3.p.1">A client that will not do its own verification must be able to discover the oracle server(s) it should trust for resolution. Integration with e.g. DHCP or selection of a local multicast discovery method are left to a future revision of this document.</p>
+<p id="rfc.section.8.3.p.2">In any case, clients MUST provide a configuration interface to allow a user to specify (by address or name) and/or constrain (by certificate property) a preferred/trusted oracle. This would allow client on an untrusted network to use an untrusted locally-available oracle to discover a preferred oracle (doing key verification on its own for bootstrapping), before connecting to that oracle for normal name resolution.</p>
+<h1 id="rfc.section.8.4"><a href="#rfc.section.8.4">8.4.</a> <a href="#transition-using-translation-between-rains-and-dns-information-models" id="transition-using-translation-between-rains-and-dns-information-models">Transition using translation between RAINS and DNS information models</a></h1>
+<p id="rfc.section.8.4.p.1">Full adoption of RAINS would require changes to every client device (replacing DNS stub resolvers with RAINS clients) and name server on the Internet. In addition, most client software would need to change, as well, to get the full benefits of explicit context in name resolution. This is a wholly unrealistic goal.</p>
+<p id="rfc.section.8.4.p.2">RAINS servers can, however, coexist with Domain Name System servers and clients during an indefinite transition period. RAINS assertions can be algorithmically translated into DNS answers, and RAINS queries can be algorithmically translated into DNS queries, by RAINS to DNS gateways, given the mostly compatible information models used by the two.</p>
+<p id="rfc.section.8.4.p.3">RAINS to DNS gateways must provide verification services for clients; there is no equivalent to query option 7 for gateways, since the RAINS signatures are generated over the RAINS bytestream for an assertion, not the DNS bytestream.  DNS over TLS <a href="#RFC7858">[RFC7858]</a> SHOULD be used between the DNS client and gateway to ensure confidentiality and integrity for queries and answers.</p>
+<p id="rfc.section.8.4.p.4">Object type mappings are as follows:</p>
+<p/>
+
+<ul>
+  <li>Objects of type name can (largely) be represented as CNAME RRs.</li>
+  <li>Objects of type ip6-addr can be represented as AAAA RRs.</li>
+  <li>Objects of type ip4-addr can be represented as A RRs.</li>
+  <li>Objects of type redirection can be represented as NS RRs.</li>
+  <li>Objects of type cert-info can be represented as TLSA RRs [EDITOR&#8217;S NOTE make sure we design them so this is true].</li>
+  <li>Objects of type service-info can be represented as SRV RRs.</li>
+</ul>
+<p id="rfc.section.8.4.p.6">There are a few object types without mappings:</p>
+<p/>
+
+<ul>
+  <li>Objects of type delegation can be represented as DS RRs, and signatures as RRSIG RRs, but since these keys are verified by the gateway, there is no need to represent this information to the client.</li>
+  <li>Objects of type infrakey cannot be represented in DNS, but are irrelevant for DNS translation of RAINS messages, since DNS does not support server signing of responses.</li>
+  <li>Objects of type registrar and registrant cannot be represented in DNS; clients can use WHOIS instead. In addition, RRTYPEs could be added for them in the future if RAINS sees significant deployment with DNS as a front-end protocol.</li>
+  <li>Objects of type nameset cannot be represented in DNS; the current equivalent are the IDNA parameters maintained by IANA (for the DNS root zone only) at https://www.iana.org/assignments/idna-tables-6.3.0/idna-tables-6.3.0.xhtml.</li>
+</ul>
+<p id="rfc.section.8.4.p.8">When translating a DNS query from a client to a RAINS query for that client, client options can be set on a per-server, per-client, or per-query basis using some out of band configuration options.</p>
+<p id="rfc.section.8.4.p.9">When translating a RAINS assertion to a DNS answer, the gateway can use the time to expiry for the verified signature as the TTL.</p>
 <h1 id="rfc.section.9"><a href="#rfc.section.9">9.</a> <a href="#experimental-design-and-evaluation" id="experimental-design-and-evaluation">Experimental Design and Evaluation</a></h1>
-<p id="rfc.section.9.p.1">TODO: note that this is primarily a prototype for discussion, but that we do intend to implement it. how will we tell if something like RAINS is ready for standardization?</p>
+<p id="rfc.section.9.p.1">The protocol described in this document is intended primarily as a prototype for discussion, though the goal of the document is to specify RAINS completely enough to allow independent, interoperable implementation of clients an servers. The massive inertia behind the deployment of the present domain name system makes</p>
+<p id="rfc.section.9.p.2">TODO: note that this is primarily a prototype for discussion, but that we do intend to implement it. how will we tell if something like RAINS is ready for standardization?</p>
 <h1 id="rfc.section.10"><a href="#rfc.section.10">10.</a> <a href="#iana-considerations" id="iana-considerations">IANA Considerations</a></h1>
 <p id="rfc.section.10.p.1">The present revision of this document has no actions for IANA.</p>
 <p id="rfc.section.10.p.2">The authors have registered the CBOR tag 15309736 to identify RAINS messages in the CBOR tag registry at https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml.</p>
@@ -1165,7 +1189,7 @@ li, p {
 <p id="rfc.section.10.p.4">The symbol table in this document in <a href="#cbor-symtab">Section 5.1</a>, the notification code table in <a href="#cbor-notification">Section 5.8</a>, and the signature algorithm table in <a href="#cbor-signature">Section 5.10</a> may be candidates for IANA registries in future revisions of this document.</p>
 <p id="rfc.section.10.p.5">The urn:x-rains namespace used by the RAINS capability mechanism in {{cbor- capabilities}} may be a candidate for replacement with an IANA-registered namespace in a future revision of this document.</p>
 <h1 id="rfc.section.11"><a href="#rfc.section.11">11.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a></h1>
-<p id="rfc.section.11.p.1">TODO: point at <a href="#signatures-in-assertions">Section 4.2.2</a>, <a href="#integrity-and-confidentiality-protection">Section 6.5</a>, and <a href="#secret-key-management">Section 8.2</a>. Note that shards for proving non-existence of a name are equivalent to NSEC, and that there is explicitly no resistance against zone enumeration.</p>
+<p id="rfc.section.11.p.1">This document specifies a new, experimental protocol for Internet name resolution, with mandatory integrity protection for assertions about names built into the information model, and confidentiality for query information protected on a hop-by-hop basis. See especially <a href="#signatures-in-assertions">Section 4.2.2</a>, <a href="#integrity-and-confidentiality-protection">Section 6.5</a>, and <a href="#secret-key-management">Section 8.2</a> for security-relevant details.</p>
 <h1 id="rfc.section.12"><a href="#rfc.section.12">12.</a> <a href="#acknowledgments" id="acknowledgments">Acknowledgments</a></h1>
 <p id="rfc.section.12.p.1">Thanks to Daniele Asoni, Laurent Chuat, Ted Hardie, Joe Hildebrand, Steve Matsumoto, Adrian Perrig, Raphael Reischuk, Stephen Shirley, Andrew Sullivan, and Suzanne Woolf for the discussions leading to the design of this protocol.</p>
 <h1 id="rfc.references"><a href="#rfc.references">13.</a> References</h1>
@@ -1182,7 +1206,7 @@ li, p {
       <td class="reference">
         <b id="I-D.trammell-inip-pins">[I-D.trammell-inip-pins]</b>
       </td>
-      <td class="top"><a>Trammell, B.</a>, "<a href="http://tools.ietf.org/html/draft-trammell-inip-pins-01">Properties of an Ideal Naming Service</a>", Internet-Draft draft-trammell-inip-pins-01, March 2016.</td>
+      <td class="top"><a>Trammell, B.</a>, "<a href="http://tools.ietf.org/html/draft-trammell-inip-pins-02">Properties of an Ideal Naming Service</a>", Internet-Draft draft-trammell-inip-pins-02, September 2016.</td>
     </tr>
     <tr>
       <td class="reference">
@@ -1275,6 +1299,12 @@ li, p {
     </tr>
     <tr>
       <td class="reference">
+        <b id="RFC7858">[RFC7858]</b>
+      </td>
+      <td class="top"><a>Hu, Z.</a>, <a>Zhu, L.</a>, <a>Heidemann, J.</a>, <a>Mankin, A.</a>, <a>Wessels, D.</a> and <a>P. Hoffman</a>, "<a href="http://tools.ietf.org/html/rfc7858">Specification for DNS over Transport Layer Security (TLS)</a>", RFC 7858, DOI 10.17487/RFC7858, May 2016.</td>
+    </tr>
+    <tr>
+      <td class="reference">
         <b id="RFC7871">[RFC7871]</b>
       </td>
       <td class="top"><a>Contavalli, C.</a>, <a>van der Gaast, W.</a>, <a>Lawrence, D.</a> and <a>W. Kumari</a>, "<a href="http://tools.ietf.org/html/rfc7871">Client Subnet in DNS Queries</a>", RFC 7871, DOI 10.17487/RFC7871, May 2016.</td>
@@ -1287,6 +1317,13 @@ li, p {
     </tr>
   </tbody>
 </table>
+<h1 id="rfc.appendix.A"><a href="#rfc.appendix.A">Appendix A.</a> <a href="#open-issues" id="open-issues">Open Issues</a></h1>
+<p/>
+
+<ul>
+  <li>The format of the nameset and certinfo object types needs to be specified.</li>
+  <li>A method for clients to discover local oracles needs to be specified.</li>
+</ul>
 <h1 id="rfc.authors">
   <a href="#rfc.authors">Author's Address</a>
 </h1>
