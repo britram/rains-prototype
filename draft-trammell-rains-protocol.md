@@ -48,6 +48,7 @@ informative:
     RFC7231:
     RFC7624:
     RFC7696:
+    RFC7858:
     RFC7871:
     XEP0115:
       title: XEP-0115 Entity Capababilities
@@ -1145,19 +1146,77 @@ which they will accept and cache any assertion, shard, or zone for which they
 are authority servers until at least the end of validity of the last
 signature, provided the signature is verifiable.
 
-## Client Resolver Interfaces
+## Client Oracle Discovery
 
-TODO: Clients must be able to discover the oracle server(s) trusted for their domain. DSCP. Certificate configuration/pinning? 
+A client that will not do its own verification must be able to discover the
+oracle server(s) it should trust for resolution. Integration with e.g. DHCP or
+selection of a local multicast discovery method are left to a future revision
+of this document.
 
-## Translation between RAINS and DNS information models
+In any case, clients MUST provide a configuration interface to allow a user to
+specify (by address or name) and/or constrain (by certificate property) a
+preferred/trusted oracle. This would allow client on an untrusted network to
+use an untrusted locally-available oracle to discover a preferred oracle
+(doing key verification on its own for bootstrapping), before connecting to
+that oracle for normal name resolution.
 
-TODO: contexts are really hard to wedge into DNS.
+## Transition using translation between RAINS and DNS information models
 
-## Rendering RAINS messages as JSON for debugging
+Full adoption of RAINS would require changes to every client device (replacing
+DNS stub resolvers with RAINS clients) and name server on the Internet. In
+addition, most client software would need to change, as well, to get the full
+benefits of explicit context in name resolution. This is a wholly unrealistic goal.
 
-TODO: note an algorithmic transform to replace keys with names.
+RAINS servers can, however, coexist with Domain Name System servers and
+clients during an indefinite transition period. RAINS assertions can be
+algorithmically translated into DNS answers, and RAINS queries can be
+algorithmically translated into DNS queries, by RAINS to DNS gateways, given
+the mostly compatible information models used by the two.
+
+RAINS to DNS gateways must provide verification services for clients; there is
+no equivalent to query option 7 for gateways, since the RAINS signatures are
+generated over the RAINS bytestream for an assertion, not the DNS bytestream.
+DNS over TLS {{RFC7858}} SHOULD be used between the DNS client and gateway to
+ensure confidentiality and integrity for queries and answers.
+
+Object type mappings are as follows:
+
+- Objects of type name can (largely) be represented as CNAME RRs.
+- Objects of type ip6-addr can be represented as AAAA RRs.
+- Objects of type ip4-addr can be represented as A RRs.
+- Objects of type redirection can be represented as NS RRs.
+- Objects of type cert-info can be represented as TLSA RRs 
+  [EDITOR'S NOTE make sure we design them so this is true].
+- Objects of type service-info can be represented as SRV RRs.
+
+There are a few object types without mappings:
+
+- Objects of type delegation can be represented as DS RRs, and signatures as
+  RRSIG RRs, but since these keys are verified by the gateway, there is no need
+  to represent this information to the client.
+- Objects of type infrakey cannot be represented in DNS, but are irrelevant for
+  DNS translation of RAINS messages, since DNS does not support server signing
+  of responses.
+- Objects of type registrar and registrant cannot be represented in DNS; clients
+  can use WHOIS instead. In addition, RRTYPEs could be added for them in the
+  future if RAINS sees significant deployment with DNS as a front-end protocol.
+- Objects of type nameset cannot be represented in DNS; the current equivalent
+  are the IDNA parameters maintained by IANA (for the DNS root zone only) at
+  https://www.iana.org/assignments/idna-tables-6.3.0/idna-tables-6.3.0.xhtml.
+
+When translating a DNS query from a client to a RAINS query for that client,
+client options can be set on a per-server, per-client, or per-query basis
+using some out of band configuration options.
+
+When translating a RAINS assertion to a DNS answer, the gateway can use the
+time to expiry for the verified signature as the TTL.
 
 # Experimental Design and Evaluation
+
+The protocol described in this document is intended primarily as a prototype
+for discussion, though the goal of the document is to specify RAINS completely
+enough to allow independent, interoperable implementation of clients an
+servers. The massive inertia behind the deployment of the present domain name system makes 
 
 TODO: note that this is primarily a prototype for discussion, but that we do
 intend to implement it. how will we tell if something like RAINS is ready for
@@ -1184,12 +1243,14 @@ The urn:x-rains namespace used by the RAINS capability mechanism in {{cbor-
 capabilities}} may be a candidate for replacement with an IANA-registered
 namespace in a future revision of this document.
 
-
 # Security Considerations
 
-TODO: point at {{signatures-in-assertions}}, {{integrity-and-confidentiality-protection}}, and {{secret-key-management}}. Note that shards
-for proving non-existence of a name are equivalent to NSEC, and that there is
-explicitly no resistance against zone enumeration.
+This document specifies a new, experimental protocol for Internet name
+resolution, with mandatory integrity protection for assertions about names
+built into the information model, and confidentiality for query information
+protected on a hop-by-hop basis. See especially {{signatures-in-assertions}},
+{{integrity-and-confidentiality-protection}}, and {{secret-key-management}}
+for security-relevant details.
 
 # Acknowledgments
 
@@ -1202,3 +1263,4 @@ and Suzanne Woolf for the discussions leading to the design of this protocol.
 # Open Issues
 
 - The format of the nameset and certinfo object types needs to be specified.
+- A method for clients to discover local oracles needs to be specified.
