@@ -4,8 +4,8 @@
 
 Names and Identifiers Program                                B. Trammell
 Internet-Draft                                         ETH Zurich NetSec
-Intended status: Experimental                           October 04, 2016
-Expires: April 7, 2017
+Intended status: Experimental                           October 05, 2016
+Expires: April 8, 2017
 
 
      RAINS (Another Internet Naming Service) Protocol Specification
@@ -35,7 +35,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on April 7, 2017.
+   This Internet-Draft will expire on April 8, 2017.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Trammell                  Expires April 7, 2017                 [Page 1]
+Trammell                  Expires April 8, 2017                 [Page 1]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -64,78 +64,171 @@ Internet-Draft                    RAINS                     October 2016
 Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   3
-   2.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   3
-   3.  Architecture  . . . . . . . . . . . . . . . . . . . . . . . .   3
-   4.  Information Model . . . . . . . . . . . . . . . . . . . . . .   4
-     4.1.  Namespace Assumptions . . . . . . . . . . . . . . . . . .   4
-     4.2.  Assertion . . . . . . . . . . . . . . . . . . . . . . . .   4
-       4.2.1.  Context in Assertions . . . . . . . . . . . . . . . .   6
-       4.2.2.  Signatures in Assertions  . . . . . . . . . . . . . .   7
-       4.2.3.  Shards and Zones  . . . . . . . . . . . . . . . . . .   7
-     4.3.  Query . . . . . . . . . . . . . . . . . . . . . . . . . .   9
-       4.3.1.  Context in Queries  . . . . . . . . . . . . . . . . .   9
-     4.4.  Answer  . . . . . . . . . . . . . . . . . . . . . . . . .  10
-   5.  Data Model  . . . . . . . . . . . . . . . . . . . . . . . . .  11
-     5.1.  Symbol Table  . . . . . . . . . . . . . . . . . . . . . .  11
-     5.2.  Message . . . . . . . . . . . . . . . . . . . . . . . . .  12
-     5.3.  Message Section header  . . . . . . . . . . . . . . . . .  13
-     5.4.  Assertion body  . . . . . . . . . . . . . . . . . . . . .  13
-     5.5.  Shard body  . . . . . . . . . . . . . . . . . . . . . . .  14
-     5.6.  Zone Message Section body . . . . . . . . . . . . . . . .  15
-     5.7.  Query Message Section body  . . . . . . . . . . . . . . .  16
-     5.8.  Notification Message Section body . . . . . . . . . . . .  17
-     5.9.  Object  . . . . . . . . . . . . . . . . . . . . . . . . .  18
+   2.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   4
+   3.  Architecture  . . . . . . . . . . . . . . . . . . . . . . . .   5
+   4.  Information Model . . . . . . . . . . . . . . . . . . . . . .   5
+     4.1.  Assertion . . . . . . . . . . . . . . . . . . . . . . . .   5
+       4.1.1.  Context in Assertions . . . . . . . . . . . . . . . .   7
+       4.1.2.  Signatures in Assertions  . . . . . . . . . . . . . .   8
+       4.1.3.  Shards and Zones  . . . . . . . . . . . . . . . . . .   9
+     4.2.  Query . . . . . . . . . . . . . . . . . . . . . . . . . .  10
+       4.2.1.  Context in Queries  . . . . . . . . . . . . . . . . .  11
+     4.3.  Answer  . . . . . . . . . . . . . . . . . . . . . . . . .  11
+   5.  Data Model  . . . . . . . . . . . . . . . . . . . . . . . . .  12
+     5.1.  Symbol Table  . . . . . . . . . . . . . . . . . . . . . .  12
+     5.2.  Message . . . . . . . . . . . . . . . . . . . . . . . . .  13
+     5.3.  Message Section header  . . . . . . . . . . . . . . . . .  14
+     5.4.  Assertion body  . . . . . . . . . . . . . . . . . . . . .  14
+     5.5.  Shard body  . . . . . . . . . . . . . . . . . . . . . . .  15
+     5.6.  Zone Message Section body . . . . . . . . . . . . . . . .  16
+     5.7.  Query Message Section body  . . . . . . . . . . . . . . .  17
+     5.8.  Notification Message Section body . . . . . . . . . . . .  19
+     5.9.  Object  . . . . . . . . . . . . . . . . . . . . . . . . .  20
      5.10. Signatures, delegation keys, and RAINS infrastructure
-           keys  . . . . . . . . . . . . . . . . . . . . . . . . . .  20
-       5.10.1.  ECDSA signature and public key format  . . . . . . .  22
-       5.10.2.  Hash-chain based revocation  . . . . . . . . . . . .  22
-     5.11. Certificate information format  . . . . . . . . . . . . .  23
-     5.12. Name expression format  . . . . . . . . . . . . . . . . .  23
-     5.13. Capabilities  . . . . . . . . . . . . . . . . . . . . . .  23
-   6.  RAINS Protocol Definition . . . . . . . . . . . . . . . . . .  24
-     6.1.  Message processing  . . . . . . . . . . . . . . . . . . .  25
-     6.2.  Message Transmission  . . . . . . . . . . . . . . . . . .  27
-     6.3.  Message Limits  . . . . . . . . . . . . . . . . . . . . .  28
-     6.4.  Runtime consistency checking  . . . . . . . . . . . . . .  28
-     6.5.  Integrity and Confidentiality Protection  . . . . . . . .  28
-   7.  RAINS Client Protocol . . . . . . . . . . . . . . . . . . . .  29
-   8.  Deployment Considerations . . . . . . . . . . . . . . . . . .  30
-     8.1.  Assertion lifetime management . . . . . . . . . . . . . .  30
-     8.2.  Secret Key Management . . . . . . . . . . . . . . . . . .  30
-     8.3.  Client Oracle Discovery . . . . . . . . . . . . . . . . .  30
+           keys  . . . . . . . . . . . . . . . . . . . . . . . . . .  22
+       5.10.1.  ECDSA signature and public key format  . . . . . . .  23
+       5.10.2.  Hash-chain based revocation  . . . . . . . . . . . .  23
+     5.11. Certificate information format  . . . . . . . . . . . . .  24
+     5.12. Name expression format  . . . . . . . . . . . . . . . . .  24
+     5.13. Capabilities  . . . . . . . . . . . . . . . . . . . . . .  24
+   6.  RAINS Protocol Definition . . . . . . . . . . . . . . . . . .  25
+     6.1.  Message processing  . . . . . . . . . . . . . . . . . . .  26
+     6.2.  Message Transmission  . . . . . . . . . . . . . . . . . .  28
+     6.3.  Message Limits  . . . . . . . . . . . . . . . . . . . . .  29
+     6.4.  Runtime consistency checking  . . . . . . . . . . . . . .  29
+     6.5.  Integrity and Confidentiality Protection  . . . . . . . .  30
+   7.  RAINS Client Protocol . . . . . . . . . . . . . . . . . . . .  30
+   8.  Deployment Considerations . . . . . . . . . . . . . . . . . .  31
+     8.1.  Assertion lifetime management . . . . . . . . . . . . . .  31
+     8.2.  Secret Key Management . . . . . . . . . . . . . . . . . .  31
+     8.3.  Query Service Discovery . . . . . . . . . . . . . . . . .  32
      8.4.  Transition using translation between RAINS and DNS
-           information models  . . . . . . . . . . . . . . . . . . .  31
-   9.  Experimental Design and Evaluation  . . . . . . . . . . . . .  32
+           information models  . . . . . . . . . . . . . . . . . . .  32
+   9.  Experimental Design and Evaluation  . . . . . . . . . . . . .  33
+   10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  34
 
 
 
-Trammell                  Expires April 7, 2017                 [Page 2]
+Trammell                  Expires April 8, 2017                 [Page 2]
 
 Internet-Draft                    RAINS                     October 2016
 
 
-   10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  32
-   11. Security Considerations . . . . . . . . . . . . . . . . . . .  33
-   12. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  33
-   13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  33
-     13.1.  Normative References . . . . . . . . . . . . . . . . . .  33
-     13.2.  Informative References . . . . . . . . . . . . . . . . .  34
-   Appendix A.  Open Issues  . . . . . . . . . . . . . . . . . . . .  35
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  35
+   11. Security Considerations . . . . . . . . . . . . . . . . . . .  34
+   12. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  35
+   13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  35
+     13.1.  Normative References . . . . . . . . . . . . . . . . . .  35
+     13.2.  Informative References . . . . . . . . . . . . . . . . .  36
+   Appendix A.  Open Issues  . . . . . . . . . . . . . . . . . . . .  37
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  37
 
 1.  Introduction
 
-   TODO: what is this
+   This document defines an experimental protocol for providing Internet
+   name resolution services, as a replacement for DNS, called RAINS
+   (RAINS, Another Internet Naming Service).  It is designed as a
+   prototype to facilitate conversation about the evolution or
+   replacement of the Domain Name System protocol, and was developed as
+   a name resolution system for the SCION ("Scalability, Control, and
+   Isolation on Next-Generation Networks") future Internet architecture
+   [SCION].  It attempts to answer the question: "how would we design
+   the DNS knowing what we do now," on the background of the properties
+   of an ideal naming service described in [I-D.trammell-inip-pins].
 
-   TODO: what is this not
+   Its architecture (Section 3) and information model ({{information-
+   model}}) are largely compatible with the existing Domain Name System.
+   However, it does take several radical departures from DNS as
+   presently defined and implemented:
 
-   TODO: why does it exist
+   o  Delegation from a superordinate zone to a subordinate zone is done
+      solely with cryptography: a superordinate defines the key(s) that
+      are valid for signing assertions in the subordinate during a
+      particular time interval.  Assertions about names can therefore
+      safely be served from any infrastructure.
+
+   o  All time references in RAINS are absolute: instead of a time to
+      live, each assertion's temporal validity is defined by the
+      temporal validity of the signature(s) on it.
+
+   o  All assertions have validity within a specific context.  A context
+      determines the rules for chaining signatures to verify validity of
+      an assertion.  The global context is a special case of context,
+      which uses chains from the global naming root key.  The use of
+      context explicitly separates global usage of the DNS from local
+      usage thereof, and allows other application-specific naming
+      constraints to be bound to names; see Section 4.1.1.  Queries are
+      valid in one or more contexts, with specific rules for determining
+      which assertions answer which queries; see {{context-in-
+      queries}}.
+
+
+
+
+
+Trammell                  Expires April 8, 2017                 [Page 3]
+
+Internet-Draft                    RAINS                     October 2016
+
+
+   o  There is an explicit separation between registrant-level names and
+      sub- registrant-level names, and explicit information about
+      registrars and registrants available in the naming system at
+      runtime.
+
+   o  Sets of valid characters and rules for valid names are defined on
+      a per-zone basis, and can be verified at runtime.
+
+   Instead of using a custom binary framing as DNS, RAINS uses Concise
+   Binary Object Representation [RFC7049], partially in an effort to
+   make implementations easier to verify and less likely to contain
+   potentially dangerous parser bugs [PARSER-BUGS].  Like DNS, CBOR
+   messages can be carried atop any number of substrate protocols; RAINS
+   is presently defined to use TLS over persistent TCP connections (see
+   Section 6).
 
 2.  Terminology
 
    The terms MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY, when they
    appear in all-capitals, are to be interpreted as defined in
    [RFC2119].
+
+   In addition, the following terms are used in this document as defined
+   [EDITOR'S NOTE: define and normalize definitions/capitalizations,
+   move definitions here]
+
+   o  Authority: see Section 4.1 [EDITOR'S NOTE: not really, needs def]
+
+   o  Assertion: see Section 4.1
+
+   o  Context: see Section 4.1.1 and Section 4.2.1
+
+   o  Shard: see Section 4.1.3
+
+   o  Zone: see Section 4.1.3
+
+   o  Query: see Section 4.2
+
+   o  Notification: see Section 5.8
+
+   o  RAINS Message: see Section 5.2
+
+   o  Authority Service: see Section 3
+
+   o  Query Service: see Section 3
+
+   o  Intermediary Service: see Section 3
+
+
+
+
+Trammell                  Expires April 8, 2017                 [Page 4]
+
+Internet-Draft                    RAINS                     October 2016
+
+
+   o  RAINS Server: see Section 3
+
+   o  RAINS Client: see Section 3 and Section 7
 
 3.  Architecture
 
@@ -161,15 +254,6 @@ Internet-Draft                    RAINS                     October 2016
 
    RAINS Servers use the RAINS Protocol defined in this document to
    exchange queries and assertions.  RAINS Clients use a subset variant
-
-
-
-
-Trammell                  Expires April 7, 2017                 [Page 3]
-
-Internet-Draft                    RAINS                     October 2016
-
-
    of the RAINS Protocol (called the RAINS Client Protocol) to interact
    with RAINS Servers providing query services on their behalf.
 
@@ -183,26 +267,20 @@ Internet-Draft                    RAINS                     October 2016
    required by the resolution mechanism itself; these are defined in
    more detail in Section 5 and Section 6.
 
-4.1.  Namespace Assumptions
-
-   TODO: prosify: The RAINS Information Model makes a few assumptions
-   about the namespaces in which assertions are made:
-
-   o  federated namespace with delegation a la DNS (reference?)
-
-   o  delegations can be organization-level, or sub-organization-level.
-      an organization level name is one that someone has paid a
-      registrar to place in a registry, and contains additional
-      information about the registrar and the registrant (reference for
-      this terminology?)
-
-4.2.  Assertion
+4.1.  Assertion
 
    An Assertion is a signed statement about a mapping from a subject
    name to an object value, and consists of the following elements:
 
    o  Context: name of the context in which the assertion is valid; see
-      Section 4.2.1 below.
+      Section 4.1.1 below.
+
+
+
+Trammell                  Expires April 8, 2017                 [Page 5]
+
+Internet-Draft                    RAINS                     October 2016
+
 
    o  Subject: name about which the assertion is made.
 
@@ -218,16 +296,8 @@ Internet-Draft                    RAINS                     October 2016
    o  Signatures: one or more signatures generated by the authority for
       the Assertion.  Signatures contain a time interval during which
       they are considered valid, and may contain a revocation token
-
-
-
-Trammell                  Expires April 7, 2017                 [Page 4]
-
-Internet-Draft                    RAINS                     October 2016
-
-
       allowing them to be revoked before the end of the time interval.
-      See Section 4.2.2 below.
+      See Section 4.1.2 below.
 
    The Types supported for each assertion are:
 
@@ -260,34 +330,33 @@ Internet-Draft                    RAINS                     October 2016
    o  Zone-Nameset: an expression of the set of names allowed within a
       zone; e.g.  Unicode scripts or codepages in which names in the
       zone may be issued.  This allows a zone to set policy on names in
-      support of the distinguishability property in
-      [I-D.trammell-inip-pins] that can be checked by authority and
-      oracle servers at runtime.  An assertion about a Subject within a
-      Zone whose name is not allowed by a valid signed Zone-Nameset
-      expression is taken to be invalid, even if it has a valid
-      signature.  The details of this type will be described in a
-      separate document.
-
-   o  Registrar: Information about the organization that caused a
-      Subject name to exist, for organization-level names.
-
-   o  Registrant: Information about the organization responsible for a
-      Subject name, for organization-level names.
 
 
 
-
-Trammell                  Expires April 7, 2017                 [Page 5]
+Trammell                  Expires April 8, 2017                 [Page 6]
 
 Internet-Draft                    RAINS                     October 2016
 
+
+      support of the distinguishability property in
+      [I-D.trammell-inip-pins] that can be checked by RAINS servers at
+      runtime.  An assertion about a Subject within a Zone whose name is
+      not allowed by a valid signed Zone-Nameset expression is taken to
+      be invalid, even if it has a valid signature.  The details of this
+      type will be described in a separate document.
+
+   o  Registrar: Information about the organization that caused a
+      Subject name to exist, for registrant-level names.
+
+   o  Registrant: Information about the organization responsible for a
+      Subject name, for registrant-level names.
 
    For a given {subject, type} tuple, multiple assertions can be valid
    at a given point in time; the union of the object values of all of
    these assertions is considered to be the set of valid values at that
    point in time.
 
-4.2.1.  Context in Assertions
+4.1.1.  Context in Assertions
 
    Assertion contexts are used to determine the validity of the
    signature by the declared authority as follows:
@@ -317,6 +386,14 @@ Internet-Draft                    RAINS                     October 2016
       context staff-workstations.cx-.inf.ethz.ch.  Assertions about this
       name would be signed by the authority for inf.ethz.ch.  Here, the
       context serves simply as a marker, without enabling an alternate
+
+
+
+Trammell                  Expires April 8, 2017                 [Page 7]
+
+Internet-Draft                    RAINS                     October 2016
+
+
       signature chain: note that the name simplon.cab.inf.ethz.ch can be
       validly signed by the authority for inf.ethz.ch if no delegation
       exists for cab.inf.ethz.ch.  The context simply marks this
@@ -330,14 +407,6 @@ Internet-Draft                    RAINS                     October 2016
       portal resolver could respond to a query for a common website
       (e.g. www.google.ch) with a signed response directed at the
       captive portal, but within a context identifying the location as
-
-
-
-Trammell                  Expires April 7, 2017                 [Page 6]
-
-Internet-Draft                    RAINS                     October 2016
-
-
       well as the ISP (e.g.  sihlquai.zurich.ch.cx-
       .starbucks.access.some-isp.net.).  This response will be signed by
       the authority for starbucks.access.some-isp.net.  This signature
@@ -347,13 +416,13 @@ Internet-Draft                    RAINS                     October 2016
       it is connected to.
 
    Further examples showing how context can be used in queries as well
-   are given in Section 4.3.1 below.
+   are given in Section 4.2.1 below.
 
    Developing conventions for assertion contexts for different
    situations will require implementation and deployment experience, and
    is a subject for future work.
 
-4.2.2.  Signatures in Assertions
+4.1.2.  Signatures in Assertions
 
    A signature over an assertion contains the following information
    elements:
@@ -373,6 +442,14 @@ Internet-Draft                    RAINS                     October 2016
       which allows a signature to be replaced or removed before the end
       of its validity.  Revocation tokens are generally based on hash
       chains, meaning that a signature with a revocation token "down"
+
+
+
+Trammell                  Expires April 8, 2017                 [Page 8]
+
+Internet-Draft                    RAINS                     October 2016
+
+
       the chain from a given token supercedes it.  The format and
       mechanism used by the revocation token is determined by the
       alogrithm used.
@@ -381,19 +458,11 @@ Internet-Draft                    RAINS                     October 2016
    its own valid-since and valid-until values and the revocation token;
    it does not protect other signatures on the assertion.
 
-4.2.3.  Shards and Zones
+4.1.3.  Shards and Zones
 
    Assertions may also be grouped and signed as a group.  A shard is a
    set of assertions subject to the same authority within the same
    context, protected by one or more signatures over all assertions
-
-
-
-Trammell                  Expires April 7, 2017                 [Page 7]
-
-Internet-Draft                    RAINS                     October 2016
-
-
    within the shard.  A shard may have an additional property that given
    a subject and an authenticated shard, it can be shown that either an
    assertion with a given name and type exists within the shard or does
@@ -402,14 +471,14 @@ Internet-Draft                    RAINS                     October 2016
    A shard has the following information elements:
 
    o  Context: name of the context in which the assertions in the shard
-      are valid; see Section 4.2.1 above.
+      are valid; see Section 4.1.1 above.
 
    o  Zone: name of the zone in which the assertions are made.
 
    o  Content: a set of assertions sharing the context and zone.
 
    o  Signatures: one or more signatures generated by the authority for
-      the shard; see Section 4.2.2.
+      the shard; see Section 4.1.2.
 
    o  Complete-Flag: if true, the shard is lexicographically complete,
       and subject names that sort such that they would be within the
@@ -429,6 +498,14 @@ Internet-Draft                    RAINS                     October 2016
       assertion lookup, other than for discovering and verifying
       authority.  Top-level domains are generally delegation-only.
 
+
+
+
+Trammell                  Expires April 8, 2017                 [Page 9]
+
+Internet-Draft                    RAINS                     October 2016
+
+
    o  Zones containing no delegation assertions are final zones.  Final
       zones are not relevant as part of an authority discovery.
 
@@ -439,33 +516,26 @@ Internet-Draft                    RAINS                     October 2016
    A zone has the following information elements:
 
    o  Context: name of the context in which the assertions in the zone
-      are valid; see Section 4.2.1 above.
+      are valid; see Section 4.1.1 above.
 
    o  Zone: name of the zone.
-
-
-
-Trammell                  Expires April 7, 2017                 [Page 8]
-
-Internet-Draft                    RAINS                     October 2016
-
 
    o  Content: a set of assertions and/or shards sharing the context and
       zone.
 
    o  Signatures: one or more signatures generated by the authority for
-      the shard; see Section 4.2.2.
+      the shard; see Section 4.1.2.
 
    o  Kind: delegation-only, final, or mixed; see above.
 
-4.3.  Query
+4.2.  Query
 
    A query is a request for a set of assertions supporting a conclusion
    about a given subject-object mapping.  It consists of the following
    information elements:
 
    o  Contexts: an expression of the context(s) in which assertions
-      answering the query will be accepted; see Section 4.3.1 below.
+      answering the query will be accepted; see Section 4.2.1 below.
 
    o  Qualified-Subject: the name about which the query is made.  The
       subject name in a query must be fully-qualified.
@@ -483,10 +553,19 @@ Internet-Draft                    RAINS                     October 2016
    all the specified contexts; more complex expressions of which types
    in which contexts must be asked using multiple queries.
 
+
+
+
+
+Trammell                  Expires April 8, 2017                [Page 10]
+
+Internet-Draft                    RAINS                     October 2016
+
+
    TODO: provide mechanisms for privacy/performance tradeoffs in
    queries; are infomodel changes required here?
 
-4.3.1.  Context in Queries
+4.2.1.  Context in Queries
 
    Contexts are used in queries as they are in assertions (see
    {{context-in- assertions}}).  Assertion contexts in an answer to a
@@ -498,14 +577,6 @@ Internet-Draft                    RAINS                     October 2016
    priority.  A special null context (represented by the empty string)
    indicates that assertions in any context will be accepted.  Any
    context in the Contexts part of a query may additionally be negated,
-
-
-
-Trammell                  Expires April 7, 2017                 [Page 9]
-
-Internet-Draft                    RAINS                     October 2016
-
-
    in order to note that assertions in those contexts are not
    acceptable.  Negated context name appearing in the Contexts part of a
    query before the null context expresses "any context except these".
@@ -533,11 +604,19 @@ Internet-Draft                    RAINS                     October 2016
    for different situations will require implementation and deployment
    experience, and is a subject for future work.
 
-4.4.  Answer
+4.3.  Answer
 
    An answer consists of a set of assertions, shards, and/or zones which
    respond to a query, bound to that query.  It consists of the
    following information elements:
+
+
+
+
+Trammell                  Expires April 8, 2017                [Page 11]
+
+Internet-Draft                    RAINS                     October 2016
+
 
    o  Query: the query this answer applies to.  If the query was issued
       with a token, the query in the answer may omit all content except
@@ -552,15 +631,6 @@ Internet-Draft                    RAINS                     October 2016
    to verify it; either a shard with the Complete-Flag set, an entire
    Zone, or a Zone-Nameset assertion showing the name is illegal within
    the zone.
-
-
-
-
-
-Trammell                  Expires April 7, 2017                [Page 10]
-
-Internet-Draft                    RAINS                     October 2016
-
 
    A query is taken to have an inconclusive answer when no answer
    returns to the querier before the query's Valid-Until time.
@@ -596,6 +666,14 @@ Internet-Draft                    RAINS                     October 2016
     |    5 | query-name     | Qualified subject name in a query      |
     |      |                |                                        |
     |    6 | context        | Context of an assertion                |
+
+
+
+Trammell                  Expires April 8, 2017                [Page 12]
+
+Internet-Draft                    RAINS                     October 2016
+
+
     |      |                |                                        |
     |    7 | objects        | Objects of an assertion                |
     |      |                |                                        |
@@ -610,14 +688,6 @@ Internet-Draft                    RAINS                     October 2016
     |   12 | reserved       | Reserved for future use in RAINS       |
     |      |                |                                        |
     |   13 | query-contexts | Reserved for future use in RAINS       |
-
-
-
-Trammell                  Expires April 7, 2017                [Page 11]
-
-Internet-Draft                    RAINS                     October 2016
-
-
     |      |                |                                        |
     |   14 | query-types    | acceptable object types for query      |
     |      |                |                                        |
@@ -653,6 +723,13 @@ Internet-Draft                    RAINS                     October 2016
    A Message map MAY contain a capabilities (1) key, whose value is
    described in {#cbor-capabilities}.
 
+
+
+Trammell                  Expires April 8, 2017                [Page 13]
+
+Internet-Draft                    RAINS                     October 2016
+
+
    A Message map MAY contain a signatures (2) key, whose value is an
    array of Signatures over the entire message as defined in
    Section 5.10, to be verified against the
@@ -663,16 +740,6 @@ Internet-Draft                    RAINS                     October 2016
    to a past message or query by token.  If the message is in response
    to a message or query containing a token, the message MUST contain
    that token.
-
-
-
-
-
-
-Trammell                  Expires April 7, 2017                [Page 12]
-
-Internet-Draft                    RAINS                     October 2016
-
 
 5.3.  Message Section header
 
@@ -711,6 +778,14 @@ Internet-Draft                    RAINS                     October 2016
 
    Assertions within a Shard or Zone are "contained Assertions", and can
    inherit values from their containers.  A contained Assertion MAY
+
+
+
+Trammell                  Expires April 8, 2017                [Page 14]
+
+Internet-Draft                    RAINS                     October 2016
+
+
    contain the signatures (2) key and MUST contain the subject-name (3)
    and objects (7) keys.  It MAY contain subject-zone (4) and context
    (6) keys, but in this case the values of these keys MUST be identical
@@ -721,14 +796,6 @@ Internet-Draft                    RAINS                     October 2016
    containing Shard or Zone MUST be signed.  Signatures on a contained
    Assertion are generated as if the inherited values are present in the
    Assertion, whether actually present or not.
-
-
-
-
-Trammell                  Expires April 7, 2017                [Page 13]
-
-Internet-Draft                    RAINS                     October 2016
-
 
    The value of the subject-name (3) key is a UTF-8 encoded [RFC3629]
    string containing the name of the subject of the assertion.  The
@@ -767,6 +834,14 @@ Internet-Draft                    RAINS                     October 2016
    keys, but in this case the values of these keys MUST be identical to
    the values in the containing Zone.
 
+
+
+
+Trammell                  Expires April 8, 2017                [Page 15]
+
+Internet-Draft                    RAINS                     October 2016
+
+
    The value of the content (0) key is an array of Assertion bodies as
    defined in {#cbor-assertion}.
 
@@ -778,14 +853,6 @@ Internet-Draft                    RAINS                     October 2016
 
    The value of the subject-zone (4) key, if present, is a UTF-8 encoded
    string containing the name of the zone in which the Assertions within
-
-
-
-Trammell                  Expires April 7, 2017                [Page 14]
-
-Internet-Draft                    RAINS                     October 2016
-
-
    the Shard is made.  If not present, the zone of the assertion is
    inherited from the containing Zone.
 
@@ -824,6 +891,13 @@ Internet-Draft                    RAINS                     October 2016
    The value of the subject-zone (4) key is a UTF-8 encoded string
    containing the name of the Zone.
 
+
+
+Trammell                  Expires April 8, 2017                [Page 16]
+
+Internet-Draft                    RAINS                     October 2016
+
+
    The value of the context (6) key is a UTF-8 encoded string containing
    the name of the context for which the Zone is valid.
 
@@ -831,16 +905,6 @@ Internet-Draft                    RAINS                     October 2016
    the Zone.  I think so.  This leads (as with inconsistent Shards) to
    the question of "what happens if not", and defending against
    malicious inconsistency.
-
-
-
-
-
-
-Trammell                  Expires April 7, 2017                [Page 15]
-
-Internet-Draft                    RAINS                     October 2016
-
 
 5.7.  Query Message Section body
 
@@ -881,6 +945,15 @@ Internet-Draft                    RAINS                     October 2016
       context except 'cx-.inf.ethz.ch' are acceptable, with the global
       context preferred.
 
+
+
+
+
+Trammell                  Expires April 8, 2017                [Page 17]
+
+Internet-Draft                    RAINS                     October 2016
+
+
    An empty context array in a query is taken to be equivalent to an
    array containing only ['.', 'cx-any-']; i.e. any context acceptable,
    global context preferred.
@@ -891,13 +964,6 @@ Internet-Draft                    RAINS                     October 2016
    priority: [2,3] means the querier is equally interested in both IPv4
    and IPv6 addresses for the query-name.
 
-
-
-Trammell                  Expires April 7, 2017                [Page 16]
-
-Internet-Draft                    RAINS                     October 2016
-
-
    The value of the token (8) key, if present, is either an integer or a
    UTF-8 string of maximum byte length 32.  Future messages or
    notifications containing answers to this query MUST contain this
@@ -907,29 +973,42 @@ Internet-Draft                    RAINS                     October 2016
    integers in priority order of the querier's preferences in tradeoffs
    in answering the query.
 
-   +------+-----------------------------------------------------------+
-   | Code | Description                                               |
-   +------+-----------------------------------------------------------+
-   |    1 | Minimize end-to-end latency                               |
-   |      |                                                           |
-   |    2 | Minimize last-hop answer size (bandwidth)                 |
-   |      |                                                           |
-   |    3 | Minimize information leakage beyond oracle                |
-   |      |                                                           |
-   |    4 | No information leakage beyond oracle: cached answers only |
-   |      |                                                           |
-   |    5 | Expired assertions are acceptable                         |
-   |      |                                                           |
-   |    6 | Enable token tracing                                      |
-   |      |                                                           |
-   |    7 | Disable verification delegation (client protocol only)    |
-   +------+-----------------------------------------------------------+
+   +------+------------------------------------------------------------+
+   | Code | Description                                                |
+   +------+------------------------------------------------------------+
+   |    1 | Minimize end-to-end latency                                |
+   |      |                                                            |
+   |    2 | Minimize last-hop answer size (bandwidth)                  |
+   |      |                                                            |
+   |    3 | Minimize information leakage beyond first hop              |
+   |      |                                                            |
+   |    4 | No information leakage beyond first hop: cached answers    |
+   |      | only                                                       |
+   |      |                                                            |
+   |    5 | Expired assertions are acceptable                          |
+   |      |                                                            |
+   |    6 | Enable token tracing                                       |
+   |      |                                                            |
+   |    7 | Disable verification delegation (client protocol only)     |
+   +------+------------------------------------------------------------+
 
    Each server is free to determine how to minimize each performance
    metric requested; however, servers MUST NOT generate queries to other
    servers if "no information leakage" is specified, and servers MUST
    NOT return expired assertions unless "expired assertions acceptable"
    is specified.
+
+
+
+
+
+
+
+
+Trammell                  Expires April 8, 2017                [Page 18]
+
+Internet-Draft                    RAINS                     October 2016
+
 
 5.8.  Notification Message Section body
 
@@ -938,21 +1017,6 @@ Internet-Draft                    RAINS                     October 2016
    a map which MUST contain the note-type (17) key and MAY contain the
    token (8) and note-data (23) keys.  The value of the note-type key is
    encoded as an integer as in the following table:
-
-
-
-
-
-
-
-
-
-
-
-Trammell                  Expires April 7, 2017                [Page 17]
-
-Internet-Draft                    RAINS                     October 2016
-
 
            +------+--------------------------------------------+
            | Code | Description                                |
@@ -990,25 +1054,22 @@ Internet-Draft                    RAINS                     October 2016
    to be displayed to an administrator to help debug the issue
    identified by the negotiation.
 
+
+
+
+
+
+
+
+Trammell                  Expires April 8, 2017                [Page 19]
+
+Internet-Draft                    RAINS                     October 2016
+
+
 5.9.  Object
 
    Objects are encoded as arrays in CBOR, where the first element is the
    type of the object, encoded as an integer in the following table:
-
-
-
-
-
-
-
-
-
-
-
-Trammell                  Expires April 7, 2017                [Page 18]
-
-Internet-Draft                    RAINS                     October 2016
-
 
       +-------+--------------+-------------------------------------+
       |  Code | Name         | Description                         |
@@ -1052,19 +1113,19 @@ Internet-Draft                    RAINS                     October 2016
    is a byte array of length 4 containing an IPv4 address in network
    byte order.
 
+
+
+
+
+Trammell                  Expires April 8, 2017                [Page 20]
+
+Internet-Draft                    RAINS                     October 2016
+
+
    A redirection (4) object contains the fully-qualified name of a RAINS
    authority server for a named zone.  It is represented as a two-
    element array.  The second element is a fully-qualified name of an
    RAINS authority server as a UTF-8 encoded string.
-
-
-
-
-
-Trammell                  Expires April 7, 2017                [Page 19]
-
-Internet-Draft                    RAINS                     October 2016
-
 
    A delegation (5) object contains the public key used to generate
    signatures on assertions in a named zone, and by which a delegation
@@ -1107,6 +1168,16 @@ Internet-Draft                    RAINS                     October 2016
    message signature may be verified by a receiver.  It is identical in
    structure to a delegation object, as defined in Section 5.10.
 
+
+
+
+
+
+Trammell                  Expires April 8, 2017                [Page 21]
+
+Internet-Draft                    RAINS                     October 2016
+
+
 5.10.  Signatures, delegation keys, and RAINS infrastructure keys
 
    RAINS supports multiple signature algorithms and hash functions for
@@ -1114,14 +1185,6 @@ Internet-Draft                    RAINS                     October 2016
    RAINS signature algorithm identifier specifies the signature
    algorithm; a hash function for generating the HMAC; a method for
    generating, verifying, and interpreting hash chain tokens in
-
-
-
-Trammell                  Expires April 7, 2017                [Page 20]
-
-Internet-Draft                    RAINS                     October 2016
-
-
    signatures; and the format of the encodings of the signature values
    in Assertions, Shards, Zones, and Messages, as well as of public key
    values in delegation objects.
@@ -1163,20 +1226,15 @@ Internet-Draft                    RAINS                     October 2016
       signature; or verify the signature of the resulting byte stream
       according to the algorithm selected.
 
-   The following algorithms are supported:
 
 
 
-
-
-
-
-
-
-Trammell                  Expires April 7, 2017                [Page 21]
+Trammell                  Expires April 8, 2017                [Page 22]
 
 Internet-Draft                    RAINS                     October 2016
 
+
+   The following algorithms are supported:
 
    +------+------------+-----------+-----------------+-----------------+
    | Code | Signatures | Hash/HMAC | Format          | Token           |
@@ -1224,16 +1282,15 @@ Internet-Draft                    RAINS                     October 2016
    Hash-chain based revocation allows a signature (and the Assertion,
    Shard, or Zone it protects) to be replaced before it expires.  To use
    hash-chain based revocation, a signing entity generates a hash chain
-   from a known seed using the hash function specified by the signature
 
 
 
-
-Trammell                  Expires April 7, 2017                [Page 22]
+Trammell                  Expires April 8, 2017                [Page 23]
 
 Internet-Draft                    RAINS                     October 2016
 
 
+   from a known seed using the hash function specified by the signature
    algorithm in use, and places the Nth value derived therefrom in the
    hash chain revocation token on a signature.
 
@@ -1279,16 +1336,19 @@ Internet-Draft                    RAINS                     October 2016
       supported by the sending server, taken from the table below, with
       each name encoded as a UTF-8 string.
 
-   o  a SHA-256 hash of the CBOR byte stream derived from normalizing
-      such an array by sorting it in lexicographically increasing order,
-      then serializing it.
 
 
 
-Trammell                  Expires April 7, 2017                [Page 23]
+
+
+Trammell                  Expires April 8, 2017                [Page 24]
 
 Internet-Draft                    RAINS                     October 2016
 
+
+   o  a SHA-256 hash of the CBOR byte stream derived from normalizing
+      such an array by sorting it in lexicographically increasing order,
+      then serializing it.
 
    This mechanism is inspired by [XEP0115], and is intended to be used
    to reduce the overhead in exposing common sets of capabilities.  Each
@@ -1334,17 +1394,17 @@ Internet-Draft                    RAINS                     October 2016
    confidentiality, and support rapid deployment over a ubiquitously
    implemented transport, RAINS is defined in this document to run over
    persistent TLS 1.2 connections [RFC5246] over TCP [RFC0793] with
-   mutual authentication.  The TLS certificates of RAINS server peers
-   can be verified as specified in the certificate assertions for those
-   servers.
 
 
 
-
-Trammell                  Expires April 7, 2017                [Page 24]
+Trammell                  Expires April 8, 2017                [Page 25]
 
 Internet-Draft                    RAINS                     October 2016
 
+
+   mutual authentication.  The TLS certificates of RAINS server peers
+   can be verified as specified in the certificate assertions for those
+   servers.
 
    RAINS servers MUST support this transport; future transports can be
    negotiated using the capabilities mechanism after bootstrapping using
@@ -1358,8 +1418,8 @@ Internet-Draft                    RAINS                     October 2016
    attempts to open a connection with that server.
 
    This section describes the operation of the protocol as used among
-   oracle servers and authority servers.  A simplified version of the
-   protocol for client access is described in Section 7.
+   RAINS servers.  A simplified version of the protocol for client
+   access is described in Section 7.
 
 6.1.  Message processing
 
@@ -1388,19 +1448,19 @@ Internet-Draft                    RAINS                     October 2016
       Inconsistent Message to the peer, and discards the section.
       Otherwise, it:
 
-   o  determines whether it answers an outstanding query; if so, it
-      prepares to forward the section to the server that issued the
-      query.
 
 
 
 
 
-
-Trammell                  Expires April 7, 2017                [Page 25]
+Trammell                  Expires April 8, 2017                [Page 26]
 
 Internet-Draft                    RAINS                     October 2016
 
+
+   o  determines whether it answers an outstanding query; if so, it
+      prepares to forward the section to the server that issued the
+      query.
 
    o  determines whether it replaces any information presently in its
       cache (see Section 5.10.2).  If so, it discards the old
@@ -1446,17 +1506,18 @@ Internet-Draft                    RAINS                     October 2016
    When a server creates a new query to forward to another server in
    response to a query it received, it SHOULD NOT use the same token on
    the delegated query as on the received query, unless option 6 Enable
+
+
+
+Trammell                  Expires April 8, 2017                [Page 27]
+
+Internet-Draft                    RAINS                     October 2016
+
+
    Tracing is present in the received , in which case it MUST use the
    same token.  The Enable Tracing option is designed to allow debugging
    of query processing across multiple servers, and MUST NOT be enabled
    by default.
-
-
-
-Trammell                  Expires April 7, 2017                [Page 26]
-
-Internet-Draft                    RAINS                     October 2016
-
 
    On receipt of a notification, the server's behavior depends on the
    notification type:
@@ -1501,18 +1562,17 @@ Internet-Draft                    RAINS                     October 2016
    received from peers.  Servers may also originate messages on their
    own, based on their configuration and policy:
 
-   o  Proactive queries to retrieve assertions, shards, and zones for
-      which all signatures have expired or will soon expire, for cache
-      management purposes.
 
 
 
-
-
-Trammell                  Expires April 7, 2017                [Page 27]
+Trammell                  Expires April 8, 2017                [Page 28]
 
 Internet-Draft                    RAINS                     October 2016
 
+
+   o  Proactive queries to retrieve assertions, shards, and zones for
+      which all signatures have expired or will soon expire, for cache
+      management purposes.
 
    o  Proactive push of assertions, shards, and zones to other servers,
       based on query history or other information indicating those
@@ -1555,23 +1615,26 @@ Internet-Draft                    RAINS                     October 2016
    and zones in its cache, log the error, and send a 403 Inconsistent
    Message to the source of the message.
 
+
+
+
+
+
+
+Trammell                  Expires April 8, 2017                [Page 29]
+
+Internet-Draft                    RAINS                     October 2016
+
+
 6.5.  Integrity and Confidentiality Protection
 
    Assertions are not valid unless they contain at least one signature
    that can be verified from the chain of authorities specified by the
    name and context on the assertion; integrity protection is built into
    the information model.  The infrastructure key object type allows
-   keys to be associated with RAINS (oracle) servers in addition to zone
-
-
-
-Trammell                  Expires April 7, 2017                [Page 28]
-
-Internet-Draft                    RAINS                     October 2016
-
-
+   keys to be associated with RAINS servers in addition to zone
    authorities, which allows a client to delegate integrity verification
-   of assertions to a trusted oracle (see Section 7).
+   of assertions to a trusted query service (see Section 7).
 
    Since the job of an Internet naming service is to provide publicly-
    available information mapping names to information needed to connect
@@ -1595,36 +1658,38 @@ Internet-Draft                    RAINS                     October 2016
 7.  RAINS Client Protocol
 
    The protocol used by clients to issue queries to and receive
-   responses from an oracle is a subset of the full RAINS protocol, with
-   the following differences:
+   responses from an query service is a subset of the full RAINS
+   protocol, with the following differences:
 
    o  Clients only process assertion, shard, zone, and notification
       sections; sending a query to a client results in a 400 Malformed
       Message notification.
 
    o  Clients never listen for connections; a client must initiate and
-      maintain a transport session to the oracle server(s) it uses for
+      maintain a transport session to the query server(s) it uses for
       name resolution.
 
    o  Servers only process query and notification sections when
       connected to clients; a client sending assertions to a server
       results in a 400 Malformed Message notification.
 
+
+
+
+
+Trammell                  Expires April 8, 2017                [Page 30]
+
+Internet-Draft                    RAINS                     October 2016
+
+
    Since signature verification is resource-intensive, clients delegate
-   signature verification to oracle servers by default.  The oracle
-   server signs the message containing results for a query using its own
-   key (published as an infrakey object associated with the oracle's
+   signature verification to query servers by default.  The query server
+   signs the message containing results for a query using its own key
+   (published as an infrakey object associated with the query server's
    name), and a validity time corresponding to the signature it verified
    with the longest lifetime, stripping other signatures from the reply.
    This behavior can be disabled by a client by specifying query option
    7, allowing the client to do its own verification.
-
-
-
-Trammell                  Expires April 7, 2017                [Page 29]
-
-Internet-Draft                    RAINS                     October 2016
-
 
 8.  Deployment Considerations
 
@@ -1653,10 +1718,10 @@ Internet-Draft                    RAINS                     October 2016
    The secret keys associated with public keys for each RAINS server
    (via infrakey objects) must be available on that server, whether
    through a hardware or software security device, so they can sign
-   messages on demand; this is particularly important for oracle
-   servers.  In addition, the secret keys associated with TLS
-   certificates for each server (published via certinfo objects) must be
-   available as well in order to establish TLS sessions.
+   messages on demand; this is particularly important for query servers.
+   In addition, the secret keys associated with TLS certificates for
+   each server (published via certinfo objects) must be available as
+   well in order to establish TLS sessions.
 
    However, storing zone secret keys (associated via delegation objects)
    on RAINS servers would represent a more serious operational risk.  To
@@ -1666,21 +1731,19 @@ Internet-Draft                    RAINS                     October 2016
    at least the end of validity of the last signature, provided the
    signature is verifiable.
 
-8.3.  Client Oracle Discovery
+
+
+Trammell                  Expires April 8, 2017                [Page 31]
+
+Internet-Draft                    RAINS                     October 2016
+
+
+8.3.  Query Service Discovery
 
    A client that will not do its own verification must be able to
    discover the oracle server(s) it should trust for resolution.
    Integration with e.g.  DHCP or selection of a local multicast
    discovery method are left to a future revision of this document.
-
-
-
-
-
-Trammell                  Expires April 7, 2017                [Page 30]
-
-Internet-Draft                    RAINS                     October 2016
-
 
    In any case, clients MUST provide a configuration interface to allow
    a user to specify (by address or name) and/or constrain (by
@@ -1706,12 +1769,14 @@ Internet-Draft                    RAINS                     October 2016
    gateways, given the mostly compatible information models used by the
    two.
 
-   RAINS to DNS gateways must provide verification services for clients;
-   there is no equivalent to query option 7 for gateways, since the
-   RAINS signatures are generated over the RAINS bytestream for an
-   assertion, not the DNS bytestream.  DNS over TLS [RFC7858] SHOULD be
-   used between the DNS client and gateway to ensure confidentiality and
-   integrity for queries and answers.
+   While DNSSEC and RAINS keys for equivalent ciphersuites are
+   compatible with each other, there is no equivalent to query option 7
+   for gateways, since the RAINS signatures are generated over the RAINS
+   bytestream for an assertion, not the DNS bytestream.  Therefore,
+   RAINS to DNS gateways must provide verification services for DNS
+   clients.  DNS over TLS [RFC7858] SHOULD be used between the DNS
+   client and gateway to ensure confidentiality and integrity for
+   queries and answers.
 
    Object type mappings are as follows:
 
@@ -1721,6 +1786,14 @@ Internet-Draft                    RAINS                     October 2016
 
    o  Objects of type ip4-addr can be represented as A RRs.
 
+
+
+
+Trammell                  Expires April 8, 2017                [Page 32]
+
+Internet-Draft                    RAINS                     October 2016
+
+
    o  Objects of type redirection can be represented as NS RRs.
 
    o  Objects of type cert-info can be represented as TLSA RRs [EDITOR'S
@@ -1729,14 +1802,6 @@ Internet-Draft                    RAINS                     October 2016
    o  Objects of type service-info can be represented as SRV RRs.
 
    There are a few object types without mappings:
-
-
-
-
-Trammell                  Expires April 7, 2017                [Page 31]
-
-Internet-Draft                    RAINS                     October 2016
-
 
    o  Objects of type delegation can be represented as DS RRs, and
       signatures as RRSIG RRs, but since these keys are verified by the
@@ -1764,17 +1829,40 @@ Internet-Draft                    RAINS                     October 2016
    When translating a RAINS assertion to a DNS answer, the gateway can
    use the time to expiry for the verified signature as the TTL.
 
+   There is no method for exposing context information in a DNS query or
+   answer.  Therefore, queries and answers at a RAINS gateway are only
+   supported for the global context ".".
+
 9.  Experimental Design and Evaluation
 
    The protocol described in this document is intended primarily as a
    prototype for discussion, though the goal of the document is to
    specify RAINS completely enough to allow independent, interoperable
    implementation of clients an servers.  The massive inertia behind the
-   deployment of the present domain name system makes
+   deployment of the present domain name system makes full deployment as
+   a replacement for DNS unlikely.  Despite this, there are some
+   criteria by which the success of the RAINS experiment may be judged:
 
-   TODO: note that this is primarily a prototype for discussion, but
-   that we do intend to implement it. how will we tell if something like
-   RAINS is ready for standardization?
+
+
+Trammell                  Expires April 8, 2017                [Page 33]
+
+Internet-Draft                    RAINS                     October 2016
+
+
+   First, deployment in simulated or closed networks, or in alternate
+   Internet architectures such as SCION, allows implementation
+   experience with the features of RAINS which DNS lacks (signatures as
+   a first-order delegation primitive, support for explicit contexts,
+   explicit tradeoffs in queries, runtime availability of registrar/
+   registrant data, and nameset support), which in turn may inform the
+   specification and deployment of these features on the present DNS.
+
+   Second, deployment of RAINS "islands" in the present Internet
+   alongside DNS on a per-domain basis would allow for comparison
+   between operational and implementation complexity and efficiency and
+   benefits derived from RAINS' features, as information for future
+   development of the DNS protocol.
 
 10.  IANA Considerations
 
@@ -1783,16 +1871,6 @@ Internet-Draft                    RAINS                     October 2016
    The authors have registered the CBOR tag 15309736 to identify RAINS
    messages in the CBOR tag registry at
    https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml.
-
-
-
-
-
-
-Trammell                  Expires April 7, 2017                [Page 32]
-
-Internet-Draft                    RAINS                     October 2016
-
 
    RAINS servers currently listen for connections from other servers on
    Port 1022.  Future revisions of this document may specify a different
@@ -1813,8 +1891,20 @@ Internet-Draft                    RAINS                     October 2016
    name resolution, with mandatory integrity protection for assertions
    about names built into the information model, and confidentiality for
    query information protected on a hop-by-hop basis.  See especially
-   Section 4.2.2, Section 6.5, and Section 8.2 for security-relevant
-   details.
+   Section 4.1.2, Section 6.5, Section 5.10, Section 5.11, and
+   Section 8.2 for security-relevant details.
+
+
+
+
+
+
+
+
+Trammell                  Expires April 8, 2017                [Page 34]
+
+Internet-Draft                    RAINS                     October 2016
+
 
 12.  Acknowledgments
 
@@ -1840,16 +1930,6 @@ Internet-Draft                    RAINS                     October 2016
               RFC 793, DOI 10.17487/RFC0793, September 1981,
               <http://www.rfc-editor.org/info/rfc793>.
 
-
-
-
-
-
-Trammell                  Expires April 7, 2017                [Page 33]
-
-Internet-Draft                    RAINS                     October 2016
-
-
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
@@ -1874,11 +1954,23 @@ Internet-Draft                    RAINS                     October 2016
               DOI 10.17487/RFC5246, August 2008,
               <http://www.rfc-editor.org/info/rfc5246>.
 
+
+
+
+Trammell                  Expires April 8, 2017                [Page 35]
+
+Internet-Draft                    RAINS                     October 2016
+
+
    [RFC7049]  Bormann, C. and P. Hoffman, "Concise Binary Object
               Representation (CBOR)", RFC 7049, DOI 10.17487/RFC7049,
               October 2013, <http://www.rfc-editor.org/info/rfc7049>.
 
 13.2.  Informative References
+
+   [PARSER-BUGS]
+              Bratus, S., Patterson, M., and A. Shubina, "The Bugs We
+              Have To Kill (USENIX login, August 2015)", n.d..
 
    [RFC1035]  Mockapetris, P., "Domain names - implementation and
               specification", STD 13, RFC 1035, DOI 10.17487/RFC1035,
@@ -1899,13 +1991,6 @@ Internet-Draft                    RAINS                     October 2016
               DOI 10.17487/RFC6605, April 2012,
               <http://www.rfc-editor.org/info/rfc6605>.
 
-
-
-Trammell                  Expires April 7, 2017                [Page 34]
-
-Internet-Draft                    RAINS                     October 2016
-
-
    [RFC7231]  Fielding, R., Ed. and J. Reschke, Ed., "Hypertext Transfer
               Protocol (HTTP/1.1): Semantics and Content", RFC 7231,
               DOI 10.17487/RFC7231, June 2014,
@@ -1923,6 +2008,16 @@ Internet-Draft                    RAINS                     October 2016
               BCP 201, RFC 7696, DOI 10.17487/RFC7696, November 2015,
               <http://www.rfc-editor.org/info/rfc7696>.
 
+
+
+
+
+
+Trammell                  Expires April 8, 2017                [Page 36]
+
+Internet-Draft                    RAINS                     October 2016
+
+
    [RFC7858]  Hu, Z., Zhu, L., Heidemann, J., Mankin, A., Wessels, D.,
               and P. Hoffman, "Specification for DNS over Transport
               Layer Security (TLS)", RFC 7858, DOI 10.17487/RFC7858, May
@@ -1932,6 +2027,11 @@ Internet-Draft                    RAINS                     October 2016
               Kumari, "Client Subnet in DNS Queries", RFC 7871,
               DOI 10.17487/RFC7871, May 2016,
               <http://www.rfc-editor.org/info/rfc7871>.
+
+   [SCION]    Barrera, D., Reischuk, R., Szalachowski, P., and A.
+              Perrig, "SCION Five Years Later - Revisiting Scalability,
+              Control, and Isolation Next-Generation Networks
+              (arXiv:1508.01651v1)", n.d..
 
    [XEP0115]  Hildebrand, J., Saint-Andre, P., Troncon, R., and J.
               Konieczny, "XEP-0115 Entity Capababilities", n.d..
@@ -1957,4 +2057,16 @@ Author's Address
 
 
 
-Trammell                  Expires April 7, 2017                [Page 35]
+
+
+
+
+
+
+
+
+
+
+
+
+Trammell                  Expires April 8, 2017                [Page 37]

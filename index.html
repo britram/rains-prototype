@@ -272,14 +272,13 @@ li, p {
 <link href="#rfc.section.2" rel="Chapter" title="2 Terminology"/>
 <link href="#rfc.section.3" rel="Chapter" title="3 Architecture"/>
 <link href="#rfc.section.4" rel="Chapter" title="4 Information Model"/>
-<link href="#rfc.section.4.1" rel="Chapter" title="4.1 Namespace Assumptions"/>
-<link href="#rfc.section.4.2" rel="Chapter" title="4.2 Assertion"/>
-<link href="#rfc.section.4.2.1" rel="Chapter" title="4.2.1 Context in Assertions"/>
-<link href="#rfc.section.4.2.2" rel="Chapter" title="4.2.2 Signatures in Assertions"/>
-<link href="#rfc.section.4.2.3" rel="Chapter" title="4.2.3 Shards and Zones"/>
-<link href="#rfc.section.4.3" rel="Chapter" title="4.3 Query"/>
-<link href="#rfc.section.4.3.1" rel="Chapter" title="4.3.1 Context in Queries"/>
-<link href="#rfc.section.4.4" rel="Chapter" title="4.4 Answer"/>
+<link href="#rfc.section.4.1" rel="Chapter" title="4.1 Assertion"/>
+<link href="#rfc.section.4.1.1" rel="Chapter" title="4.1.1 Context in Assertions"/>
+<link href="#rfc.section.4.1.2" rel="Chapter" title="4.1.2 Signatures in Assertions"/>
+<link href="#rfc.section.4.1.3" rel="Chapter" title="4.1.3 Shards and Zones"/>
+<link href="#rfc.section.4.2" rel="Chapter" title="4.2 Query"/>
+<link href="#rfc.section.4.2.1" rel="Chapter" title="4.2.1 Context in Queries"/>
+<link href="#rfc.section.4.3" rel="Chapter" title="4.3 Answer"/>
 <link href="#rfc.section.5" rel="Chapter" title="5 Data Model"/>
 <link href="#rfc.section.5.1" rel="Chapter" title="5.1 Symbol Table"/>
 <link href="#rfc.section.5.2" rel="Chapter" title="5.2 Message"/>
@@ -306,7 +305,7 @@ li, p {
 <link href="#rfc.section.8" rel="Chapter" title="8 Deployment Considerations"/>
 <link href="#rfc.section.8.1" rel="Chapter" title="8.1 Assertion lifetime management"/>
 <link href="#rfc.section.8.2" rel="Chapter" title="8.2 Secret Key Management"/>
-<link href="#rfc.section.8.3" rel="Chapter" title="8.3 Client Oracle Discovery"/>
+<link href="#rfc.section.8.3" rel="Chapter" title="8.3 Query Service Discovery"/>
 <link href="#rfc.section.8.4" rel="Chapter" title="8.4 Transition using translation between RAINS and DNS information models"/>
 <link href="#rfc.section.9" rel="Chapter" title="9 Experimental Design and Evaluation"/>
 <link href="#rfc.section.10" rel="Chapter" title="10 IANA Considerations"/>
@@ -324,7 +323,7 @@ li, p {
 
   <meta name="dct.creator" content="Trammell, B." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-trammell-rains-protocol" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-10-04" />
+  <meta name="dct.issued" scheme="ISO8601" content="2016-10-05" />
   <meta name="dct.abstract" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design the DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in " />
   <meta name="description" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design the DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in " />
 
@@ -345,10 +344,10 @@ li, p {
 </tr>
 <tr>
   <td class="left">Intended status: Experimental</td>
-  <td class="right">October 04, 2016</td>
+  <td class="right">October 05, 2016</td>
 </tr>
 <tr>
-  <td class="left">Expires: April 7, 2017</td>
+  <td class="left">Expires: April 8, 2017</td>
   <td class="right"></td>
 </tr>
 
@@ -369,7 +368,7 @@ li, p {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on April 7, 2017.</p>
+<p>This Internet-Draft will expire on April 8, 2017.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -385,14 +384,13 @@ li, p {
 <li>2.   <a href="#rfc.section.2">Terminology</a></li>
 <li>3.   <a href="#rfc.section.3">Architecture</a></li>
 <li>4.   <a href="#rfc.section.4">Information Model</a></li>
-<ul><li>4.1.   <a href="#rfc.section.4.1">Namespace Assumptions</a></li>
-<li>4.2.   <a href="#rfc.section.4.2">Assertion</a></li>
-<ul><li>4.2.1.   <a href="#rfc.section.4.2.1">Context in Assertions</a></li>
-<li>4.2.2.   <a href="#rfc.section.4.2.2">Signatures in Assertions</a></li>
-<li>4.2.3.   <a href="#rfc.section.4.2.3">Shards and Zones</a></li>
-</ul><li>4.3.   <a href="#rfc.section.4.3">Query</a></li>
-<ul><li>4.3.1.   <a href="#rfc.section.4.3.1">Context in Queries</a></li>
-</ul><li>4.4.   <a href="#rfc.section.4.4">Answer</a></li>
+<ul><li>4.1.   <a href="#rfc.section.4.1">Assertion</a></li>
+<ul><li>4.1.1.   <a href="#rfc.section.4.1.1">Context in Assertions</a></li>
+<li>4.1.2.   <a href="#rfc.section.4.1.2">Signatures in Assertions</a></li>
+<li>4.1.3.   <a href="#rfc.section.4.1.3">Shards and Zones</a></li>
+</ul><li>4.2.   <a href="#rfc.section.4.2">Query</a></li>
+<ul><li>4.2.1.   <a href="#rfc.section.4.2.1">Context in Queries</a></li>
+</ul><li>4.3.   <a href="#rfc.section.4.3">Answer</a></li>
 </ul><li>5.   <a href="#rfc.section.5">Data Model</a></li>
 <ul><li>5.1.   <a href="#rfc.section.5.1">Symbol Table</a></li>
 <li>5.2.   <a href="#rfc.section.5.2">Message</a></li>
@@ -419,7 +417,7 @@ li, p {
 <li>8.   <a href="#rfc.section.8">Deployment Considerations</a></li>
 <ul><li>8.1.   <a href="#rfc.section.8.1">Assertion lifetime management</a></li>
 <li>8.2.   <a href="#rfc.section.8.2">Secret Key Management</a></li>
-<li>8.3.   <a href="#rfc.section.8.3">Client Oracle Discovery</a></li>
+<li>8.3.   <a href="#rfc.section.8.3">Query Service Discovery</a></li>
 <li>8.4.   <a href="#rfc.section.8.4">Transition using translation between RAINS and DNS information models</a></li>
 </ul><li>9.   <a href="#rfc.section.9">Experimental Design and Evaluation</a></li>
 <li>10.   <a href="#rfc.section.10">IANA Considerations</a></li>
@@ -435,11 +433,38 @@ li, p {
   </ul>
 
   <h1 id="rfc.section.1"><a href="#rfc.section.1">1.</a> <a href="#introduction" id="introduction">Introduction</a></h1>
-<p id="rfc.section.1.p.1">TODO: what is this</p>
-<p id="rfc.section.1.p.2">TODO: what is this not</p>
-<p id="rfc.section.1.p.3">TODO: why does it exist</p>
+<p id="rfc.section.1.p.1">This document defines an experimental protocol for providing Internet name resolution services, as a replacement for DNS, called RAINS (RAINS, Another Internet Naming Service). It is designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol, and was developed as a name resolution system for the SCION (&#8220;Scalability, Control, and Isolation on Next-Generation Networks&#8221;) future Internet architecture <a href="#SCION">[SCION]</a>. It attempts to answer the question: &#8220;how would we design the DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in <a href="#I-D.trammell-inip-pins">[I-D.trammell-inip-pins]</a>.</p>
+<p id="rfc.section.1.p.2">Its architecture (<a href="#architecture">Section 3</a>) and information model ({{information- model}}) are largely compatible with the existing Domain Name System. However, it does take several radical departures from DNS as presently defined and implemented:</p>
+<p/>
+
+<ul>
+  <li>Delegation from a superordinate zone to a subordinate zone is done solely with cryptography: a superordinate defines the key(s) that are valid for signing assertions in the subordinate during a particular time interval.  Assertions about names can therefore safely be served from any infrastructure.</li>
+  <li>All time references in RAINS are absolute: instead of a time to live, each assertion&#8217;s temporal validity is defined by the temporal validity of the signature(s) on it.</li>
+  <li>All assertions have validity within a specific context. A context determines the rules for chaining signatures to verify validity of an assertion. The global context is a special case of context, which uses chains from the global naming root key. The use of context explicitly separates global usage of the DNS from local usage thereof, and allows other application-specific naming constraints to be bound to names; see <a href="#context-in-assertions">Section 4.1.1</a>.  Queries are valid in one or more contexts, with specific rules for determining which assertions answer which queries; see {{context-in- queries}}.</li>
+  <li>There is an explicit separation between registrant-level names and sub- registrant-level names, and explicit information about registrars and registrants available in the naming system at runtime.</li>
+  <li>Sets of valid characters and rules for valid names are defined on a per-zone basis, and can be verified at runtime.</li>
+</ul>
+<p id="rfc.section.1.p.4">Instead of using a custom binary framing as DNS, RAINS uses Concise Binary Object Representation <a href="#RFC7049">[RFC7049]</a>, partially in an effort to make implementations easier to verify and less likely to contain potentially dangerous parser bugs <a href="#PARSER-BUGS">[PARSER-BUGS]</a>. Like DNS, CBOR messages can be carried atop any number of substrate protocols; RAINS is presently defined to use TLS over persistent TCP connections (see <a href="#protocol-def">Section 6</a>).</p>
 <h1 id="rfc.section.2"><a href="#rfc.section.2">2.</a> <a href="#terminology" id="terminology">Terminology</a></h1>
 <p id="rfc.section.2.p.1">The terms MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY, when they appear in all-capitals, are to be interpreted as defined in <a href="#RFC2119">[RFC2119]</a>.</p>
+<p id="rfc.section.2.p.2">In addition, the following terms are used in this document as defined [EDITOR&#8217;S NOTE: define and normalize definitions/capitalizations, move definitions here]</p>
+<p/>
+
+<ul>
+  <li>Authority: see <a href="#assertion">Section 4.1</a> [EDITOR&#8217;S NOTE: not really, needs def]</li>
+  <li>Assertion: see <a href="#assertion">Section 4.1</a></li>
+  <li>Context: see <a href="#context-in-assertions">Section 4.1.1</a> and <a href="#context-in-queries">Section 4.2.1</a></li>
+  <li>Shard: see <a href="#shards-and-zones">Section 4.1.3</a></li>
+  <li>Zone: see <a href="#shards-and-zones">Section 4.1.3</a></li>
+  <li>Query: see <a href="#query">Section 4.2</a></li>
+  <li>Notification: see <a href="#cbor-notification">Section 5.8</a></li>
+  <li>RAINS Message: see <a href="#cbor-message">Section 5.2</a></li>
+  <li>Authority Service: see <a href="#architecture">Section 3</a></li>
+  <li>Query Service: see <a href="#architecture">Section 3</a></li>
+  <li>Intermediary Service: see <a href="#architecture">Section 3</a></li>
+  <li>RAINS Server: see <a href="#architecture">Section 3</a></li>
+  <li>RAINS Client: see <a href="#architecture">Section 3</a> and <a href="#protocol-client">Section 7</a></li>
+</ul>
 <h1 id="rfc.section.3"><a href="#rfc.section.3">3.</a> <a href="#architecture" id="architecture">Architecture</a></h1>
 <p id="rfc.section.3.p.1">The RAINS architecture is simple, and resembles the architecture of DNS. A RAINS Server is an entity that provides transient and/or permanent storage for assertions about names, and a lookup function that finds assertions for a given query about a name, either by searching local storage or by delegating to another RAINS server. RAINS servers can take on any or all of three roles:</p>
 <p/>
@@ -453,27 +478,19 @@ li, p {
 <h1 id="rfc.section.4"><a href="#rfc.section.4">4.</a> <a href="#information-model" id="information-model">Information Model</a></h1>
 <p id="rfc.section.4.p.1">Messages in the RAINS Protocol are made up of two kinds of elements: Assertion and Query. A third type of element, Answer, binds a Query to a set of Assertions in response to a Query.</p>
 <p id="rfc.section.4.p.2">The information model in this section omits information elements required by the resolution mechanism itself; these are defined in more detail in <a href="#cbor">Section 5</a> and <a href="#protocol-def">Section 6</a>.</p>
-<h1 id="rfc.section.4.1"><a href="#rfc.section.4.1">4.1.</a> <a href="#namespace-assumptions" id="namespace-assumptions">Namespace Assumptions</a></h1>
-<p id="rfc.section.4.1.p.1">TODO: prosify: The RAINS Information Model makes a few assumptions about the namespaces in which assertions are made:</p>
+<h1 id="rfc.section.4.1"><a href="#rfc.section.4.1">4.1.</a> <a href="#assertion" id="assertion">Assertion</a></h1>
+<p id="rfc.section.4.1.p.1">An Assertion is a signed statement about a mapping from a subject name to an object value, and consists of the following elements:</p>
 <p/>
 
 <ul>
-  <li>federated namespace with delegation a la DNS (reference?)</li>
-  <li>delegations can be organization-level, or sub-organization-level. an organization level name is one that someone has paid a registrar to place in a registry, and contains additional information about the registrar and the registrant (reference for this terminology?)</li>
-</ul>
-<h1 id="rfc.section.4.2"><a href="#rfc.section.4.2">4.2.</a> <a href="#assertion" id="assertion">Assertion</a></h1>
-<p id="rfc.section.4.2.p.1">An Assertion is a signed statement about a mapping from a subject name to an object value, and consists of the following elements:</p>
-<p/>
-
-<ul>
-  <li>Context: name of the context in which the assertion is valid; see <a href="#context-in-assertions">Section 4.2.1</a> below.</li>
+  <li>Context: name of the context in which the assertion is valid; see <a href="#context-in-assertions">Section 4.1.1</a> below.</li>
   <li>Subject: name about which the assertion is made.</li>
   <li>Zone: name of the zone in which the assertion is made. The fully qualified name of the subject is made by appending the zone name to the subject name with a domain name separator (&#8216;.&#8217;).</li>
   <li>Type: the type of information about the Subject contained in the assertion. Each Assertion is about a single type of data.</li>
   <li>Object: the data of the indicated type associated with the Subject</li>
-  <li>Signatures: one or more signatures generated by the authority for the Assertion. Signatures contain a time interval during which they are considered valid, and may contain a revocation token allowing them to be revoked before the end of the time interval. See <a href="#signatures-in-assertions">Section 4.2.2</a> below.</li>
+  <li>Signatures: one or more signatures generated by the authority for the Assertion. Signatures contain a time interval during which they are considered valid, and may contain a revocation token allowing them to be revoked before the end of the time interval. See <a href="#signatures-in-assertions">Section 4.1.2</a> below.</li>
 </ul>
-<p id="rfc.section.4.2.p.3">The Types supported for each assertion are:</p>
+<p id="rfc.section.4.1.p.3">The Types supported for each assertion are:</p>
 <p/>
 
 <ul>
@@ -483,30 +500,30 @@ li, p {
   <li>Service-Info: one or more layer 4 ports and hostnames associated with a service name (replaces DNS SRV RRTYPE). The object contains a {hostname, port-number, priority tuple}.</li>
   <li>Name: one or more names associated with the name (roughly equivalent to DNS CNAME). The Object contains a set of names.</li>
   <li>Certificate: a certificate which must appear at a specified location in the certificate chain presented on a connection attempt with the named entity (roughly equivalent to DNS TLSA). The details of this type will be described in a separate document.</li>
-  <li>Zone-Nameset: an expression of the set of names allowed within a zone; e.g.  Unicode scripts or codepages in which names in the zone may be issued. This allows a zone to set policy on names in support of the distinguishability property in <a href="#I-D.trammell-inip-pins">[I-D.trammell-inip-pins]</a> that can be checked by authority and oracle servers at runtime. An assertion about a Subject within a Zone whose name is not allowed by a valid signed Zone-Nameset expression is taken to be invalid, even if it has a valid signature. The details of this type will be described in a separate document.</li>
-  <li>Registrar: Information about the organization that caused a Subject name to exist, for organization-level names.</li>
-  <li>Registrant: Information about the organization responsible for a Subject name, for organization-level names.</li>
+  <li>Zone-Nameset: an expression of the set of names allowed within a zone; e.g.  Unicode scripts or codepages in which names in the zone may be issued. This allows a zone to set policy on names in support of the distinguishability property in <a href="#I-D.trammell-inip-pins">[I-D.trammell-inip-pins]</a> that can be checked by RAINS servers at runtime. An assertion about a Subject within a Zone whose name is not allowed by a valid signed Zone-Nameset expression is taken to be invalid, even if it has a valid signature. The details of this type will be described in a separate document.</li>
+  <li>Registrar: Information about the organization that caused a Subject name to exist, for registrant-level names.</li>
+  <li>Registrant: Information about the organization responsible for a Subject name, for registrant-level names.</li>
 </ul>
-<p id="rfc.section.4.2.p.5">For a given {subject, type} tuple, multiple assertions can be valid at a given point in time; the union of the object values of all of these assertions is considered to be the set of valid values at that point in time.</p>
-<h1 id="rfc.section.4.2.1"><a href="#rfc.section.4.2.1">4.2.1.</a> <a href="#context-in-assertions" id="context-in-assertions">Context in Assertions</a></h1>
-<p id="rfc.section.4.2.1.p.1">Assertion contexts are used to determine the validity of the signature by the declared authority as follows:</p>
+<p id="rfc.section.4.1.p.5">For a given {subject, type} tuple, multiple assertions can be valid at a given point in time; the union of the object values of all of these assertions is considered to be the set of valid values at that point in time.</p>
+<h1 id="rfc.section.4.1.1"><a href="#rfc.section.4.1.1">4.1.1.</a> <a href="#context-in-assertions" id="context-in-assertions">Context in Assertions</a></h1>
+<p id="rfc.section.4.1.1.p.1">Assertion contexts are used to determine the validity of the signature by the declared authority as follows:</p>
 <p/>
 
 <ul>
   <li>The global context is identified by the special context name `.&#8217;. Assertions in the global context are signed by the authority for the subject name. For example, assertions about the name simplon.inf.ethz.ch in the global context are only valid if signed by the relevant authority inf.ethz.ch.</li>
   <li>A local context is associated with a given authority. The authority-part and the context-part of a local context name are divided by a context marker (&#8216;cx&#8211;&#8217;). The authority-part directly identifies the authority whose key was used to sign the assertion; assertions within a local context are only valid if signed by the identified authority. Authorities have complete control over how the contexts under their namespaces are arranged, and over the names within those contexts.</li>
 </ul>
-<p id="rfc.section.4.2.1.p.3">Assertion context is the mechanism by which RAINS provides explicit inconsistency (see section 5.3.2 of <a href="#I-D.trammell-inip-pins">[I-D.trammell-inip-pins]</a>). Some examples illustrate how context works:</p>
+<p id="rfc.section.4.1.1.p.3">Assertion context is the mechanism by which RAINS provides explicit inconsistency (see section 5.3.2 of <a href="#I-D.trammell-inip-pins">[I-D.trammell-inip-pins]</a>). Some examples illustrate how context works:</p>
 <p/>
 
 <ul>
   <li>For the common split-DNS case, an enterprise could place names for machines on its local networks within a separate context. E.g., a workstation could be named simplon.cab.inf.ethz.ch within the context staff-workstations.cx&#8211;.inf.ethz.ch. Assertions about this name would be signed by the authority for inf.ethz.ch. Here, the context serves simply as a marker, without enabling an alternate signature chain: note that the name simplon.cab.inf.ethz.ch can be validly signed by the authority for inf.ethz.ch if no delegation exists for cab.inf.ethz.ch. The context simply marks this assertion as internal. This allows a client making requests of local names to know they are local, and for local resolvers to manage visibility of assertions outside the enterprise: explicit context makes accidental leakage of both queries and assertions easier to detect and avoid.</li>
   <li>Contexts make captive-portal interactions more explicit: a captive portal resolver could respond to a query for a common website (e.g. www.google.ch) with a signed response directed at the captive portal, but within a context identifying the location as well as the ISP (e.g.  sihlquai.zurich.ch.cx&#8211;.starbucks.access.some-isp.net.). This response will be signed by the authority for starbucks.access.some-isp.net. This signature achieves two things: first, the client knows the result for www.google.ch is not globally valid; second, it can present the user with some indication as to the identity of the captive portal it is connected to.</li>
 </ul>
-<p id="rfc.section.4.2.1.p.5">Further examples showing how context can be used in queries as well are given in <a href="#context-in-queries">Section 4.3.1</a> below.</p>
-<p id="rfc.section.4.2.1.p.6">Developing conventions for assertion contexts for different situations will require implementation and deployment experience, and is a subject for future work.</p>
-<h1 id="rfc.section.4.2.2"><a href="#rfc.section.4.2.2">4.2.2.</a> <a href="#signatures-in-assertions" id="signatures-in-assertions">Signatures in Assertions</a></h1>
-<p id="rfc.section.4.2.2.p.1">A signature over an assertion contains the following information elements:</p>
+<p id="rfc.section.4.1.1.p.5">Further examples showing how context can be used in queries as well are given in <a href="#context-in-queries">Section 4.2.1</a> below.</p>
+<p id="rfc.section.4.1.1.p.6">Developing conventions for assertion contexts for different situations will require implementation and deployment experience, and is a subject for future work.</p>
+<h1 id="rfc.section.4.1.2"><a href="#rfc.section.4.1.2">4.1.2.</a> <a href="#signatures-in-assertions" id="signatures-in-assertions">Signatures in Assertions</a></h1>
+<p id="rfc.section.4.1.2.p.1">A signature over an assertion contains the following information elements:</p>
 <p/>
 
 <ul>
@@ -516,21 +533,21 @@ li, p {
   <li>Signature: the cryptographic signature itself, whose format is determined by the algorithm used.</li>
   <li>Revocation-Token: an optional revocation token for this signature, which allows a signature to be replaced or removed before the end of its validity.  Revocation tokens are generally based on hash chains, meaning that a signature with a revocation token &#8220;down&#8221; the chain from a given token supercedes it. The format and mechanism used by the revocation token is determined by the alogrithm used.</li>
 </ul>
-<p id="rfc.section.4.2.2.p.3">The signature protects all the information in an assertion as well as its own valid-since and valid-until values and the revocation token; it does not protect other signatures on the assertion.</p>
-<h1 id="rfc.section.4.2.3"><a href="#rfc.section.4.2.3">4.2.3.</a> <a href="#shards-and-zones" id="shards-and-zones">Shards and Zones</a></h1>
-<p id="rfc.section.4.2.3.p.1">Assertions may also be grouped and signed as a group. A shard is a set of assertions subject to the same authority within the same context, protected by one or more signatures over all assertions within the shard. A shard may have an additional property that given a subject and an authenticated shard, it can be shown that either an assertion with a given name and type exists within the shard or does not exist at all.</p>
-<p id="rfc.section.4.2.3.p.2">A shard has the following information elements:</p>
+<p id="rfc.section.4.1.2.p.3">The signature protects all the information in an assertion as well as its own valid-since and valid-until values and the revocation token; it does not protect other signatures on the assertion.</p>
+<h1 id="rfc.section.4.1.3"><a href="#rfc.section.4.1.3">4.1.3.</a> <a href="#shards-and-zones" id="shards-and-zones">Shards and Zones</a></h1>
+<p id="rfc.section.4.1.3.p.1">Assertions may also be grouped and signed as a group. A shard is a set of assertions subject to the same authority within the same context, protected by one or more signatures over all assertions within the shard. A shard may have an additional property that given a subject and an authenticated shard, it can be shown that either an assertion with a given name and type exists within the shard or does not exist at all.</p>
+<p id="rfc.section.4.1.3.p.2">A shard has the following information elements:</p>
 <p/>
 
 <ul>
-  <li>Context: name of the context in which the assertions in the shard are valid; see <a href="#context-in-assertions">Section 4.2.1</a> above.</li>
+  <li>Context: name of the context in which the assertions in the shard are valid; see <a href="#context-in-assertions">Section 4.1.1</a> above.</li>
   <li>Zone: name of the zone in which the assertions are made.</li>
   <li>Content: a set of assertions sharing the context and zone.</li>
-  <li>Signatures: one or more signatures generated by the authority for the shard; see <a href="#signatures-in-assertions">Section 4.2.2</a>.</li>
+  <li>Signatures: one or more signatures generated by the authority for the shard; see <a href="#signatures-in-assertions">Section 4.1.2</a>.</li>
   <li>Complete-Flag: if true, the shard is lexicographically complete, and subject names that sort such that they would be within the shard if they existed, but are not in the shard, can be assumed not to exist.</li>
 </ul>
-<p id="rfc.section.4.2.3.p.4">For efficiency&#8217;s sake, information elements within a shard common to all assertions (zone, context, signature) within the shard may be omitted from the assertions themselves.</p>
-<p id="rfc.section.4.2.3.p.5">A zone is the entire set of shards subject to a given authority within a given context. There are three kinds of zones; treating these zones differently may allow lookup protocol optimizations:</p>
+<p id="rfc.section.4.1.3.p.4">For efficiency&#8217;s sake, information elements within a shard common to all assertions (zone, context, signature) within the shard may be omitted from the assertions themselves.</p>
+<p id="rfc.section.4.1.3.p.5">A zone is the entire set of shards subject to a given authority within a given context. There are three kinds of zones; treating these zones differently may allow lookup protocol optimizations:</p>
 <p/>
 
 <ul>
@@ -538,43 +555,43 @@ li, p {
   <li>Zones containing no delegation assertions are final zones. Final zones are not relevant as part of an authority discovery.</li>
   <li>Zones containing at least one delegation assertion and at least one assertion that is not a delegation assertion are mixed zones. No optimizations are available for mixed zones.</li>
 </ul>
-<p id="rfc.section.4.2.3.p.7">A zone has the following information elements:</p>
+<p id="rfc.section.4.1.3.p.7">A zone has the following information elements:</p>
 <p/>
 
 <ul>
-  <li>Context: name of the context in which the assertions in the zone are valid; see <a href="#context-in-assertions">Section 4.2.1</a> above.</li>
+  <li>Context: name of the context in which the assertions in the zone are valid; see <a href="#context-in-assertions">Section 4.1.1</a> above.</li>
   <li>Zone: name of the zone.</li>
   <li>Content: a set of assertions and/or shards sharing the context and zone.</li>
-  <li>Signatures: one or more signatures generated by the authority for the shard; see <a href="#signatures-in-assertions">Section 4.2.2</a>.</li>
+  <li>Signatures: one or more signatures generated by the authority for the shard; see <a href="#signatures-in-assertions">Section 4.1.2</a>.</li>
   <li>Kind: delegation-only, final, or mixed; see above.</li>
 </ul>
-<h1 id="rfc.section.4.3"><a href="#rfc.section.4.3">4.3.</a> <a href="#query" id="query">Query</a></h1>
-<p id="rfc.section.4.3.p.1">A query is a request for a set of assertions supporting a conclusion about a given subject-object mapping. It consists of the following information elements:</p>
+<h1 id="rfc.section.4.2"><a href="#rfc.section.4.2">4.2.</a> <a href="#query" id="query">Query</a></h1>
+<p id="rfc.section.4.2.p.1">A query is a request for a set of assertions supporting a conclusion about a given subject-object mapping. It consists of the following information elements:</p>
 <p/>
 
 <ul>
-  <li>Contexts: an expression of the context(s) in which assertions answering the query will be accepted; see <a href="#context-in-queries">Section 4.3.1</a> below.</li>
+  <li>Contexts: an expression of the context(s) in which assertions answering the query will be accepted; see <a href="#context-in-queries">Section 4.2.1</a> below.</li>
   <li>Qualified-Subject: the name about which the query is made. The subject name in a query must be fully-qualified.</li>
   <li>Types: a set of assertion types the querier is interested in.</li>
   <li>Valid-Until: an optional client-generated timestamp for the query after which it expires and should not be answered.</li>
   <li>Token: an optional client-generated token for the query, which can be used in the answer to refer to the query (instead of the answer containing the query itself).</li>
 </ul>
-<p id="rfc.section.4.3.p.3">A query expresses interest about all the given types of assertion in all the specified contexts; more complex expressions of which types in which contexts must be asked using multiple queries.</p>
-<p id="rfc.section.4.3.p.4">TODO: provide mechanisms for privacy/performance tradeoffs in queries; are infomodel changes required here?</p>
-<h1 id="rfc.section.4.3.1"><a href="#rfc.section.4.3.1">4.3.1.</a> <a href="#context-in-queries" id="context-in-queries">Context in Queries</a></h1>
-<p id="rfc.section.4.3.1.p.1">Contexts are used in queries as they are in assertions (see {{context-in- assertions}}). Assertion contexts in an answer to a query have to match some context in the query in order to respond to a query. However, there are a few additional considerations. An assertion can only exist with a specific context, while queries may accept answers in multiple contexts. The Contexts part of a query is a sequence of context specifiers taken to be in order of decreasing priority. A special null context (represented by the empty string) indicates that assertions in any context will be accepted. Any context in the Contexts part of a query may additionally be negated, in order to note that assertions in those contexts are not acceptable. Negated context name appearing in the Contexts part of a query before the null context expresses &#8220;any context except these&#8221;.</p>
-<p id="rfc.section.4.3.1.p.2">Query contexts can also be used to provide additional information to RAINS servers about the query. For example, contexts can provide a method for explicit selection of a CDN servers not based on either the client&#8217;s or the resolver&#8217;s address (see <a href="#RFC7871">[RFC7871]</a>). Here, the CDN creates a context for each of its content zones, and an external service selects appropriate contexts for the client based not just on client source address but passive and active measurement of performance. Queries for names at which content resides can then be made within these contexts, with the priority order of the contexts reflecting the goodness of the zone for the client. Here, a context might be zrh.cx&#8211;.cdn-zones.some-cdn.com for names of servers hosting content in a CDN&#8217;s Zurich data center, and a client could represent its desire to find content nearby by making queries in the zrh.cx&#8211;, fra.cx&#8211; (Frankfurt), and ams.cx&#8211; (Amsterdam) contexts within cdn-zones .some-cdn.com. In all cases, the assertions themselves will be signed by the authority for cdn-zones.some-cdn.com, accurately representing that it is the CDN, not the owner of the related name in the global context, that is making the assertion.</p>
-<p id="rfc.section.4.3.1.p.3">As with assertion contexts, developing conventions for query contexts for different situations will require implementation and deployment experience, and is a subject for future work.</p>
-<h1 id="rfc.section.4.4"><a href="#rfc.section.4.4">4.4.</a> <a href="#answer" id="answer">Answer</a></h1>
-<p id="rfc.section.4.4.p.1">An answer consists of a set of assertions, shards, and/or zones which respond to a query, bound to that query. It consists of the following information elements:</p>
+<p id="rfc.section.4.2.p.3">A query expresses interest about all the given types of assertion in all the specified contexts; more complex expressions of which types in which contexts must be asked using multiple queries.</p>
+<p id="rfc.section.4.2.p.4">TODO: provide mechanisms for privacy/performance tradeoffs in queries; are infomodel changes required here?</p>
+<h1 id="rfc.section.4.2.1"><a href="#rfc.section.4.2.1">4.2.1.</a> <a href="#context-in-queries" id="context-in-queries">Context in Queries</a></h1>
+<p id="rfc.section.4.2.1.p.1">Contexts are used in queries as they are in assertions (see {{context-in- assertions}}). Assertion contexts in an answer to a query have to match some context in the query in order to respond to a query. However, there are a few additional considerations. An assertion can only exist with a specific context, while queries may accept answers in multiple contexts. The Contexts part of a query is a sequence of context specifiers taken to be in order of decreasing priority. A special null context (represented by the empty string) indicates that assertions in any context will be accepted. Any context in the Contexts part of a query may additionally be negated, in order to note that assertions in those contexts are not acceptable. Negated context name appearing in the Contexts part of a query before the null context expresses &#8220;any context except these&#8221;.</p>
+<p id="rfc.section.4.2.1.p.2">Query contexts can also be used to provide additional information to RAINS servers about the query. For example, contexts can provide a method for explicit selection of a CDN servers not based on either the client&#8217;s or the resolver&#8217;s address (see <a href="#RFC7871">[RFC7871]</a>). Here, the CDN creates a context for each of its content zones, and an external service selects appropriate contexts for the client based not just on client source address but passive and active measurement of performance. Queries for names at which content resides can then be made within these contexts, with the priority order of the contexts reflecting the goodness of the zone for the client. Here, a context might be zrh.cx&#8211;.cdn-zones.some-cdn.com for names of servers hosting content in a CDN&#8217;s Zurich data center, and a client could represent its desire to find content nearby by making queries in the zrh.cx&#8211;, fra.cx&#8211; (Frankfurt), and ams.cx&#8211; (Amsterdam) contexts within cdn-zones .some-cdn.com. In all cases, the assertions themselves will be signed by the authority for cdn-zones.some-cdn.com, accurately representing that it is the CDN, not the owner of the related name in the global context, that is making the assertion.</p>
+<p id="rfc.section.4.2.1.p.3">As with assertion contexts, developing conventions for query contexts for different situations will require implementation and deployment experience, and is a subject for future work.</p>
+<h1 id="rfc.section.4.3"><a href="#rfc.section.4.3">4.3.</a> <a href="#answer" id="answer">Answer</a></h1>
+<p id="rfc.section.4.3.p.1">An answer consists of a set of assertions, shards, and/or zones which respond to a query, bound to that query. It consists of the following information elements:</p>
 <p/>
 
 <ul>
   <li>Query: the query this answer applies to. If the query was issued with a token, the query in the answer may omit all content except the token.</li>
   <li>Content: a set of assertions and/or shards answering the query.</li>
 </ul>
-<p id="rfc.section.4.4.p.3">The content of an answer content depends on whether the answer is positive or negative. A positive answer contains the information requested in the smallest atomic container that can be found, usually a single assertion. A negative answer contains the information used to verify it; either a shard with the Complete-Flag set, an entire Zone, or a Zone-Nameset assertion showing the name is illegal within the zone.</p>
-<p id="rfc.section.4.4.p.4">A query is taken to have an inconclusive answer when no answer returns to the querier before the query&#8217;s Valid-Until time.</p>
+<p id="rfc.section.4.3.p.3">The content of an answer content depends on whether the answer is positive or negative. A positive answer contains the information requested in the smallest atomic container that can be found, usually a single assertion. A negative answer contains the information used to verify it; either a shard with the Complete-Flag set, an entire Zone, or a Zone-Nameset assertion showing the name is illegal within the zone.</p>
+<p id="rfc.section.4.3.p.4">A query is taken to have an inconclusive answer when no answer returns to the querier before the query&#8217;s Valid-Until time.</p>
 <h1 id="rfc.section.5"><a href="#rfc.section.5">5.</a> <a href="#cbor" id="cbor">Data Model</a></h1>
 <p id="rfc.section.5.p.1">The RAINS data model is a relatively straightforward mapping of the information model in <a href="#information-model">Section 4</a> to the Concise Binary Object Representation (CBOR) <a href="#RFC7049">[RFC7049]</a>, with an outer message type providing a mechanism for future capabilities-based versioning and recognition of a message as a RAINS message.</p>
 <h1 id="rfc.section.5.1"><a href="#rfc.section.5.1">5.1.</a> <a href="#cbor-symtab" id="cbor-symtab">Symbol Table</a></h1>
@@ -710,7 +727,7 @@ li, p {
     </tr>
   </tbody>
 </table>
-<h1 id="rfc.section.5.2"><a href="#rfc.section.5.2">5.2.</a> <a href="#message" id="message">Message</a></h1>
+<h1 id="rfc.section.5.2"><a href="#rfc.section.5.2">5.2.</a> <a href="#cbor-message" id="cbor-message">Message</a></h1>
 <p id="rfc.section.5.2.p.1">All interactions in RAINS take place in an outer envelope called a Message, which is a CBOR map tagged with the RAINS Message tag (hex 0xE99BA8, decimal 15309736).</p>
 <p id="rfc.section.5.2.p.2">A Message map MUST contain a content (0) key, whose value is an array of Message Sections; a Message Section is either an Assertion, Shard, Zone, or Query.</p>
 <p id="rfc.section.5.2.p.3">A Message map MAY contain a capabilities (1) key, whose value is described in {#cbor-capabilities}.</p>
@@ -823,11 +840,11 @@ li, p {
     </tr>
     <tr>
       <td class="right">3</td>
-      <td class="left">Minimize information leakage beyond oracle</td>
+      <td class="left">Minimize information leakage beyond first hop</td>
     </tr>
     <tr>
       <td class="right">4</td>
-      <td class="left">No information leakage beyond oracle: cached answers only</td>
+      <td class="left">No information leakage beyond first hop: cached answers only</td>
     </tr>
     <tr>
       <td class="right">5</td>
@@ -1071,7 +1088,7 @@ li, p {
 <h1 id="rfc.section.6"><a href="#rfc.section.6">6.</a> <a href="#protocol-def" id="protocol-def">RAINS Protocol Definition</a></h1>
 <p id="rfc.section.6.p.1">As noted in <a href="#cbor">Section 5</a>, RAINS is a message-exchange protocol that uses CBOR <a href="#RFC7049">[RFC7049]</a> as its framing. Since CBOR is self-framing &#8211; a CBOR parser can determine when a CBOR object is complete at the point at which it has read its final byte &#8211; RAINS requires no external framing. It can therefore run over any streaming, multistreaming, or message-oriented transport protocol. In order to protect query confidentiality, and support rapid deployment over a ubiquitously implemented transport, RAINS is defined in this document to run over persistent TLS 1.2 connections <a href="#RFC5246">[RFC5246]</a> over TCP <a href="#RFC0793">[RFC0793]</a> with mutual authentication. The TLS certificates of RAINS server peers can be verified as specified in the certificate assertions for those servers.</p>
 <p id="rfc.section.6.p.2">RAINS servers MUST support this transport; future transports can be negotiated using the capabilities mechanism after bootstrapping using TLS 1.2. As RAINS is an experimental protocol, RAINS servers listen on port 1022 <a href="#RFC4727">[RFC4727]</a> for connections from other RAINS servers and clients. RAINS servers should strive to keep connections open to peer servers, unless it is clear that no future messages will be exchanged with those peers, or in the face of resource limitations at either peer. If a RAINS server needs to send a message to another RAINS server to which it does not have an open connection, it attempts to open a connection with that server.</p>
-<p id="rfc.section.6.p.3">This section describes the operation of the protocol as used among oracle servers and authority servers. A simplified version of the protocol for client access is described in <a href="#protocol-client">Section 7</a>.</p>
+<p id="rfc.section.6.p.3">This section describes the operation of the protocol as used among RAINS servers. A simplified version of the protocol for client access is described in <a href="#protocol-client">Section 7</a>.</p>
 <h1 id="rfc.section.6.1"><a href="#rfc.section.6.1">6.1.</a> <a href="#protocol-processing" id="protocol-processing">Message processing</a></h1>
 <p id="rfc.section.6.1.p.1">Once a transport is established, any server may validly send a message with any content to any other server. Upon receipt of a message, a server parses it, and:</p>
 <p/>
@@ -1128,19 +1145,19 @@ li, p {
 <p id="rfc.section.6.4.p.1">The data model used by the RAINS protocol allows inconsistent information to be asserted, all resulting from misconfigured or misbehaving authority servers. For example, a shard valid at a given point in time can be marked lexically complete, but not contain an assertion within its lexical range, which is also valid at that point. This would allow both proof of the presence and absence of an assertion at the same time, which is clearly nonsensical.</p>
 <p id="rfc.section.6.4.p.2">RAINS relies on runtime consistency checking to mitigate this problem: each server receiving an assertion, shard, or zone SHOULD, subject to resource constraints, ensure that it is consistent with other information it has, and if not, discard all assertions, shards, and zones in its cache, log the error, and send a 403 Inconsistent Message to the source of the message.</p>
 <h1 id="rfc.section.6.5"><a href="#rfc.section.6.5">6.5.</a> <a href="#integrity-and-confidentiality-protection" id="integrity-and-confidentiality-protection">Integrity and Confidentiality Protection</a></h1>
-<p id="rfc.section.6.5.p.1">Assertions are not valid unless they contain at least one signature that can be verified from the chain of authorities specified by the name and context on the assertion; integrity protection is built into the information model. The infrastructure key object type allows keys to be associated with RAINS (oracle) servers in addition to zone authorities, which allows a client to delegate integrity verification of assertions to a trusted oracle (see <a href="#protocol-client">Section 7</a>).</p>
+<p id="rfc.section.6.5.p.1">Assertions are not valid unless they contain at least one signature that can be verified from the chain of authorities specified by the name and context on the assertion; integrity protection is built into the information model. The infrastructure key object type allows keys to be associated with RAINS servers in addition to zone authorities, which allows a client to delegate integrity verification of assertions to a trusted query service (see <a href="#protocol-client">Section 7</a>).</p>
 <p id="rfc.section.6.5.p.2">Since the job of an Internet naming service is to provide publicly-available information mapping names to information needed to connect to the services they name, confidentiality protection for assertions is not a goal of the system. Specifically, the information model and the mechanism for proving non- existence of an assertion is not designed to provide resistance against zone enumeration.</p>
 <p id="rfc.section.6.5.p.3">On the other hand, confidentiality protection of query information in crucial.  Linking naming queries to a specific user can be nearly as useful to build a profile of that user for surveillance purposes as full access to the clear text of that client&#8217;s communications <a href="#RFC7624">[RFC7624]</a>. In this revision, RAINS uses TLS to protect communications between servers and between servers and clients, with certificate information for RAINS infrastructure stored in RAINS itself.  Together with hop-by-hop confidentiality protection, query options, proactive caching, default use of non-persistent tokens, and redirection among servers can be used to mix queries and reduce the linkability of query information to specific clients.</p>
 <h1 id="rfc.section.7"><a href="#rfc.section.7">7.</a> <a href="#protocol-client" id="protocol-client">RAINS Client Protocol</a></h1>
-<p id="rfc.section.7.p.1">The protocol used by clients to issue queries to and receive responses from an oracle is a subset of the full RAINS protocol, with the following differences:</p>
+<p id="rfc.section.7.p.1">The protocol used by clients to issue queries to and receive responses from an query service is a subset of the full RAINS protocol, with the following differences:</p>
 <p/>
 
 <ul>
   <li>Clients only process assertion, shard, zone, and notification sections; sending a query to a client results in a 400 Malformed Message notification.</li>
-  <li>Clients never listen for connections; a client must initiate and maintain a transport session to the oracle server(s) it uses for name resolution.</li>
+  <li>Clients never listen for connections; a client must initiate and maintain a transport session to the query server(s) it uses for name resolution.</li>
   <li>Servers only process query and notification sections when connected to clients; a client sending assertions to a server results in a 400 Malformed Message notification.</li>
 </ul>
-<p id="rfc.section.7.p.3">Since signature verification is resource-intensive, clients delegate signature verification to oracle servers by default. The oracle server signs the message containing results for a query using its own key (published as an infrakey object associated with the oracle&#8217;s name), and a validity time corresponding to the signature it verified with the longest lifetime, stripping other signatures from the reply. This behavior can be disabled by a client by specifying query option 7, allowing the client to do its own verification.</p>
+<p id="rfc.section.7.p.3">Since signature verification is resource-intensive, clients delegate signature verification to query servers by default. The query server signs the message containing results for a query using its own key (published as an infrakey object associated with the query server&#8217;s name), and a validity time corresponding to the signature it verified with the longest lifetime, stripping other signatures from the reply. This behavior can be disabled by a client by specifying query option 7, allowing the client to do its own verification.</p>
 <h1 id="rfc.section.8"><a href="#rfc.section.8">8.</a> <a href="#deployment-considerations" id="deployment-considerations">Deployment Considerations</a></h1>
 <p id="rfc.section.8.p.1">The following subsections discuss issues that must be considered in any deployment of RAINS at scale.</p>
 <h1 id="rfc.section.8.1"><a href="#rfc.section.8.1">8.1.</a> <a href="#assertion-lifetime-management" id="assertion-lifetime-management">Assertion lifetime management</a></h1>
@@ -1148,15 +1165,15 @@ li, p {
 <p id="rfc.section.8.1.p.2">If an unexpected change to an assertion is necessary, the hash chain based replacement mechanism described in <a href="#hash-chain-rev">Section 5.10.2</a> provides a way for an authority to replace signed assertions with new information or with Null objects, in the case of deletion.</p>
 <p id="rfc.section.8.1.p.3">Since assertion lifetime management is based on a real-time clock expressed in UTC, RAINS servers MUST use a clock synchronization protocol such as NTP <a href="#RFC5905">[RFC5905]</a>.</p>
 <h1 id="rfc.section.8.2"><a href="#rfc.section.8.2">8.2.</a> <a href="#secret-key-management" id="secret-key-management">Secret Key Management</a></h1>
-<p id="rfc.section.8.2.p.1">The secret keys associated with public keys for each RAINS server (via infrakey objects) must be available on that server, whether through a hardware or software security device, so they can sign messages on demand; this is particularly important for oracle servers. In addition, the secret keys associated with TLS certificates for each server (published via certinfo objects) must be available as well in order to establish TLS sessions.</p>
+<p id="rfc.section.8.2.p.1">The secret keys associated with public keys for each RAINS server (via infrakey objects) must be available on that server, whether through a hardware or software security device, so they can sign messages on demand; this is particularly important for query servers. In addition, the secret keys associated with TLS certificates for each server (published via certinfo objects) must be available as well in order to establish TLS sessions.</p>
 <p id="rfc.section.8.2.p.2">However, storing zone secret keys (associated via delegation objects) on RAINS servers would represent a more serious operational risk. To keep this from being necessary, authority servers have an additional signer interface, from which they will accept and cache any assertion, shard, or zone for which they are authority servers until at least the end of validity of the last signature, provided the signature is verifiable.</p>
-<h1 id="rfc.section.8.3"><a href="#rfc.section.8.3">8.3.</a> <a href="#client-oracle-discovery" id="client-oracle-discovery">Client Oracle Discovery</a></h1>
+<h1 id="rfc.section.8.3"><a href="#rfc.section.8.3">8.3.</a> <a href="#query-service-discovery" id="query-service-discovery">Query Service Discovery</a></h1>
 <p id="rfc.section.8.3.p.1">A client that will not do its own verification must be able to discover the oracle server(s) it should trust for resolution. Integration with e.g. DHCP or selection of a local multicast discovery method are left to a future revision of this document.</p>
 <p id="rfc.section.8.3.p.2">In any case, clients MUST provide a configuration interface to allow a user to specify (by address or name) and/or constrain (by certificate property) a preferred/trusted oracle. This would allow client on an untrusted network to use an untrusted locally-available oracle to discover a preferred oracle (doing key verification on its own for bootstrapping), before connecting to that oracle for normal name resolution.</p>
 <h1 id="rfc.section.8.4"><a href="#rfc.section.8.4">8.4.</a> <a href="#transition-using-translation-between-rains-and-dns-information-models" id="transition-using-translation-between-rains-and-dns-information-models">Transition using translation between RAINS and DNS information models</a></h1>
 <p id="rfc.section.8.4.p.1">Full adoption of RAINS would require changes to every client device (replacing DNS stub resolvers with RAINS clients) and name server on the Internet. In addition, most client software would need to change, as well, to get the full benefits of explicit context in name resolution. This is a wholly unrealistic goal.</p>
 <p id="rfc.section.8.4.p.2">RAINS servers can, however, coexist with Domain Name System servers and clients during an indefinite transition period. RAINS assertions can be algorithmically translated into DNS answers, and RAINS queries can be algorithmically translated into DNS queries, by RAINS to DNS gateways, given the mostly compatible information models used by the two.</p>
-<p id="rfc.section.8.4.p.3">RAINS to DNS gateways must provide verification services for clients; there is no equivalent to query option 7 for gateways, since the RAINS signatures are generated over the RAINS bytestream for an assertion, not the DNS bytestream.  DNS over TLS <a href="#RFC7858">[RFC7858]</a> SHOULD be used between the DNS client and gateway to ensure confidentiality and integrity for queries and answers.</p>
+<p id="rfc.section.8.4.p.3">While DNSSEC and RAINS keys for equivalent ciphersuites are compatible with each other, there is no equivalent to query option 7 for gateways, since the RAINS signatures are generated over the RAINS bytestream for an assertion, not the DNS bytestream. Therefore, RAINS to DNS gateways must provide verification services for DNS clients. DNS over TLS <a href="#RFC7858">[RFC7858]</a> SHOULD be used between the DNS client and gateway to ensure confidentiality and integrity for queries and answers.</p>
 <p id="rfc.section.8.4.p.4">Object type mappings are as follows:</p>
 <p/>
 
@@ -1179,9 +1196,11 @@ li, p {
 </ul>
 <p id="rfc.section.8.4.p.8">When translating a DNS query from a client to a RAINS query for that client, client options can be set on a per-server, per-client, or per-query basis using some out of band configuration options.</p>
 <p id="rfc.section.8.4.p.9">When translating a RAINS assertion to a DNS answer, the gateway can use the time to expiry for the verified signature as the TTL.</p>
+<p id="rfc.section.8.4.p.10">There is no method for exposing context information in a DNS query or answer.  Therefore, queries and answers at a RAINS gateway are only supported for the global context &#8220;.&#8221;.</p>
 <h1 id="rfc.section.9"><a href="#rfc.section.9">9.</a> <a href="#experimental-design-and-evaluation" id="experimental-design-and-evaluation">Experimental Design and Evaluation</a></h1>
-<p id="rfc.section.9.p.1">The protocol described in this document is intended primarily as a prototype for discussion, though the goal of the document is to specify RAINS completely enough to allow independent, interoperable implementation of clients an servers. The massive inertia behind the deployment of the present domain name system makes</p>
-<p id="rfc.section.9.p.2">TODO: note that this is primarily a prototype for discussion, but that we do intend to implement it. how will we tell if something like RAINS is ready for standardization?</p>
+<p id="rfc.section.9.p.1">The protocol described in this document is intended primarily as a prototype for discussion, though the goal of the document is to specify RAINS completely enough to allow independent, interoperable implementation of clients an servers. The massive inertia behind the deployment of the present domain name system makes full deployment as a replacement for DNS unlikely. Despite this, there are some criteria by which the success of the RAINS experiment may be judged:</p>
+<p id="rfc.section.9.p.2">First, deployment in simulated or closed networks, or in alternate Internet architectures such as SCION, allows implementation experience with the features of RAINS which DNS lacks (signatures as a first-order delegation primitive, support for explicit contexts, explicit tradeoffs in queries, runtime availability of registrar/registrant data, and nameset support), which in turn may inform the specification and deployment of these features on the present DNS.</p>
+<p id="rfc.section.9.p.3">Second, deployment of RAINS &#8220;islands&#8221; in the present Internet alongside DNS on a per-domain basis would allow for comparison between operational and implementation complexity and efficiency and benefits derived from RAINS&#8217; features, as information for future development of the DNS protocol.</p>
 <h1 id="rfc.section.10"><a href="#rfc.section.10">10.</a> <a href="#iana-considerations" id="iana-considerations">IANA Considerations</a></h1>
 <p id="rfc.section.10.p.1">The present revision of this document has no actions for IANA.</p>
 <p id="rfc.section.10.p.2">The authors have registered the CBOR tag 15309736 to identify RAINS messages in the CBOR tag registry at https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml.</p>
@@ -1189,7 +1208,7 @@ li, p {
 <p id="rfc.section.10.p.4">The symbol table in this document in <a href="#cbor-symtab">Section 5.1</a>, the notification code table in <a href="#cbor-notification">Section 5.8</a>, and the signature algorithm table in <a href="#cbor-signature">Section 5.10</a> may be candidates for IANA registries in future revisions of this document.</p>
 <p id="rfc.section.10.p.5">The urn:x-rains namespace used by the RAINS capability mechanism in {{cbor- capabilities}} may be a candidate for replacement with an IANA-registered namespace in a future revision of this document.</p>
 <h1 id="rfc.section.11"><a href="#rfc.section.11">11.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a></h1>
-<p id="rfc.section.11.p.1">This document specifies a new, experimental protocol for Internet name resolution, with mandatory integrity protection for assertions about names built into the information model, and confidentiality for query information protected on a hop-by-hop basis. See especially <a href="#signatures-in-assertions">Section 4.2.2</a>, <a href="#integrity-and-confidentiality-protection">Section 6.5</a>, and <a href="#secret-key-management">Section 8.2</a> for security-relevant details.</p>
+<p id="rfc.section.11.p.1">This document specifies a new, experimental protocol for Internet name resolution, with mandatory integrity protection for assertions about names built into the information model, and confidentiality for query information protected on a hop-by-hop basis. See especially <a href="#signatures-in-assertions">Section 4.1.2</a>, <a href="#integrity-and-confidentiality-protection">Section 6.5</a>, <a href="#cbor-signature">Section 5.10</a>, <a href="#cbor-certinfo">Section 5.11</a>, and <a href="#secret-key-management">Section 8.2</a> for security-relevant details.</p>
 <h1 id="rfc.section.12"><a href="#rfc.section.12">12.</a> <a href="#acknowledgments" id="acknowledgments">Acknowledgments</a></h1>
 <p id="rfc.section.12.p.1">Thanks to Daniele Asoni, Laurent Chuat, Ted Hardie, Joe Hildebrand, Steve Matsumoto, Adrian Perrig, Raphael Reischuk, Stephen Shirley, Andrew Sullivan, and Suzanne Woolf for the discussions leading to the design of this protocol.</p>
 <h1 id="rfc.references"><a href="#rfc.references">13.</a> References</h1>
@@ -1257,6 +1276,12 @@ li, p {
   <tbody>
     <tr>
       <td class="reference">
+        <b id="PARSER-BUGS">[PARSER-BUGS]</b>
+      </td>
+      <td class="top"><a>Bratus, S.</a>, <a>Patterson, M.</a> and <a>A. Shubina</a>, "<a>The Bugs We Have To Kill (USENIX login, August 2015)</a>", n.d..</td>
+    </tr>
+    <tr>
+      <td class="reference">
         <b id="RFC1035">[RFC1035]</b>
       </td>
       <td class="top"><a>Mockapetris, P.</a>, "<a href="http://tools.ietf.org/html/rfc1035">Domain names - implementation and specification</a>", STD 13, RFC 1035, DOI 10.17487/RFC1035, November 1987.</td>
@@ -1308,6 +1333,12 @@ li, p {
         <b id="RFC7871">[RFC7871]</b>
       </td>
       <td class="top"><a>Contavalli, C.</a>, <a>van der Gaast, W.</a>, <a>Lawrence, D.</a> and <a>W. Kumari</a>, "<a href="http://tools.ietf.org/html/rfc7871">Client Subnet in DNS Queries</a>", RFC 7871, DOI 10.17487/RFC7871, May 2016.</td>
+    </tr>
+    <tr>
+      <td class="reference">
+        <b id="SCION">[SCION]</b>
+      </td>
+      <td class="top"><a>Barrera, D.</a>, <a>Reischuk, R.</a>, <a>Szalachowski, P.</a> and <a>A. Perrig</a>, "<a>SCION Five Years Later - Revisiting Scalability, Control, and Isolation Next-Generation Networks (arXiv:1508.01651v1)</a>", n.d..</td>
     </tr>
     <tr>
       <td class="reference">
