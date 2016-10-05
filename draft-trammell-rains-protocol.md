@@ -61,6 +61,7 @@ informative:
           ins: R. Troncon
         - 
           ins: J. Konieczny
+      date: 2008-02-26
     SCION:
       title: SCION Five Years Later - Revisiting Scalability, Control, and Isolation Next-Generation Networks (arXiv:1508.01651v1)
       author: 
@@ -72,8 +73,9 @@ informative:
           ins: P. Szalachowski
         - 
           ins: A. Perrig
+      date: 2015-08
     PARSER-BUGS:
-      title: The Bugs We Have To Kill (USENIX login, August 2015)
+      title: The Bugs We Have To Kill (USENIX login)
       author: 
         -
           ins: S. Bratus
@@ -81,6 +83,7 @@ informative:
           ins: M. Patterson
         - 
           ins: A. Shubina
+      date: 2015-08
 
 --- abstract
 
