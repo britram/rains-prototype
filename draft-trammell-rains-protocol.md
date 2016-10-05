@@ -61,6 +61,26 @@ informative:
           ins: R. Troncon
         - 
           ins: J. Konieczny
+    SCION:
+      title: SCION Five Years Later - Revisiting Scalability, Control, and Isolation Next-Generation Networks (arXiv:1508.01651v1)
+      author: 
+        -
+          ins: D. Barrera 
+        - 
+          ins: R. Reischuk
+        - 
+          ins: P. Szalachowski
+        - 
+          ins: A. Perrig
+    PARSER-BUGS:
+      title: The Bugs We Have To Kill (USENIX login, August 2015)
+      author: 
+        -
+          ins: S. Bratus
+        - 
+          ins: M. Patterson
+        - 
+          ins: A. Shubina
 
 --- abstract
 
@@ -75,16 +95,71 @@ background of the properties of an ideal naming service described in
 
 # Introduction
 
-TODO: what is this
+This document defines an experimental protocol for providing Internet name
+resolution services, as a replacement for DNS, called RAINS (RAINS, Another
+Internet Naming Service). It is designed as a prototype to facilitate
+conversation about the evolution or replacement of the Domain Name System
+protocol, and was developed as a name resolution system for the SCION
+("Scalability, Control, and Isolation on Next-Generation Networks") future
+Internet architecture {{SCION}}. It attempts to answer the
+question: "how would we design the DNS knowing what we do now," on the
+background of the properties of an ideal naming service described in 
+{{I-D.trammell-inip-pins}}.
 
-TODO: what is this not
+Its architecture ({{architecture}}) and information model ({{information-
+model}}) are largely compatible with the existing Domain Name System. However,
+it does take several radical departures from DNS as presently defined and
+implemented:
 
-TODO: why does it exist
+- Delegation from a superordinate zone to a subordinate zone is done solely
+  with cryptography: a superordinate defines the key(s) that are valid for
+  signing assertions in the subordinate during a particular time interval.
+  Assertions about names can therefore safely be served from any infrastructure.
+- All time references in RAINS are absolute: instead of a time to live, each
+  assertion's temporal validity is defined by the temporal validity of the
+  signature(s) on it.
+- All assertions have validity within a specific context. A context determines
+  the rules for chaining signatures to verify validity of an assertion. The
+  global context is a special case of context, which uses chains from the
+  global naming root key. The use of context explicitly separates global usage
+  of the DNS from local usage thereof, and allows other application-specific
+  naming constraints to be bound to names; see {{context-in-assertions}}.
+  Queries are valid in one or more contexts, with specific rules for
+  determining which assertions answer which queries; see {{context-in-
+  queries}}.
+- There is an explicit separation between registrant-level names and sub-
+  registrant-level names, and explicit information about registrars and
+  registrants available in the naming system at runtime.
+- Sets of valid characters and rules for valid names are defined on a per-zone
+  basis, and can be verified at runtime.
+
+Instead of using a custom binary framing as DNS, RAINS uses Concise Binary
+Object Representation {{RFC7049}}, partially in an effort to make
+implementations easier to verify and less likely to contain potentially
+dangerous parser bugs {{PARSER-BUGS}}. Like DNS, CBOR messages can be carried
+atop any number of substrate protocols; RAINS is presently defined to use TLS
+over persistent TCP connections (see {{protocol-def}}).
 
 # Terminology
 
 The terms MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY, when they appear in
 all-capitals, are to be interpreted as defined in {{RFC2119}}.
+
+In addition, the following terms are used in this document as defined [EDITOR'S NOTE: define and normalize definitions/capitalizations, move definitions here]
+
+- Authority: see {{assertion}} [EDITOR'S NOTE: not really, needs def]
+- Assertion: see {{assertion}}
+- Context: see {{context-in-assertions}} and {{context-in-queries}}
+- Shard: see {{shards-and-zones}}
+- Zone: see {{shards-and-zones}}
+- Query: see {{query}}
+- Notification: see {{cbor-notification}}
+- RAINS Message: see {{cbor-message}}
+- Authority Service: see {{architecture}}
+- Query Service: see {{architecture}}
+- Intermediary Service: see {{architecture}}
+- RAINS Server: see {{architecture}}
+- RAINS Client: see {{architecture}} and {{protocol-client}}
 
 # Architecture
 
@@ -119,17 +194,6 @@ Assertions in response to a Query.
 The information model in this section omits information elements required by
 the resolution mechanism itself; these are defined in more detail in 
 {{cbor}} and {{protocol-def}}.
-
-## Namespace Assumptions
-
-TODO: prosify: The RAINS Information Model makes a few assumptions about the
-namespaces in which assertions are made:
-
-- federated namespace with delegation a la DNS (reference?)
-- delegations can be organization-level, or sub-organization-level. an
-  organization level name is one that someone has paid a registrar to place in
-  a registry, and contains additional information about the registrar and the
-  registrant (reference for this terminology?)
 
 ## Assertion
 
@@ -174,15 +238,15 @@ The Types supported for each assertion are:
 - Zone-Nameset: an expression of the set of names allowed within a zone; e.g.
   Unicode scripts or codepages in which names in the zone may be issued. This
   allows a zone to set policy on names in support of the distinguishability
-  property in {{I-D.trammell-inip-pins}} that can be checked by authority and
-  oracle servers at runtime. An assertion about a Subject within a Zone whose
+  property in {{I-D.trammell-inip-pins}} that can be checked by RAINS 
+  servers at runtime. An assertion about a Subject within a Zone whose
   name is not allowed by a valid signed Zone-Nameset expression is taken to be
   invalid, even if it has a valid signature. The details of this type will be
   described in a separate document.
 - Registrar: Information about the organization that caused a Subject name 
-  to exist, for organization-level names.
+  to exist, for registrant-level names.
 - Registrant: Information about the organization responsible for a Subject name, 
-  for organization-level names.
+  for registrant-level names.
 
 For a given {subject, type} tuple, multiple assertions can be valid at a given
 point in time; the union of the object values of all of these assertions is
@@ -432,7 +496,7 @@ table below:
 | 22   | query-opts     | Set of query options requested                |
 | 23   | note-data      | Additional notification data                  |
 
-## Message
+## Message {#cbor-message}
 
 All interactions in RAINS take place in an outer envelope called a Message,
 which is a CBOR map tagged with the RAINS Message tag (hex 0xE99BA8, decimal
@@ -634,8 +698,8 @@ query.
 |-----:|----------------------------------------------------------------|
 | 1    | Minimize end-to-end latency                                    |
 | 2    | Minimize last-hop answer size (bandwidth)                      |
-| 3    | Minimize information leakage beyond oracle                     |
-| 4    | No information leakage beyond oracle: cached answers only      |
+| 3    | Minimize information leakage beyond first hop                  |
+| 4    | No information leakage beyond first hop: cached answers only   |
 | 5    | Expired assertions are acceptable                              |
 | 6    | Enable token tracing                                           |
 | 7    | Disable verification delegation (client protocol only)         |
@@ -924,9 +988,9 @@ limitations at either peer. If a RAINS server needs to send a message to
 another RAINS server to which it does not have an open connection, it attempts
 to open a connection with that server.
 
-This section describes the operation of the protocol as used among oracle
-servers and authority servers. A simplified version of the protocol for client
-access is described in {{protocol-client}}.
+This section describes the operation of the protocol as used among RAINS
+servers. A simplified version of the protocol for client access is described
+in {{protocol-client}}.
 
 ## Message processing {#protocol-processing}
 
@@ -1067,8 +1131,8 @@ Assertions are not valid unless they contain at least one signature that can
 be verified from the chain of authorities specified by the name and context on
 the assertion; integrity protection is built into the information model. The
 infrastructure key object type allows keys to be associated with RAINS
-(oracle) servers in addition to zone authorities, which allows a client to
-delegate integrity verification of assertions to a trusted oracle (see
+servers in addition to zone authorities, which allows a client to
+delegate integrity verification of assertions to a trusted query service (see
 {{protocol-client}}).
 
 Since the job of an Internet naming service is to provide publicly-available
@@ -1092,20 +1156,20 @@ specific clients.
 # RAINS Client Protocol {#protocol-client}
 
 The protocol used by clients to issue queries to and receive responses from an
-oracle is a subset of the full RAINS protocol, with the following differences:
+query service is a subset of the full RAINS protocol, with the following differences:
 
 - Clients only process assertion, shard, zone, and notification sections;
   sending a query to a client results in a 400 Malformed Message notification.
 - Clients never listen for connections; a client must initiate and maintain a
-  transport session to the oracle server(s) it uses for name resolution.
+  transport session to the query server(s) it uses for name resolution.
 - Servers only process query and notification sections when connected to
   clients; a client sending assertions to a server results in a 400 Malformed
   Message notification.
 
 Since signature verification is resource-intensive, clients delegate signature
-verification to oracle servers by default. The oracle server signs the message
+verification to query servers by default. The query server signs the message
 containing results for a query using its own key (published as an infrakey
-object associated with the oracle's name), and a validity time corresponding
+object associated with the query server's name), and a validity time corresponding
 to the signature it verified with the longest lifetime, stripping other
 signatures from the reply. This behavior can be disabled by a client by
 specifying query option 7, allowing the client to do its own verification.
@@ -1135,7 +1199,7 @@ UTC, RAINS servers MUST use a clock synchronization protocol such as NTP {{RFC59
 The secret keys associated with public keys for each RAINS server (via
 infrakey objects) must be available on that server, whether through a hardware
 or software security device, so they can sign messages on demand; this is
-particularly important for oracle servers. In addition, the secret keys
+particularly important for query servers. In addition, the secret keys
 associated with TLS certificates for each server (published via certinfo
 objects) must be available as well in order to establish TLS sessions.
 
@@ -1146,7 +1210,7 @@ which they will accept and cache any assertion, shard, or zone for which they
 are authority servers until at least the end of validity of the last
 signature, provided the signature is verifiable.
 
-## Client Oracle Discovery
+## Query Service Discovery
 
 A client that will not do its own verification must be able to discover the
 oracle server(s) it should trust for resolution. Integration with e.g. DHCP or
@@ -1173,11 +1237,13 @@ algorithmically translated into DNS answers, and RAINS queries can be
 algorithmically translated into DNS queries, by RAINS to DNS gateways, given
 the mostly compatible information models used by the two.
 
-RAINS to DNS gateways must provide verification services for clients; there is
-no equivalent to query option 7 for gateways, since the RAINS signatures are
-generated over the RAINS bytestream for an assertion, not the DNS bytestream.
-DNS over TLS {{RFC7858}} SHOULD be used between the DNS client and gateway to
-ensure confidentiality and integrity for queries and answers.
+While DNSSEC and RAINS keys for equivalent ciphersuites are compatible with
+each other, there is no equivalent to query option 7 for gateways, since the
+RAINS signatures are generated over the RAINS bytestream for an assertion, not
+the DNS bytestream. Therefore, RAINS to DNS gateways must provide verification
+services for DNS clients. DNS over TLS {{RFC7858}} SHOULD be used between the
+DNS client and gateway to ensure confidentiality and integrity for queries and
+answers.
 
 Object type mappings are as follows:
 
@@ -1211,16 +1277,32 @@ using some out of band configuration options.
 When translating a RAINS assertion to a DNS answer, the gateway can use the
 time to expiry for the verified signature as the TTL.
 
+There is no method for exposing context information in a DNS query or answer.
+Therefore, queries and answers at a RAINS gateway are only supported for the
+global context ".".
+
 # Experimental Design and Evaluation
 
 The protocol described in this document is intended primarily as a prototype
 for discussion, though the goal of the document is to specify RAINS completely
 enough to allow independent, interoperable implementation of clients an
-servers. The massive inertia behind the deployment of the present domain name system makes 
+servers. The massive inertia behind the deployment of the present domain name
+system makes full deployment as a replacement for DNS unlikely. Despite this,
+there are some criteria by which the success of the RAINS experiment may be
+judged:
 
-TODO: note that this is primarily a prototype for discussion, but that we do
-intend to implement it. how will we tell if something like RAINS is ready for
-standardization?
+First, deployment in simulated or closed networks, or in alternate Internet
+architectures such as SCION, allows implementation experience with the
+features of RAINS which DNS lacks (signatures as a first-order delegation
+primitive, support for explicit contexts, explicit tradeoffs in queries,
+runtime availability of registrar/registrant data, and nameset support),
+which in turn may inform the specification and deployment of these features
+on the present DNS.
+
+Second, deployment of RAINS "islands" in the present Internet alongside DNS on
+a per-domain basis would allow for comparison between operational and
+implementation complexity and efficiency and benefits derived from RAINS'
+features, as information for future development of the DNS protocol.
 
 # IANA Considerations
 
@@ -1249,8 +1331,9 @@ This document specifies a new, experimental protocol for Internet name
 resolution, with mandatory integrity protection for assertions about names
 built into the information model, and confidentiality for query information
 protected on a hop-by-hop basis. See especially {{signatures-in-assertions}},
-{{integrity-and-confidentiality-protection}}, and {{secret-key-management}}
-for security-relevant details.
+{{integrity-and-confidentiality-protection}}, {{cbor-signature}}, 
+{{cbor-certinfo}}, and {{secret-key-management}} for security-relevant 
+details.
 
 # Acknowledgments
 
