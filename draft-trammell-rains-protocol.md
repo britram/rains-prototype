@@ -1,7 +1,7 @@
 ---
 title: RAINS (Another Internet Naming Service) Protocol Specification
 abbrev: RAINS
-docname: draft-trammell-rains-protocol
+docname: draft-trammell-rains-protocol-00
 date: 
 category: exp
 
@@ -148,21 +148,23 @@ over persistent TCP connections (see {{protocol-def}}).
 The terms MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY, when they appear in
 all-capitals, are to be interpreted as defined in {{RFC2119}}.
 
-In addition, the following terms are used in this document as defined [EDITOR'S NOTE: define and normalize definitions/capitalizations, move definitions here]
+In addition, the following terms are used in this document as defined:
 
-- Authority: see {{assertion}} [EDITOR'S NOTE: not really, needs def]
-- Assertion: see {{assertion}}
-- Context: see {{context-in-assertions}} and {{context-in-queries}}
-- Shard: see {{shards-and-zones}}
-- Zone: see {{shards-and-zones}}
-- Query: see {{query}}
-- Notification: see {{cbor-notification}}
-- RAINS Message: see {{cbor-message}}
-- Authority Service: see {{architecture}}
-- Query Service: see {{architecture}}
-- Intermediary Service: see {{architecture}}
-- RAINS Server: see {{architecture}}
-- RAINS Client: see {{architecture}} and {{protocol-client}}
+- Authority: An entity which may make assertions about names in a zone, by virtue of holding a secret key which can generate signatures verifiable using a public key associated with a delegation to the zone.
+- Assertion: A mapping between a name and object(s) of specified types describing the name, signed by an authority for the zone containing the subject name. See {{assertion}}.
+- Subject: The name to which an assertion pertains.
+- Object: A type/value pair of information about a name within an assertion.
+- Query: An expression of interest in certain types of objects pertaining to a subject name in one or more contexts. See {{query}}.
+- Context: Additional information about the scope in which an assertion or query is valid. See {{context-in-assertions}} and {{context-in-queries}}.
+- Shard: A group of assertions common to a zone, with common signatures, which may be lexicographically complete for purposes of proving nonexistence of an assertion. See {{shards-and-zones}}.
+- Zone: A group of all assertions valid at a given point in time, with common signatures, for a given level of delegation and context within the namespace. See {{shards-and-zones}}.
+- RAINS Message: Unit of exchange in the RAINS protocol, containing assertions, shards, zones, queries, and notifications. See {{cbor-message}}.
+- Notification: A RAINS-internal message section carrying information about the operation of the protocol itself. See {{cbor-notification}}.
+- Authority Service: A service provided by a RAINS Server for publishing assertions by an authority. See {{architecture}}.
+- Query Service: A service provided by a RAINS Server for answering queries on behalf of a RAINS Client. See {{architecture}}.
+- Intermediary Service: A service provided by a RAINS Server for answering queries and providing temporary storage for assertions on behalf of other RAINS Servers. See {{architecture}}.
+- RAINS Server: A server that speaks the RAINS Protocol, and provides on or more services on behalf of other RAINS Servers and/or RAINS Clients. See {{architecture}}.
+- RAINS Client: A client that uses the Query Service of one or more RAINS Servers to retrieve assertions on behalf of applications that wish to connect to named services in the Internet.
 
 # Architecture
 
@@ -395,10 +397,9 @@ elements:
 
 A query expresses interest about all the given types of assertion in all the
 specified contexts; more complex expressions of which types in which contexts
-must be asked using multiple queries.
-
-TODO: provide mechanisms for privacy/performance tradeoffs in queries; are
-infomodel changes required here?
+must be asked using multiple queries. Preferences for tradeoffs (freshness,
+bandwidth efficiency, latency, privacy preservation) in servicing a query may
+be bound to the query using query options.
 
 ### Context in Queries
 
@@ -642,10 +643,6 @@ containing the name of the Zone.
 
 The value of the context (6) key is a UTF-8 encoded string
 containing the name of the context for which the Zone is valid.
-
-TODO: determine if Zones MUST contain all the valid assertions within the
-Zone. I think so. This leads (as with inconsistent Shards) to the question of
-"what happens if not", and defending against malicious inconsistency.
 
 ## Query Message Section body {#cbor-query}
 
@@ -893,8 +890,6 @@ ECDSA-384 signatures and public keys use the P-384 curve as defined in {{FIPS-18
 
 All RAINS servers MUST implement ECDSA-256 and ECDSA-384.
 
-[EDITOR'S NOTE: make sure this is appropriately modern, check work in CURDLE.]
-
 ### Hash-chain based revocation {#hash-chain-rev}
 
 Hash-chain based revocation allows a signature (and the Assertion, Shard, or
@@ -922,12 +917,17 @@ the revocation token with Null.
 
 ## Certificate information format {#cbor-certinfo}
 
-[EDITOR'S NOTE: TODO. this should be largely in line with TLSA; determine if there's
-any guidance from implementation experience we should consider, as well.]
+[EDITOR'S NOTE: Not yet defined. Write me. This should be largely in line with
+TLSA; determine if there's any guidance from implementation experience we
+should consider, as well.]
 
 ## Name expression format {#cbor-nameset}
 
-[EDITOR'S NOTE: Write me.]
+[EDITOR'S NOTE: Not yet defined. Write me. For discussion within the INIP. 
+The expression language is primarily intended to solve the same problem the
+IDNA tables to -- acceptable character sets and character set mixing --
+although a general-purpose expression language that allows arbitrary matching
+of whole names would be more flexible.]
 
 ## Capabilities {#cbor-capabilities}
 
@@ -1255,7 +1255,6 @@ Object type mappings are as follows:
 - Objects of type ip4-addr can be represented as A RRs.
 - Objects of type redirection can be represented as NS RRs.
 - Objects of type cert-info can be represented as TLSA RRs 
-  [EDITOR'S NOTE make sure we design them so this is true].
 - Objects of type service-info can be represented as SRV RRs.
 
 There are a few object types without mappings:
