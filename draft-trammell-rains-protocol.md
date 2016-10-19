@@ -1,7 +1,7 @@
 ---
 title: RAINS (Another Internet Naming Service) Protocol Specification
 abbrev: RAINS
-docname: draft-trammell-rains-protocol-00
+docname: draft-trammell-rains-protocol-01
 date: 
 category: exp
 
@@ -109,10 +109,10 @@ question: "how would we design the DNS knowing what we do now," on the
 background of the properties of an ideal naming service described in 
 {{I-D.trammell-inip-pins}}.
 
-Its architecture ({{architecture}}) and information model ({{information-
-model}}) are largely compatible with the existing Domain Name System. However,
-it does take several radical departures from DNS as presently defined and
-implemented:
+Its architecture ({{architecture}}) and information model 
+({{information-model}}) are largely compatible with the existing 
+Domain Name System. However, it does take several radical departures 
+from DNS as presently defined and implemented:
 
 - Delegation from a superordinate zone to a subordinate zone is done solely
   with cryptography: a superordinate defines the key(s) that are valid for
@@ -128,8 +128,8 @@ implemented:
   of the DNS from local usage thereof, and allows other application-specific
   naming constraints to be bound to names; see {{context-in-assertions}}.
   Queries are valid in one or more contexts, with specific rules for
-  determining which assertions answer which queries; see {{context-in-
-  queries}}.
+  determining which assertions answer which queries; see 
+  {{context-in-queries}}.
 - There is an explicit separation between registrant-level names and
   sub-registrant-level names, and explicit information about registrars and
   registrants available in the naming system at runtime.
@@ -403,8 +403,9 @@ be bound to the query using query options.
 
 ### Context in Queries
 
-Contexts are used in queries as they are in assertions (see {{context-in-
-assertions}}). Assertion contexts in an answer to a query have to match some
+Contexts are used in queries as they are in assertions 
+(see {{context-in-assertions}}). 
+Assertion contexts in an answer to a query have to match some
 context in the query in order to respond to a query. However, there are a few
 additional considerations. An assertion can only exist with a specific
 context, while queries may accept answers in multiple contexts. The Contexts
@@ -578,8 +579,8 @@ containing the name of the context in which the assertion is valid. If not
 present, the context of the assertion is inherited from the containing Shard
 or Zone.
 
-The value of the objects (7) key is an array of objects, as defined in {{cbor-
-object}}.
+The value of the objects (7) key is an array of objects, as defined in 
+{{cbor-object}}.
 
 ## Shard body {#cbor-shard}
 
@@ -1323,8 +1324,8 @@ table in {{cbor-notification}}, and the signature algorithm table in
 {{cbor-signature}} may be candidates for IANA registries in future revisions 
 of this document.
 
-The urn:x-rains namespace used by the RAINS capability mechanism in {{cbor-
-capabilities}} may be a candidate for replacement with an IANA-registered
+The urn:x-rains namespace used by the RAINS capability mechanism in 
+{{cbor-capabilities}} may be a candidate for replacement with an IANA-registered
 namespace in a future revision of this document.
 
 # Security Considerations
@@ -1339,9 +1340,10 @@ details.
 
 # Acknowledgments
 
-Thanks to Daniele Asoni, Laurent Chuat, Ted Hardie, Joe Hildebrand, Steve
-Matsumoto, Adrian Perrig, Raphael Reischuk, Stephen Shirley, Andrew Sullivan,
-and Suzanne Woolf for the discussions leading to the design of this protocol.
+Thanks to Daniele Asoni, Laurent Chuat, Ted Hardie, Joe Hildebrand, Tobias
+Klausmann, Steve Matsumoto, Adrian Perrig, Raphael Reischuk, Stephen Shirley,
+Andrew Sullivan, and Suzanne Woolf for the discussions leading to the design
+of this protocol.
 
 --- back
 
