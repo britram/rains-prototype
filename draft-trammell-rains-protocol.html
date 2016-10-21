@@ -7,7 +7,7 @@
 
   <title>RAINS (Another Internet Naming Service) Protocol Specification</title>
 
-  <style type="text/css">/*<![CDATA[*/
+<style type="text/css">/*<![CDATA[*/
 @viewport {
   zoom: 1.0;
   width: extend-to-zoom;
@@ -265,7 +265,7 @@ li, p {
   .github-fork-ribbon-wrapper {
     position: fixed;
   }
-  /*]]>*/</style>
+/*]]>*/</style>
 
   <link href="#rfc.toc" rel="Contents"/>
 <link href="#rfc.section.1" rel="Chapter" title="1 Introduction"/>
@@ -323,7 +323,7 @@ li, p {
 
   <meta name="dct.creator" content="Trammell, B." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-trammell-rains-protocol-01" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-10-19" />
+  <meta name="dct.issued" scheme="ISO8601" content="2016-10-21" />
   <meta name="dct.abstract" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design the DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in " />
   <meta name="description" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design the DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in " />
 
@@ -344,10 +344,10 @@ li, p {
 </tr>
 <tr>
   <td class="left">Intended status: Experimental</td>
-  <td class="right">October 19, 2016</td>
+  <td class="right">October 21, 2016</td>
 </tr>
 <tr>
-  <td class="left">Expires: April 22, 2017</td>
+  <td class="left">Expires: April 24, 2017</td>
   <td class="right"></td>
 </tr>
 
@@ -368,7 +368,7 @@ li, p {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on April 22, 2017.</p>
+<p>This Internet-Draft will expire on April 24, 2017.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -1040,7 +1040,7 @@ li, p {
 </table>
 <h1 id="rfc.section.5.10.1"><a href="#rfc.section.5.10.1">5.10.1.</a> <a href="#ecdsa-format" id="ecdsa-format">ECDSA signature and public key format</a></h1>
 <p id="rfc.section.5.10.1.p.1">ECDSA public keys consist of a single value, called &#8220;Q&#8221; in <a href="#FIPS-186-3">[FIPS-186-3]</a>. Q is a simple bit string that represents the uncompressed form of a curve point, concatenated together as &#8220;x | y&#8221;. The third element in a RAINS delegation object is the Q bit string encoded as a CBOR byte array. RAINS delegation objects for ECDSA-256 public keys are therefore represented as the array [5, 2, Q]; and for ECDSA-384 public keys as [5, 3, Q].</p>
-<p id="rfc.section.5.10.1.p.2">ECDSA signatures are a combination of two non-negative integers, called &#8220;r&#8221; and &#8220;s&#8221; in <a href="#FIPS-186-3">[FIPS-186-3]</a>. A Signature using ECDSA is represented using a six element CBOR array, with the fifth element being r represented as a byte array as described in Section C.2 of <a href="#FIPS-186-3">[FIPS-186-3]</a>, and the sixth being s represented as a byte array as described in Section C.2 of <a href="#FIPS-186-3">[FIPS-186-3]</a>. For ECDSA-256 signatures, each integer MUST be represented as a 32-byte array. For ECDSA-384 signatures, each integer MUST be represented as a 48-byte array.  RAINS signatures using ECDSA-256 are therefore the array [2, valid-from, valid-until, token, r, s]; and for ECDSA-384 the array [3, valid-from, valid-until, token, r, s].</p>
+<p id="rfc.section.5.10.1.p.2">ECDSA signatures are a combination of two non-negative integers, called &#8220;r&#8221; and &#8220;s&#8221; in <a href="#FIPS-186-3">[FIPS-186-3]</a>. A Signature using ECDSA is represented using a five element CBOR array, with the fifth element being &#8220;r | s&#8221; such that r is represented as a byte array as described in Section C.2 of <a href="#FIPS-186-3">[FIPS-186-3]</a>, and s represented as a byte array as described in Section C.2 of <a href="#FIPS-186-3">[FIPS-186-3]</a>. For ECDSA-256 signatures, each integer MUST be represented as a 32-byte array. For ECDSA-384 signatures, each integer MUST be represented as a 48-byte array.  RAINS signatures using ECDSA-256 are therefore the array [2, valid-from, valid-until, token, r|s]; and for ECDSA-384 the array [3, valid-from, valid-until, token, r|s].</p>
 <p id="rfc.section.5.10.1.p.3">ECDSA-256 signatures and public keys use the P-256 curve as defined in <a href="#FIPS-186-3">[FIPS-186-3]</a>.  ECDSA-384 signatures and public keys use the P-384 curve as defined in <a href="#FIPS-186-3">[FIPS-186-3]</a>.</p>
 <p id="rfc.section.5.10.1.p.4">All RAINS servers MUST implement ECDSA-256 and ECDSA-384.</p>
 <h1 id="rfc.section.5.10.2"><a href="#rfc.section.5.10.2">5.10.2.</a> <a href="#hash-chain-rev" id="hash-chain-rev">Hash-chain based revocation</a></h1>

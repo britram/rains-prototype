@@ -4,8 +4,8 @@
 
 Names and Identifiers Program                                B. Trammell
 Internet-Draft                                         ETH Zurich NetSec
-Intended status: Experimental                           October 19, 2016
-Expires: April 22, 2017
+Intended status: Experimental                           October 21, 2016
+Expires: April 24, 2017
 
 
      RAINS (Another Internet Naming Service) Protocol Specification
@@ -35,7 +35,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on April 22, 2017.
+   This Internet-Draft will expire on April 24, 2017.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Trammell                 Expires April 22, 2017                 [Page 1]
+Trammell                 Expires April 24, 2017                 [Page 1]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Trammell                 Expires April 22, 2017                 [Page 2]
+Trammell                 Expires April 24, 2017                 [Page 2]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -165,7 +165,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                 [Page 3]
+Trammell                 Expires April 24, 2017                 [Page 3]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -221,7 +221,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                 [Page 4]
+Trammell                 Expires April 24, 2017                 [Page 4]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -277,7 +277,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                 [Page 5]
+Trammell                 Expires April 24, 2017                 [Page 5]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -333,7 +333,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                 [Page 6]
+Trammell                 Expires April 24, 2017                 [Page 6]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -389,7 +389,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                 [Page 7]
+Trammell                 Expires April 24, 2017                 [Page 7]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -445,7 +445,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                 [Page 8]
+Trammell                 Expires April 24, 2017                 [Page 8]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -501,7 +501,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                 [Page 9]
+Trammell                 Expires April 24, 2017                 [Page 9]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -557,7 +557,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 10]
+Trammell                 Expires April 24, 2017                [Page 10]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -613,7 +613,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 11]
+Trammell                 Expires April 24, 2017                [Page 11]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -669,7 +669,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 12]
+Trammell                 Expires April 24, 2017                [Page 12]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -725,7 +725,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 13]
+Trammell                 Expires April 24, 2017                [Page 13]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -781,7 +781,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 14]
+Trammell                 Expires April 24, 2017                [Page 14]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -837,7 +837,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 15]
+Trammell                 Expires April 24, 2017                [Page 15]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -893,7 +893,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 16]
+Trammell                 Expires April 24, 2017                [Page 16]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -949,7 +949,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 17]
+Trammell                 Expires April 24, 2017                [Page 17]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -1005,7 +1005,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 18]
+Trammell                 Expires April 24, 2017                [Page 18]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -1061,7 +1061,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 19]
+Trammell                 Expires April 24, 2017                [Page 19]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -1117,7 +1117,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 20]
+Trammell                 Expires April 24, 2017                [Page 20]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -1173,7 +1173,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 21]
+Trammell                 Expires April 24, 2017                [Page 21]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -1229,7 +1229,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 22]
+Trammell                 Expires April 24, 2017                [Page 22]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -1285,7 +1285,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 23]
+Trammell                 Expires April 24, 2017                [Page 23]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -1312,15 +1312,15 @@ Internet-Draft                    RAINS                     October 2016
 
    ECDSA signatures are a combination of two non-negative integers,
    called "r" and "s" in [FIPS-186-3].  A Signature using ECDSA is
-   represented using a six element CBOR array, with the fifth element
-   being r represented as a byte array as described in Section C.2 of
-   [FIPS-186-3], and the sixth being s represented as a byte array as
+   represented using a five element CBOR array, with the fifth element
+   being "r | s" such that r is represented as a byte array as described
+   in Section C.2 of [FIPS-186-3], and s represented as a byte array as
    described in Section C.2 of [FIPS-186-3].  For ECDSA-256 signatures,
    each integer MUST be represented as a 32-byte array.  For ECDSA-384
    signatures, each integer MUST be represented as a 48-byte array.
    RAINS signatures using ECDSA-256 are therefore the array [2, valid-
-   from, valid-until, token, r, s]; and for ECDSA-384 the array [3,
-   valid-from, valid-until, token, r, s].
+   from, valid-until, token, r|s]; and for ECDSA-384 the array [3,
+   valid-from, valid-until, token, r|s].
 
    ECDSA-256 signatures and public keys use the P-256 curve as defined
    in [FIPS-186-3].  ECDSA-384 signatures and public keys use the P-384
@@ -1341,7 +1341,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 24]
+Trammell                 Expires April 24, 2017                [Page 24]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -1397,7 +1397,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 25]
+Trammell                 Expires April 24, 2017                [Page 25]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -1453,7 +1453,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 26]
+Trammell                 Expires April 24, 2017                [Page 26]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -1509,7 +1509,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 27]
+Trammell                 Expires April 24, 2017                [Page 27]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -1565,7 +1565,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 28]
+Trammell                 Expires April 24, 2017                [Page 28]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -1621,7 +1621,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 29]
+Trammell                 Expires April 24, 2017                [Page 29]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -1677,7 +1677,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 30]
+Trammell                 Expires April 24, 2017                [Page 30]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -1733,7 +1733,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 31]
+Trammell                 Expires April 24, 2017                [Page 31]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -1789,7 +1789,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 32]
+Trammell                 Expires April 24, 2017                [Page 32]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -1845,7 +1845,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 33]
+Trammell                 Expires April 24, 2017                [Page 33]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -1901,7 +1901,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 34]
+Trammell                 Expires April 24, 2017                [Page 34]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -1957,7 +1957,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 35]
+Trammell                 Expires April 24, 2017                [Page 35]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -2013,7 +2013,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 36]
+Trammell                 Expires April 24, 2017                [Page 36]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -2069,7 +2069,7 @@ Internet-Draft                    RAINS                     October 2016
 
 
 
-Trammell                 Expires April 22, 2017                [Page 37]
+Trammell                 Expires April 24, 2017                [Page 37]
 
 Internet-Draft                    RAINS                     October 2016
 
@@ -2125,4 +2125,4 @@ Author's Address
 
 
 
-Trammell                 Expires April 22, 2017                [Page 38]
+Trammell                 Expires April 24, 2017                [Page 38]
