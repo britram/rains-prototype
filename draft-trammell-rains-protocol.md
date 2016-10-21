@@ -876,15 +876,15 @@ objects for ECDSA-256 public keys are therefore represented as the array
 [5, 2, Q]; and for ECDSA-384 public keys as [5, 3, Q].
 
 ECDSA signatures are a combination of two non-negative integers, called "r"
-and "s" in {{FIPS-186-3}}. A Signature using ECDSA is represented using a six
-element CBOR array, with the fifth element being r represented as a byte array
-as described in Section C.2 of {{FIPS-186-3}}, and the sixth being s
+and "s" in {{FIPS-186-3}}. A Signature using ECDSA is represented using a five
+element CBOR array, with the fifth element being "r | s" such that r is represented as a byte array
+as described in Section C.2 of {{FIPS-186-3}}, and s
 represented as a byte array as described in Section C.2 of {{FIPS-186-3}}. For
 ECDSA-256 signatures, each integer MUST be represented as a 32-byte array. For
 ECDSA-384 signatures, each integer MUST be represented as a 48-byte array.
 RAINS signatures using ECDSA-256 are therefore the array [2, valid-from,
-valid-until, token, r, s]; and for ECDSA-384 the array [3, valid-from,
-valid-until, token, r, s].
+valid-until, token, r|s]; and for ECDSA-384 the array [3, valid-from,
+valid-until, token, r|s].
 
 ECDSA-256 signatures and public keys use the P-256 curve as defined in {{FIPS-186-3}}.
 ECDSA-384 signatures and public keys use the P-384 curve as defined in {{FIPS-186-3}}.
