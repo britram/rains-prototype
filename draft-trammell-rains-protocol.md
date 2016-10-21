@@ -1,7 +1,7 @@
 ---
 title: RAINS (Another Internet Naming Service) Protocol Specification
 abbrev: RAINS
-docname: draft-trammell-rains-protocol-00
+docname: draft-trammell-rains-protocol-01
 date: 
 category: exp
 
@@ -109,10 +109,10 @@ question: "how would we design the DNS knowing what we do now," on the
 background of the properties of an ideal naming service described in 
 {{I-D.trammell-inip-pins}}.
 
-Its architecture ({{architecture}}) and information model ({{information-
-model}}) are largely compatible with the existing Domain Name System. However,
-it does take several radical departures from DNS as presently defined and
-implemented:
+Its architecture ({{architecture}}) and information model 
+({{information-model}}) are largely compatible with the existing 
+Domain Name System. However, it does take several radical departures 
+from DNS as presently defined and implemented:
 
 - Delegation from a superordinate zone to a subordinate zone is done solely
   with cryptography: a superordinate defines the key(s) that are valid for
@@ -128,10 +128,10 @@ implemented:
   of the DNS from local usage thereof, and allows other application-specific
   naming constraints to be bound to names; see {{context-in-assertions}}.
   Queries are valid in one or more contexts, with specific rules for
-  determining which assertions answer which queries; see {{context-in-
-  queries}}.
-- There is an explicit separation between registrant-level names and sub-
-  registrant-level names, and explicit information about registrars and
+  determining which assertions answer which queries; see 
+  {{context-in-queries}}.
+- There is an explicit separation between registrant-level names and
+  sub-registrant-level names, and explicit information about registrars and
   registrants available in the naming system at runtime.
 - Sets of valid characters and rules for valid names are defined on a per-zone
   basis, and can be verified at runtime.
@@ -403,8 +403,9 @@ be bound to the query using query options.
 
 ### Context in Queries
 
-Contexts are used in queries as they are in assertions (see {{context-in-
-assertions}}). Assertion contexts in an answer to a query have to match some
+Contexts are used in queries as they are in assertions 
+(see {{context-in-assertions}}). 
+Assertion contexts in an answer to a query have to match some
 context in the query in order to respond to a query. However, there are a few
 additional considerations. An assertion can only exist with a specific
 context, while queries may accept answers in multiple contexts. The Contexts
@@ -418,7 +419,7 @@ appearing in the Contexts part of a query before the null context expresses
 
 Query contexts can also be used to provide additional information to RAINS
 servers about the query. For example, contexts can provide a method for
-explicit selection of a CDN servers not based on either the client's or the
+explicit selection of a CDN server not based on either the client's or the
 resolver's address (see {{RFC7871}}). Here, the CDN creates a context for
 each of its content zones, and an external service selects appropriate
 contexts for the client based not just on client source address but passive
@@ -447,12 +448,12 @@ to a query, bound to that query. It consists of the following information elemen
   token, the query in the answer may omit all content except the token.
 - Content: a set of assertions and/or shards answering the query.
 
-The content of an answer content depends on whether the answer is positive or
-negative. A positive answer contains the information requested in the smallest
-atomic container that can be found, usually a single assertion. A negative
-answer contains the information used to verify it; either a shard with the
-Complete-Flag set, an entire Zone, or a Zone-Nameset assertion showing the
-name is illegal within the zone.
+The content of an answer depends on whether the answer is positive or negative.
+A positive answer contains the information requested in the smallest atomic
+container that can be found, usually a single assertion. A negative answer
+contains the information used to verify it; either a shard with the
+Complete-Flag set, an entire Zone, or a Zone-Nameset assertion showing the name
+is illegal within the zone.
 
 A query is taken to have an inconclusive answer when no answer returns to the
 querier before the query's Valid-Until time.
@@ -488,7 +489,7 @@ table below:
 | 10   | reserved       | Reserved for future use in RAINS              |
 | 11   | shard-range    | Lexical range of Assertions in Shard          |
 | 12   | reserved       | Reserved for future use in RAINS              |
-| 13   | query-contexts | Reserved for future use in RAINS              |
+| 13   | reserved       | Reserved for future use in RAINS              |
 | 14   | query-types    | acceptable object types for query             |
 | 15   | reserved       | Reserved for future use in RAINS              |
 | 16   | reserved       | Reserved for future use in RAINS              |
@@ -534,8 +535,8 @@ Section types are as in the following table, taken from {{cbor-symtab}}:
 
 | Code | Name         | Description                                   |
 |-----:|--------------|-----------------------------------------------|
-| 1    | assertion    | Assertion (see {{cbor-assertion})             |
-| 2    | shard        | Shard (see {{cbor-shard})                     |
+| 1    | assertion    | Assertion (see {{cbor-assertion}})            |
+| 2    | shard        | Shard (see {{cbor-shard}})                    |
 | 3    | zone         | Zone (see {{cbor-zone}})                      |
 | 4    | query        | Query (see {{cbor-query}})                    |
 | 23   | notification | Notification (see {{cbor-notification}})      |
@@ -578,8 +579,8 @@ containing the name of the context in which the assertion is valid. If not
 present, the context of the assertion is inherited from the containing Shard
 or Zone.
 
-The value of the objects (7) key is an array of objects, as defined in {{cbor-
-object}}.
+The value of the objects (7) key is an array of objects, as defined in 
+{{cbor-object}}.
 
 ## Shard body {#cbor-shard}
 
@@ -614,18 +615,18 @@ containing the name of the context in which the Assertions within the Shard
 are valid. If not present, the context of the assertion is inherited from the
 containing Zone.
 
-If the shard-range (11) key is present, the shard is lexicographically
-complete within the range described in its value: a mapping for a (subject-
-name, object-type) pair that should be between the two values given in the
-range but is not is asserted to not exist. Lexicographic sorting is done on
-subject names by ordering Unicode codepoints in ascending order; ordering on
-object types is done via their code values in {{cbor-object}} in ascending order
+If the shard-range (11) key is present, the shard is lexicographically complete
+within the range described in its value: a mapping for a (subject-name,
+object-type) pair that should be between the two values given in the range but
+is not is asserted to not exist. Lexicographic sorting is done on subject names
+by ordering Unicode codepoints in ascending order; ordering on object types is
+done via their code values in {{cbor-object}} in ascending order.
 
-The shard-range value MUST be a four element array of (subject-name A, object-
-type A, subject-name B, object type B) where A does not necessarily need to
-sort before B, and the (subject-name, object-type) pairs need not exist in the
-shard. The shard MUST NOT contain any assertions for subject-names outside the
-range.
+The shard-range value MUST be a four element array of (subject-name A,
+object-type A, subject-name B, object-type B) where A does not necessarily need
+to sort before B, and the (subject-name, object-type) pairs need not exist in
+the shard. The shard MUST NOT contain any assertions for subject-names outside
+the range.
 
 If the shard-range key is not present, the shard is not lexicographically
 complete and MUST NOT be used to make assertions about nonexistance.
@@ -826,18 +827,18 @@ chain tokens in signatures; and the format of the encodings of the signature
 values in Assertions, Shards, Zones, and Messages, as well as of public key
 values in delegation objects.
 
-RAINS signatures have four common elements: the algorithm identifier, a valid-
-since timestamp, a valid-until timestamp, and a hash chain token. Signatures
-are represented as an array of these four values followed by additional
-elements containing the signature data itself, according to the algorithm
-identifier.
+RAINS signatures have four common elements: the algorithm identifier, a
+valid-since timestamp, a valid-until timestamp, and a hash chain token.
+Signatures are represented as an array of these four values followed by
+additional elements containing the signature data itself, according to the
+algorithm identifier.
 
 Valid-since and valid-until timestamps are represented as CBOR integers
 counting seconds since the UNIX epoch UTC, identified with tag value 1 and
-encoded as in section 2.4.1 of {{RFC7049}}. A signature MUST have a valid-
-until timestamp. If a signature has no specified valid-since time (i.e., is
-valid from the beginning of time until its valid-until timestamp), the valid-
-since time MAY be null (as in Table 2 in Section 2.3 of {{RFC7049}}).
+encoded as in section 2.4.1 of {{RFC7049}}. A signature MUST have a
+valid-until timestamp. If a signature has no specified valid-since time (i.e.,
+is valid from the beginning of time until its valid-until timestamp), the
+valid-since time MAY be null (as in Table 2 in Section 2.3 of {{RFC7049}}).
 
 Hash chain tokens and their use are specified in the appropriate subsection of
 this section for the given algorithm identifier.
@@ -1141,9 +1142,9 @@ delegate integrity verification of assertions to a trusted query service (see
 Since the job of an Internet naming service is to provide publicly-available
 information mapping names to information needed to connect to the services
 they name, confidentiality protection for assertions is not a goal of the
-system. Specifically, the information model and the mechanism for proving non-
-existence of an assertion is not designed to provide resistance against zone
-enumeration.
+system. Specifically, the information model and the mechanism for proving
+non-existence of an assertion is not designed to provide resistance against
+zone enumeration.
 
 On the other hand, confidentiality protection of query information in crucial.
 Linking naming queries to a specific user can be nearly as useful to build a
@@ -1323,8 +1324,8 @@ table in {{cbor-notification}}, and the signature algorithm table in
 {{cbor-signature}} may be candidates for IANA registries in future revisions 
 of this document.
 
-The urn:x-rains namespace used by the RAINS capability mechanism in {{cbor-
-capabilities}} may be a candidate for replacement with an IANA-registered
+The urn:x-rains namespace used by the RAINS capability mechanism in 
+{{cbor-capabilities}} may be a candidate for replacement with an IANA-registered
 namespace in a future revision of this document.
 
 # Security Considerations
@@ -1339,9 +1340,10 @@ details.
 
 # Acknowledgments
 
-Thanks to Daniele Asoni, Laurent Chuat, Ted Hardie, Joe Hildebrand, Steve
-Matsumoto, Adrian Perrig, Raphael Reischuk, Stephen Shirley, Andrew Sullivan,
-and Suzanne Woolf for the discussions leading to the design of this protocol.
+Thanks to Daniele Asoni, Laurent Chuat, Ted Hardie, Joe Hildebrand, Tobias
+Klausmann, Steve Matsumoto, Adrian Perrig, Raphael Reischuk, Stephen Shirley,
+Andrew Sullivan, and Suzanne Woolf for the discussions leading to the design
+of this protocol.
 
 --- back
 
