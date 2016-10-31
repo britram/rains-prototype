@@ -845,19 +845,19 @@ this section for the given algorithm identifier.
 
 Signatures in RAINS are generated over a normalized serialized CBOR object (a
 Message; or an Assertion, Shard, or Zone section body). To normalize and
-serialize an object for sigining or verifying:
+serialize an object for signing:
 
-- Remove all signatures from the object.
-- Add a new "blank" signature to the object, containing Null in the place 
-  of any elements containing signature data. 
-- Serialize the object, emitting all keys in CBOR maps in ascending numerical
-  order. Note that when serializing anything with a Content array, the order 
-  of the content array is preserved. If the serialized object is a Message, 
-  it should be tagged with the RAINS tag.
-- Generate a signature on the resulting byte stream according to the 
-  algorithm selected, and fill the resulting values into the "blank" 
-  signature; or verify the signature of the resulting byte stream according 
-  to the algorithm selected.
+- Serialize the object with a stub for the signature to be generated:
+  - Strip all other signatures during serialization by omitting all signatures (2) keys and their values. When signing a shard or zone, the signatures on contained assertions, if present, must be omitted too. When signing a message, the signatures on contained assertions, shards, and zones must be omitted.
+  - Create a stub signature within an array within a signatures (2) key at the appropriate place in the object, containing the algorithm ID, timestamps and hash chain token, but a null value in the place of the signature content.
+  - Normalize the serialized object by emitting all keys in CBOR maps in ascending numerical order. 
+  - Note that when serializing anything with a Content array, the order 
+  of the content array is preserved. 
+  - If the serialized object is a Message, it should be tagged with the RAINS tag.
+- Generate a signature on the resulting byte stream according to the algorithm selected
+- Add the full signature to the signatures array at the appropriate point in the object.
+
+To verify a signature, generate the bytestream as for signing, then verify the signature according to the algorithm selected.
 
 The following algorithms are supported:
 
