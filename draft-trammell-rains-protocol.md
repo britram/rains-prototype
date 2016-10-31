@@ -476,30 +476,21 @@ table below:
 
 | Code | Name           | Description                                   |
 |-----:|----------------|-----------------------------------------------|
-| 0    | content        | Content of a message, shard, or zone          |
+| 0    | signatures     | Signatures on a message or section            |
 | 1    | capabilities   | Capabilities of server sending message        |
-| 2    | signatures     | Signatures on a message or section            |
+| 2    | token          | Token for referring to a data item            |
 | 3    | subject-name   | Subject name in an assertion                  |
 | 4    | subject-zone   | Zone name in an assertion                     |
 | 5    | query-name     | Qualified subject name in a query             |
 | 6    | context        | Context of an assertion                       |
 | 7    | objects        | Objects of an assertion                       |
-| 8    | token          | Token for referring to a data item            |
-| 9    | reserved       | Reserved for future use in RAINS              |
-| 10   | reserved       | Reserved for future use in RAINS              |
+| 8    | query-contexts | Contexts acceptable in query answers          |
+| 9    | query-types    | Acceptable object types for query             |
+| 10   | query-opts     | Set of query options requested                |
 | 11   | shard-range    | Lexical range of Assertions in Shard          |
-| 12   | reserved       | Reserved for future use in RAINS              |
-| 13   | reserved       | Reserved for future use in RAINS              |
-| 14   | query-types    | acceptable object types for query             |
-| 15   | reserved       | Reserved for future use in RAINS              |
-| 16   | reserved       | Reserved for future use in RAINS              |
-| 17   | note-type      | Notification type                             |
-| 18   | reserved       | Reserved for future use in RAINS              |
-| 19   | reserved       | Reserved for future use in RAINS              |
-| 20   | reserved       | Reserved for future use in RAINS              |
-| 21   | reserved       | Reserved for future use in RAINS              |
-| 22   | query-opts     | Set of query options requested                |
-| 23   | note-data      | Additional notification data                  |
+| 21   | note-type      | Notification type                             |
+| 22   | note-data      | Additional notification data                  |
+| 23   | content        | Content of a message, shard, or zone          |
 
 ## Message {#cbor-message}
 
@@ -507,21 +498,22 @@ All interactions in RAINS take place in an outer envelope called a Message,
 which is a CBOR map tagged with the RAINS Message tag (hex 0xE99BA8, decimal
 15309736). 
 
-A Message map MUST contain a content (0) key, whose value is an array of
-Message Sections; a Message Section is either an Assertion, Shard, Zone, or
-Query.
+A Message map MAY contain a signatures (0) key, whose value is an array of
+Signatures over the entire message as defined in {{cbor-signature}}, to be 
+verified against the infrastructure key for the RAINS Server originating the message.
 
 A Message map MAY contain a capabilities (1) key, whose value is described in
 {#cbor-capabilities}.
 
-A Message map MAY contain a signatures (2) key, whose value is an array of
-Signatures over the entire message as defined in {{cbor-signature}}, to be verified against the 
-
-A Message map MAY contain a token (8) key, whose value is either an integer or
+A Message map MAY contain a token (2) key, whose value is either an integer or
 a UTF-8 string of maximum byte length 32. The token key may be used to refer
 to the message in future messages, or may refer to a past message or query by
 token. If the message is in response to a message or query containing a token,
 the message MUST contain that token.
+
+A Message map MUST contain a content (23) key, whose value is an array of
+Message Sections; a Message Section is either an Assertion, Shard, Zone, or
+Query.
 
 ## Message Section header
 
@@ -548,16 +540,16 @@ Assertion is contained in a Message Section or in a Shard or Zone.
 
 Assertions contained in Message Sections are "bare Assertions". Since they
 cannot inherit any values from their containers, they MUST contain the
-signatures (2), subject-name (3), subject-zone (4), context (6), and objects
+signatures (0), subject-name (3), subject-zone (4), context (6), and objects
 (7) keys.
 
 Assertions within a Shard or Zone are "contained Assertions", and can inherit
 values from their containers. A contained Assertion MAY contain the signatures
-(2) key and MUST contain the subject-name (3) and objects (7) keys. It MAY
+(0) key and MUST contain the subject-name (3) and objects (7) keys. It MAY
 contain subject-zone (4) and context (6) keys, but in this case the values of
 these keys MUST be identical to the values in the containing Shard or Zone.
 
-The value of the signatures (2) key, if present, is an array of one or more
+The value of the signatures (0) key, if present, is an array of one or more
 Signatures as defined in {{cbor-signature}}. If not present, the containing
 Shard or Zone MUST be signed. Signatures on a contained Assertion are
 generated as if the inherited values are present in the Assertion, whether
@@ -589,18 +581,18 @@ is contained in a Message Section or in a Zone.
 
 Shards contained in Message Sections are "bare Shards". Since they cannot
 inherit any values from their contained Zone, they MUST contain the content
-(0), signatures (2), subject-zone (4), and context (6) keys.
+(23), signatures (0), subject-zone (4), and context (6) keys.
 
 Shards within a Zone are "contained Shards", and can inherit values from their
-containing Zone. A contained Shard MUST contain the content (0) key, and MAY
-contain the signatures (2) key and shard-range (11) keys. It MAY contain
+containing Zone. A contained Shard MUST contain the content (23) key, and MAY
+contain the signatures (0) key and shard-range (11) keys. It MAY contain
 subject-zone (4) and context (6) keys, but in this case the values of these
 keys MUST be identical to the values in the containing Zone.
 
-The value of the content (0) key is an array of Assertion bodies as defined in
+The value of the content (23) key is an array of Assertion bodies as defined in
 {#cbor-assertion}.
 
-The value of the signatures (2) key, if present, is an array of one or more
+The value of the signatures (0) key, if present, is an array of one or more
 Signatures as defined in {{cbor-signature}}. If not present, the containing
 Zone MUST be signed. Signatures on a contained Shard are generated as if the
 inherited values are present in the Shard, whether actually present or not.
@@ -633,10 +625,10 @@ complete and MUST NOT be used to make assertions about nonexistance.
 
 ## Zone Message Section body {#cbor-zone}
 
-A Zone body is a map. Zones MUST contain the content (0), signatures (2),
+A Zone body is a map. Zones MUST contain the content (23), signatures (0),
 subject-zone (4), and context (6) keys.
 
-The value of the content (0) key is an array of Shard bodies as defined in
+The value of the content (23) key is an array of Shard bodies as defined in
 {#cbor-shard} and/or Assertion bodies as defined in {#cbor-assertion}.
 
 The value of the subject-zone (4) key is a UTF-8 encoded string
@@ -647,14 +639,14 @@ containing the name of the context for which the Zone is valid.
 
 ## Query Message Section body {#cbor-query}
 
-A Query body is a map. Queries MUST contain the query-name (5), query-contexts (13),
-and query-type (14) keys. Queries MAY contain the token(8) key and the 
-query-opts (22) key.
+A Query body is a map. Queries MUST contain the query-name (5), query-contexts (8),
+and query-types (9) keys. Queries MAY contain the token (2) key and the 
+query-opts (10) key.
 
 The value of the query-name (5) key is a UTF-8 encoded string containing the
 fully qualified name that is the subject of the query.
 
-The value of the query-contexts (13) key is an allowable context expression, as an
+The value of the query-contexts (8) key is an allowable context expression, as an
 array of context names as UTF-8 encoded strings. The allowable context
 expression is evaluated in-order, as follows:
 
@@ -681,17 +673,17 @@ An empty context array in a query is taken to be equivalent to an array
 containing only ['.', 'cx--any-']; i.e. any context acceptable, global context
 preferred.
 
-The value of the query-type (14) key is an array of integers encoding the
+The value of the query-types (9) key is an array of integers encoding the
 type(s) of objects (as in {{cbor-object}}) acceptable in answers to the query.
 All values in the query-type array are treated at equal priority: [2,3] means
 the querier is equally interested in both IPv4 and IPv6 addresses for the
 query-name.
 
-The value of the token (8) key, if present, is either an integer or a UTF-8
+The value of the token (2) key, if present, is either an integer or a UTF-8
 string of maximum byte length 32. Future messages or notifications containing
 answers to this query MUST contain this token, if present.
 
-The value of the query-opts (22) key, if present, is an array of integers in
+The value of the query-opts (10) key, if present, is an array of integers in
 priority order of the querier's preferences in tradeoffs in answering the
 query.
 
@@ -714,7 +706,7 @@ assertions unless "expired assertions acceptable" is specified.
 
 Notification Message Sections contain information about the operation of the
 RAINS protocol itself. A Notification Message Section body is a map which MUST
-contain the note-type (17) key and MAY contain the token (8) and note-data (23) keys. The
+contain the note-type (21) key and MAY contain the token (2) and note-data (22) keys. The
 value of the note-type key is encoded as an integer as in the following table:
 
 | Code | Description                                                    |
@@ -733,11 +725,11 @@ Note that the status codes are chosen to be mnemonically similar to status
 codes for HTTP {{RFC7231}}. Details of the meaning of each status code are
 given in {{protocol-def}}.
 
-The value of the token (8) key, if present, is either an integer or a UTF-8
+The value of the token (2) key, if present, is either an integer or a UTF-8
 string of maximum byte length 32. If the notification is in response to a
 message or query containing a token, the notification MUST contain that token.
 
-The value of the note-data (23) key, if present, is a UTF-8 encoded string
+The value of the note-data (22) key, if present, is a UTF-8 encoded string
 with additional information about the notification, intended to be displayed
 to an administrator to help debug the issue identified by the negotiation.
 
@@ -848,8 +840,8 @@ Message; or an Assertion, Shard, or Zone section body). To normalize and
 serialize an object for signing:
 
 - Serialize the object with a stub for the signature to be generated:
-  - Strip all other signatures during serialization by omitting all signatures (2) keys and their values. When signing a shard or zone, the signatures on contained assertions, if present, must be omitted too. When signing a message, the signatures on contained assertions, shards, and zones must be omitted.
-  - Create a stub signature within an array within a signatures (2) key at the appropriate place in the object, containing the algorithm ID, timestamps and hash chain token, but a null value in the place of the signature content.
+  - Strip all other signatures during serialization by omitting all signatures (0) keys and their values. When signing a shard or zone, the signatures on contained assertions, if present, must be omitted too. When signing a message, the signatures on contained assertions, shards, and zones must be omitted.
+  - Create a stub signature within an array within a signatures (0) key at the appropriate place in the object, containing the algorithm ID, timestamps and hash chain token, but a null value in the place of the signature content.
   - Normalize the serialized object by emitting all keys in CBOR maps in ascending numerical order. 
   - Note that when serializing anything with a Content array, the order 
   of the content array is preserved. 
@@ -882,8 +874,8 @@ as described in Section C.2 of {{FIPS-186-3}}, and s
 represented as a byte array as described in Section C.2 of {{FIPS-186-3}}. For
 ECDSA-256 signatures, each integer MUST be represented as a 32-byte array. For
 ECDSA-384 signatures, each integer MUST be represented as a 48-byte array.
-RAINS signatures using ECDSA-256 are therefore the array [2, valid-from,
-valid-until, token, r|s]; and for ECDSA-384 the array [3, valid-from,
+RAINS signatures using ECDSA-256 are therefore the array [0, 2, valid-from,
+valid-until, token, r|s]; and for ECDSA-384 the array [0, 3, valid-from,
 valid-until, token, r|s].
 
 ECDSA-256 signatures and public keys use the P-256 curve as defined in {{FIPS-186-3}}.
