@@ -581,13 +581,13 @@ is contained in a Message Section or in a Zone.
 
 Shards contained in Message Sections are "bare Shards". Since they cannot
 inherit any values from their contained Zone, they MUST contain the content
-(23), signatures (0), subject-zone (4), and context (6) keys.
+(23), signatures (0), subject-zone (4), context (6), and may contain the shard-range (11) key.
 
 Shards within a Zone are "contained Shards", and can inherit values from their
 containing Zone. A contained Shard MUST contain the content (23) key, and MAY
-contain the signatures (0) key and shard-range (11) keys. It MAY contain
-subject-zone (4) and context (6) keys, but in this case the values of these
-keys MUST be identical to the values in the containing Zone.
+contain the signatures (0) and shard-range(11) keys. It MAY contain subject-
+zone (4) and context (6) keys, but in this case the values of these keys MUST
+be identical to the values in the containing Zone.
 
 The value of the content (23) key is an array of Assertion bodies as defined in
 {#cbor-assertion}.
@@ -607,18 +607,23 @@ containing the name of the context in which the Assertions within the Shard
 are valid. If not present, the context of the assertion is inherited from the
 containing Zone.
 
-If the shard-range (11) key is present, the shard is lexicographically complete
+If the shard-range (11) key is present, the the shard is lexicographically complete
 within the range described in its value: a mapping for a (subject-name,
 object-type) pair that should be between the two values given in the range but
 is not is asserted to not exist. Lexicographic sorting is done on subject names
 by ordering Unicode codepoints in ascending order; ordering on object types is
 done via their code values in {{cbor-object}} in ascending order.
 
-The shard-range value MUST be a four element array of (subject-name A,
-object-type A, subject-name B, object-type B) where A does not necessarily need
-to sort before B, and the (subject-name, object-type) pairs need not exist in
-the shard. The shard MUST NOT contain any assertions for subject-names outside
-the range.
+The shard-range value MUST be a two element array of strings or nulls
+(subject-name A, subject-name B). A must lexicographically sort before B, but
+neither subject name need be present in the shard's contents. If A is null,
+the shard begins at the beginning of the zone. If B is null, the shard ends at
+the end of the zone. The shard MUST NOT contain any assertions whose subject
+names sort before A or after B. In addition, the authority for the shard belongs to
+MUST NOT make any assertions during the period of validity of the shard's
+signatures that would fall between subject-name A and subject-name B inclusive
+that are not contained within the shard (see {{runtime-consistency-
+checking}}).
 
 If the shard-range key is not present, the shard is not lexicographically
 complete and MUST NOT be used to make assertions about nonexistance.
@@ -841,6 +846,7 @@ serialize an object for signing:
 
 - Serialize the object with a stub for the signature to be generated:
   - Strip all other signatures during serialization by omitting all signatures (0) keys and their values. When signing a shard or zone, the signatures on contained assertions, if present, must be omitted too. When signing a message, the signatures on contained assertions, shards, and zones must be omitted.
+  - For 
   - Create a stub signature within an array within a signatures (0) key at the appropriate place in the object, containing the algorithm ID, timestamps and hash chain token, but a null value in the place of the signature content.
   - Normalize the serialized object by emitting all keys in CBOR maps in ascending numerical order. 
   - Note that when serializing anything with a Content array, the order 
