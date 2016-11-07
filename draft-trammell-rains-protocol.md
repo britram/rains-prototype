@@ -90,7 +90,7 @@ informative:
 This document defines an alternate protocol for Internet name resolution,
 designed as a prototype to facilitate conversation about the evolution or
 replacement of the Domain Name System protocol. It attempts to answer the
-question: "how would we design the DNS knowing what we do now," on the
+question: "how would we design DNS knowing what we do now," on the
 background of the properties of an ideal naming service described in 
 {{I-D.trammell-inip-pins}}.
 
@@ -466,13 +466,27 @@ Representation (CBOR) {{RFC7049}}, with an outer message type providing a
 mechanism for future capabilities-based versioning and recognition of a
 message as a RAINS message.
 
+Messages, assertions, shards, zones, queries, and notifications are each
+represented as a CBOR map of integer keys to values, which allows each of
+these types to be extended in the future, as well as the addition of non-
+standard, application-specific information to RAINS messages and data items. A
+common registry of map keys is given in {{tabmkey}}. RAINS implementations
+MUST ignore map keys the do not understand. Integer map keys in the range -22
+to +23 are reserved for the use of future versions or extensions to the RAINS
+protocol.
+
+Message contents, signatures and object values are implemented as type-
+prefixed CBOR arrays with fixed meanings of each array element; the structure
+of these lower-level elements can therefore not be extended. Message section
+types are given in {{tabsection}}, object types in {{tabobj}}, and signature
+algorithms in {{tabsig}}.
+
 ## Symbol Table {#cbor-symtab}
 
-Each CBOR object in a RAINS message is implemented as maps of integer keys to
-values, which
-implements a good tradeoff between efficiency of representation and
-flexibility. The meaning of each of the integer keys is given in the symbol
-table below:
+The meaning of each of the integer keys in message, zone, shard, assertion,
+and notification maps is given in the symbol table below:
+
+{: #tabmkey title="CBOR Map Keys used in RAINS"}
 
 | Code | Name           | Description                                   |
 |-----:|----------------|-----------------------------------------------|
@@ -499,8 +513,9 @@ which is a CBOR map tagged with the RAINS Message tag (hex 0xE99BA8, decimal
 15309736). 
 
 A Message map MAY contain a signatures (0) key, whose value is an array of
-Signatures over the entire message as defined in {{cbor-signature}}, to be 
-verified against the infrastructure key for the RAINS Server originating the message.
+Signatures over the entire message as defined in {{cbor-signature}}, to be
+verified against the infrastructure key for the RAINS Server originating the
+message.
 
 A Message map MAY contain a capabilities (1) key, whose value is described in
 {#cbor-capabilities}.
@@ -525,6 +540,8 @@ message section body, defined as in {{cbor-assertion}}, {{cbor-shard}},
 
 Section types are as in the following table, taken from {{cbor-symtab}}:
 
+{: #tabsection title="Message Section Type Codes"}
+
 | Code | Name         | Description                                   |
 |-----:|--------------|-----------------------------------------------|
 | 1    | assertion    | Assertion (see {{cbor-assertion}})            |
@@ -544,16 +561,23 @@ signatures (0), subject-name (3), subject-zone (4), context (6), and objects
 (7) keys.
 
 Assertions within a Shard or Zone are "contained Assertions", and can inherit
-values from their containers. A contained Assertion MAY contain the signatures
-(0) key and MUST contain the subject-name (3) and objects (7) keys. It MAY
-contain subject-zone (4) and context (6) keys, but in this case the values of
-these keys MUST be identical to the values in the containing Shard or Zone.
+values from their containers. A contained Assertion MUST contain the subject-
+name (3) and objects (7) keys. It MAY contain subject-zone (4) and context (6)
+keys, but in this case the values of these keys MUST be identical to the
+values in the containing Shard or Zone.
+
+A contained Assertion SHOULD contain the signatures (0) key, since an unsigned
+contained Assertion cannot be used by a RAINS server to answer a query; it
+must be returned in a signed Shard or Zone.
 
 The value of the signatures (0) key, if present, is an array of one or more
 Signatures as defined in {{cbor-signature}}. If not present, the containing
 Shard or Zone MUST be signed. Signatures on a contained Assertion are
-generated as if the inherited values are present in the Assertion, whether
-actually present or not.
+generated as if the inherited subject-zone and context values are present in
+the Assertion, whether actually present or not. The signatures on the
+Assertion are to be verified against the appropriate key for the Zone
+containing the Assertion in the given context, as described in {{signatures-
+in-assertions}}.
 
 The value of the subject-name (3) key is a UTF-8 encoded {{RFC3629}} string
 containing the name of the subject of the assertion. The subject name never
@@ -585,9 +609,14 @@ inherit any values from their contained Zone, they MUST contain the content
 
 Shards within a Zone are "contained Shards", and can inherit values from their
 containing Zone. A contained Shard MUST contain the content (23) key, and MAY
-contain the signatures (0) and shard-range(11) keys. It MAY contain subject-
-zone (4) and context (6) keys, but in this case the values of these keys MUST
-be identical to the values in the containing Zone.
+contain the shard-range(11) key. It MAY contain subject- zone (4) and context
+(6) keys, but in this case the values of these keys MUST be identical to the
+values in the containing Zone.
+
+A contained Shard SHOULD contain the signatures (0) key if it also contains a
+shard-range (11) key, since an unsigned contained Shard cannot be used by a
+RAINS server to answer a query for nonexistence; it must be returned in a
+signed Zone. 
 
 The value of the content (23) key is an array of Assertion bodies as defined in
 {#cbor-assertion}.
@@ -595,7 +624,10 @@ The value of the content (23) key is an array of Assertion bodies as defined in
 The value of the signatures (0) key, if present, is an array of one or more
 Signatures as defined in {{cbor-signature}}. If not present, the containing
 Zone MUST be signed. Signatures on a contained Shard are generated as if the
-inherited values are present in the Shard, whether actually present or not.
+inherited subject-zone and values are present in the Shard, whether actually
+present or not. The signatures on the Shard are to be verified against the
+appropriate key for the Zone containing the Shard in the given context, as
+described in {{signatures-in-assertions}}.
 
 The value of the subject-zone (4) key, if present, is a UTF-8 encoded string
 containing the name of the zone in which the Assertions within the Shard is
@@ -631,7 +663,10 @@ complete and MUST NOT be used to make assertions about nonexistance.
 ## Zone Message Section body {#cbor-zone}
 
 A Zone body is a map. Zones MUST contain the content (23), signatures (0),
-subject-zone (4), and context (6) keys.
+subject-zone (4), and context (6) keys. 
+
+Signatures on the Zone are to be verified against the appropriate key for the
+Zone in the given context, as described in {{signatures-in-assertions}}.
 
 The value of the content (23) key is an array of Shard bodies as defined in
 {#cbor-shard} and/or Assertion bodies as defined in {#cbor-assertion}.
@@ -665,13 +700,13 @@ expression is evaluated in-order, as follows:
 
 Some examples:
 
-- ['cx--.inf.ethz.ch', 'cx--any-'] means that answers in the 
-  'cx--.inf.ethz.ch' context are preferred, but any context is acceptable; 
-- ['.', 'cx--.inf.ethz.ch'] means that only answers in the
-  'cx--.inf.ethz.ch' or global contexts are acceptable, with the global
+- ['cx--.inf.ethz.ch.', 'cx--any-'] means that answers in the 
+  'cx--.inf.ethz.ch.' context are preferred, but any context is acceptable; 
+- ['.', 'cx--.inf.ethz.ch.'] means that only answers in the
+  'cx--.inf.ethz.ch.' or global contexts are acceptable, with the global
   context preferred;
-- ['.', cx--0-.cx--.inf.ethz.ch', 'cx--any-'] means that answers in any 
-  context except 'cx--.inf.ethz.ch' are acceptable, with the global context
+- ['.', cx--0-.cx--.inf.ethz.ch.', 'cx--any-'] means that answers in any 
+  context except 'cx--.inf.ethz.ch.' are acceptable, with the global context
   preferred.
 
 An empty context array in a query is taken to be equivalent to an array
@@ -682,7 +717,8 @@ The value of the query-types (9) key is an array of integers encoding the
 type(s) of objects (as in {{cbor-object}}) acceptable in answers to the query.
 All values in the query-type array are treated at equal priority: [2,3] means
 the querier is equally interested in both IPv4 and IPv6 addresses for the
-query-name.
+query-name. An empty query-types array indicates that objects of any type are
+acceptable in answers to the query.
 
 The value of the token (2) key, if present, is either an integer or a UTF-8
 string of maximum byte length 32. Future messages or notifications containing
@@ -691,6 +727,8 @@ answers to this query MUST contain this token, if present.
 The value of the query-opts (10) key, if present, is an array of integers in
 priority order of the querier's preferences in tradeoffs in answering the
 query.
+
+{: #tabqopts title="Query Option Codes"}
 
 | Code | Description                                                    |
 |-----:|----------------------------------------------------------------|
@@ -713,6 +751,8 @@ Notification Message Sections contain information about the operation of the
 RAINS protocol itself. A Notification Message Section body is a map which MUST
 contain the note-type (21) key and MAY contain the token (2) and note-data (22) keys. The
 value of the note-type key is encoded as an integer as in the following table:
+
+{: #tabnotify title="Notification Type Codes"}
 
 | Code | Description                                                    |
 |-----:|----------------------------------------------------------------|
@@ -743,24 +783,27 @@ to an administrator to help debug the issue identified by the negotiation.
 Objects are encoded as arrays in CBOR, where the first element is the type of
 the object, encoded as an integer in the following table:
 
-| Code  | Name         | Description                                   |
-|------:|--------------|-----------------------------------------------|
-| 1     | name         | name associated with subject                  |
-| 2     | ip6-addr     | IPv6 address of subject                       |
-| 3     | ip4-addr     | IPv4 address of subject                       |
-| 4     | redirection  | name of zone authority server                 |
-| 5     | delegation   | public key for zone delgation                 |
-| 6     | nameset      | name set expression for zone                  |
-| 7     | cert-info    | certificate information for name              |
-| 8     | service-info | service information for srvname               |
-| 9     | registrar    | registrar information                         |
-| 10    | registrant   | registrant information                        |
-| 11    | infrakey     | public key for RAINS infrastructure           |
-| 12-23 | reserved     | Reserved for future use in RAINS              |
+{: #tabobj title="Object type codes"}
+
+| Code  | Name         | Description                             |
+|------:|--------------|-----------------------------------------|
+| 1     | name         | name associated with subject            |
+| 2     | ip6-addr     | IPv6 address of subject                 |
+| 3     | ip4-addr     | IPv4 address of subject                 |
+| 4     | redirection  | name of zone authority server           |
+| 5     | delegation   | public key for zone delgation           |
+| 6     | nameset      | name set expression for zone            |
+| 7     | cert-info    | certificate information for name        |
+| 8     | service-info | service information for srvname         |
+| 9     | registrar    | registrar information                   |
+| 10    | registrant   | registrant information                  |
+| 11    | infrakey     | public key for RAINS infrastructure     |
 
 A name (1) object contains a name associated with a name as an alias. It is
-represented as a two-element array. The second element is a fully-qualified
-name as a UTF-8 encoded string.
+represented as a three-element array. The second element is a fully-qualified
+name as a UTF-8 encoded string. The third type is an array of object type
+codes for which the alias is valid, with the same semantics as the query-types
+(9) key in queries (see {{cbor-query}}).
 
 An ip6-addr (2) object contains an IPv6 address associated with a name. It is
 represented as a two element array. The second element is a byte array of
@@ -845,19 +888,40 @@ Message; or an Assertion, Shard, or Zone section body). To normalize and
 serialize an object for signing:
 
 - Serialize the object with a stub for the signature to be generated:
-  - Strip all other signatures during serialization by omitting all signatures (0) keys and their values. When signing a shard or zone, the signatures on contained assertions, if present, must be omitted too. When signing a message, the signatures on contained assertions, shards, and zones must be omitted.
-  - Add subject zone and context to contained shards and assertions if not present, inheriting them from their containing shard or zone.
-  - Create a stub signature within an array within a signatures (0) key at the appropriate place in the object, containing the algorithm ID, timestamps and hash chain token, if present, but a null value in the place of the signature content.
-  - Normalize the serialized object by emitting all keys in CBOR maps in ascending numerical order. Note that when serializing anything with a Content array, the order 
-  of the content array is preserved. 
-  - If the serialized object is a Message, it should be tagged with the RAINS tag.
-- Generate a signature on the resulting byte stream according to the algorithm selected.
-- Add the full signature to the signatures array at the appropriate point in the object.
 
-To verify a signature, generate the bytestream as for signing, then verify the
-signature according to the algorithm selected.
+  - Strip all other signatures during serialization by omitting all signatures
+    (0) keys and their values. When signing a shard or zone, the signatures on
+    contained assertions, if present, must be omitted too. When signing a
+    message, the signatures on contained assertions, shards, and zones must be
+    omitted.
+
+  - Add subject zone and context to contained shards and assertions if not
+    present, inheriting them from their containing shard or zone.
+
+  - Create a stub signature within an array within a signatures (0) key at the
+    appropriate place in the object, containing the algorithm ID, timestamps
+    and hash chain token, if present, but a null value in the place of the
+    signature content.
+
+  - Normalize the serialized object by emitting all keys in CBOR maps in
+    ascending numerical order. Note that when serializing anything with a 
+    Content array, the order of the content array is preserved.
+
+  - If the serialized object is a Message, it should be tagged with the RAINS
+    tag.
+
+- Generate a signature on the resulting byte stream according to the algorithm
+  selected.
+
+- Add the full signature to the signatures array at the appropriate point in
+  the object.
+
+To verify a signature, generate the byte stream as for signing, then verify
+the signature according to the algorithm selected.
 
 The following algorithms are supported:
+
+{: #tabsig title="Defined signature algorithms"}
 
 | Code | Signatures | Hash/HMAC | Format               | Revocation Token       |
 |-----:|------------|-----------|----------------------|------------------------|
