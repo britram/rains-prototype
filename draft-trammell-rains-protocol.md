@@ -824,9 +824,9 @@ chain tokens in signatures; and the format of the encodings of the signature
 values in Assertions, Shards, Zones, and Messages, as well as of public key
 values in delegation objects.
 
-RAINS signatures have four common elements: the algorithm identifier, a
-valid-since timestamp, a valid-until timestamp, and a hash chain token.
-Signatures are represented as an array of these four values followed by
+RAINS signatures have three common elements: the algorithm identifier, a
+valid-since timestamp, and a valid-until timestamp.
+Signatures are represented as an array of these three values followed by
 additional elements containing the signature data itself, according to the
 algorithm identifier.
 
@@ -846,23 +846,25 @@ serialize an object for signing:
 
 - Serialize the object with a stub for the signature to be generated:
   - Strip all other signatures during serialization by omitting all signatures (0) keys and their values. When signing a shard or zone, the signatures on contained assertions, if present, must be omitted too. When signing a message, the signatures on contained assertions, shards, and zones must be omitted.
-  - For 
-  - Create a stub signature within an array within a signatures (0) key at the appropriate place in the object, containing the algorithm ID, timestamps and hash chain token, but a null value in the place of the signature content.
-  - Normalize the serialized object by emitting all keys in CBOR maps in ascending numerical order. 
-  - Note that when serializing anything with a Content array, the order 
+  - Add subject zone and context to contained shards and assertions if not present, inheriting them from their containing shard or zone.
+  - Create a stub signature within an array within a signatures (0) key at the appropriate place in the object, containing the algorithm ID, timestamps and hash chain token, if present, but a null value in the place of the signature content.
+  - Normalize the serialized object by emitting all keys in CBOR maps in ascending numerical order. Note that when serializing anything with a Content array, the order 
   of the content array is preserved. 
   - If the serialized object is a Message, it should be tagged with the RAINS tag.
-- Generate a signature on the resulting byte stream according to the algorithm selected
+- Generate a signature on the resulting byte stream according to the algorithm selected.
 - Add the full signature to the signatures array at the appropriate point in the object.
 
-To verify a signature, generate the bytestream as for signing, then verify the signature according to the algorithm selected.
+To verify a signature, generate the bytestream as for signing, then verify the
+signature according to the algorithm selected.
 
 The following algorithms are supported:
 
-| Code | Signatures | Hash/HMAC | Format               | Token                  |
+| Code | Signatures | Hash/HMAC | Format               | Revocation Token       |
 |-----:|------------|-----------|----------------------|------------------------|
-| 2    | ecdsa-256  | sha-256   | See {{ecdsa-format}} | See {{hash-chain-rev}} |
-| 3    | ecdsa-384  | sha-384   | See {{ecdsa-format}} | See {{hash-chain-rev}} |
+| 2    | ecdsa-256  | sha-256   | See {{ecdsa-format}} | None                   |
+| 3    | ecdsa-384  | sha-384   | See {{ecdsa-format}} | None                   |
+| 4    | ecdsa-256  | sha-256   | See {{ecdsa-format}} | See {{hash-chain-rev}} |
+| 5    | ecdsa-384  | sha-384   | See {{ecdsa-format}} | See {{hash-chain-rev}} |
 
 ### ECDSA signature and public key format {#ecdsa-format}
 
@@ -874,15 +876,15 @@ objects for ECDSA-256 public keys are therefore represented as the array
 [5, 2, Q]; and for ECDSA-384 public keys as [5, 3, Q].
 
 ECDSA signatures are a combination of two non-negative integers, called "r"
-and "s" in {{FIPS-186-3}}. A Signature using ECDSA is represented using a five
-element CBOR array, with the fifth element being "r | s" such that r is represented as a byte array
-as described in Section C.2 of {{FIPS-186-3}}, and s
-represented as a byte array as described in Section C.2 of {{FIPS-186-3}}. For
-ECDSA-256 signatures, each integer MUST be represented as a 32-byte array. For
-ECDSA-384 signatures, each integer MUST be represented as a 48-byte array.
-RAINS signatures using ECDSA-256 are therefore the array [0, 2, valid-from,
-valid-until, token, r|s]; and for ECDSA-384 the array [0, 3, valid-from,
-valid-until, token, r|s].
+and "s" in {{FIPS-186-3}}. A Signature using ECDSA is represented using a
+four-element CBOR array, with the fourth element being "r | s" such that r is
+represented as a byte array as described in Section C.2 of {{FIPS-186-3}}, and
+s represented as a byte array as described in Section C.2 of {{FIPS-186-3}}.
+For ECDSA-256 signatures, each integer MUST be represented as a 32-byte array.
+For ECDSA-384 signatures, each integer MUST be represented as a 48-byte array.
+RAINS signatures using ECDSA-256 are therefore the array [2, valid-from,
+valid-until, r|s]; and for ECDSA-384 the array [3, valid-from, valid-until,
+r|s].
 
 ECDSA-256 signatures and public keys use the P-256 curve as defined in {{FIPS-186-3}}.
 ECDSA-384 signatures and public keys use the P-384 curve as defined in {{FIPS-186-3}}.
@@ -896,6 +898,8 @@ Zone it protects) to be replaced before it expires. To use hash-chain based
 revocation, a signing entity generates a hash chain from a known seed using
 the hash function specified by the signature algorithm in use, and places the
 Nth value derived therefrom in the hash chain revocation token on a signature.
+When used, this token appears as a byte array after the signature data in the
+signature array.
 
 A revocation can be issued by generating a new section and signing it,
 revealing the N-1st value from the hash chain in the revocation token. To
@@ -910,9 +914,6 @@ restrictions on what can replace what apply:
   key, within the same Context and Zone. Incomplete Shards cannot be replaced.
 - A Zone can only be replaced by another Zone with an identical name within 
   the same Context.
-
-Signing entities can decline to use hash-chain based revocation by replacing
-the revocation token with Null.
 
 ## Certificate information format {#cbor-certinfo}
 
