@@ -7,7 +7,7 @@
 
   <title>RAINS (Another Internet Naming Service) Protocol Specification</title>
 
-<style type="text/css">/*<![CDATA[*/
+  <style type="text/css">/*<![CDATA[*/
 @viewport {
   zoom: 1.0;
   width: extend-to-zoom;
@@ -265,7 +265,7 @@ li, p {
   .github-fork-ribbon-wrapper {
     position: fixed;
   }
-/*]]>*/</style>
+  /*]]>*/</style>
 
   <link href="#rfc.toc" rel="Contents"/>
 <link href="#rfc.section.1" rel="Chapter" title="1 Introduction"/>
@@ -323,9 +323,9 @@ li, p {
 
   <meta name="dct.creator" content="Trammell, B." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-trammell-rains-protocol-01" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-10-21" />
-  <meta name="dct.abstract" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design the DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in " />
-  <meta name="description" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design the DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in " />
+  <meta name="dct.issued" scheme="ISO8601" content="2016-11-07" />
+  <meta name="dct.abstract" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in " />
+  <meta name="description" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in " />
 
 </head>
 
@@ -344,10 +344,10 @@ li, p {
 </tr>
 <tr>
   <td class="left">Intended status: Experimental</td>
-  <td class="right">October 21, 2016</td>
+  <td class="right">November 07, 2016</td>
 </tr>
 <tr>
-  <td class="left">Expires: April 24, 2017</td>
+  <td class="left">Expires: May 11, 2017</td>
   <td class="right"></td>
 </tr>
 
@@ -361,14 +361,14 @@ li, p {
   <h1 id="rfc.abstract">
   <a href="#rfc.abstract">Abstract</a>
 </h1>
-<p>This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design the DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in <a href="#I-D.trammell-inip-pins">[I-D.trammell-inip-pins]</a>.</p>
+<p>This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in <a href="#I-D.trammell-inip-pins">[I-D.trammell-inip-pins]</a>.</p>
 <h1 id="rfc.status">
   <a href="#rfc.status">Status of This Memo</a>
 </h1>
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on April 24, 2017.</p>
+<p>This Internet-Draft will expire on May 11, 2017.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -595,9 +595,14 @@ li, p {
 <p id="rfc.section.4.3.p.4">A query is taken to have an inconclusive answer when no answer returns to the querier before the query&#8217;s Valid-Until time.</p>
 <h1 id="rfc.section.5"><a href="#rfc.section.5">5.</a> <a href="#cbor" id="cbor">Data Model</a></h1>
 <p id="rfc.section.5.p.1">The RAINS data model is a relatively straightforward mapping of the information model in <a href="#information-model">Section 4</a> to the Concise Binary Object Representation (CBOR) <a href="#RFC7049">[RFC7049]</a>, with an outer message type providing a mechanism for future capabilities-based versioning and recognition of a message as a RAINS message.</p>
+<p id="rfc.section.5.p.2">Messages, assertions, shards, zones, queries, and notifications are each represented as a CBOR map of integer keys to values, which allows each of these types to be extended in the future, as well as the addition of non- standard, application-specific information to RAINS messages and data items. A common registry of map keys is given in <a href="#tabmkey">Table 1</a>. RAINS implementations MUST ignore map keys the do not understand. Integer map keys in the range -22 to +23 are reserved for the use of future versions or extensions to the RAINS protocol.</p>
+<p id="rfc.section.5.p.3">Message contents, signatures and object values are implemented as type- prefixed CBOR arrays with fixed meanings of each array element; the structure of these lower-level elements can therefore not be extended. Message section types are given in <a href="#tabsection">Table 2</a>, object types in <a href="#tabobj">Table 5</a>, and signature algorithms in <a href="#tabsig">Table 6</a>.</p>
 <h1 id="rfc.section.5.1"><a href="#rfc.section.5.1">5.1.</a> <a href="#cbor-symtab" id="cbor-symtab">Symbol Table</a></h1>
-<p id="rfc.section.5.1.p.1">Each CBOR object in a RAINS message is implemented as maps of integer keys to values, which implements a good tradeoff between efficiency of representation and flexibility. The meaning of each of the integer keys is given in the symbol table below:</p>
+<p id="rfc.section.5.1.p.1">The meaning of each of the integer keys in message, zone, shard, assertion, and notification maps is given in the symbol table below:</p>
+<div id="rfc.table.1"/>
+<div id="tabmkey"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
+  <caption>CBOR Map Keys used in RAINS</caption>
   <thead>
     <tr>
       <th class="right">Code</th>
@@ -608,8 +613,8 @@ li, p {
   <tbody>
     <tr>
       <td class="right">0</td>
-      <td class="left">content</td>
-      <td class="left">Content of a message, shard, or zone</td>
+      <td class="left">signatures</td>
+      <td class="left">Signatures on a message or section</td>
     </tr>
     <tr>
       <td class="right">1</td>
@@ -618,8 +623,8 @@ li, p {
     </tr>
     <tr>
       <td class="right">2</td>
-      <td class="left">signatures</td>
-      <td class="left">Signatures on a message or section</td>
+      <td class="left">token</td>
+      <td class="left">Token for referring to a data item</td>
     </tr>
     <tr>
       <td class="right">3</td>
@@ -648,18 +653,18 @@ li, p {
     </tr>
     <tr>
       <td class="right">8</td>
-      <td class="left">token</td>
-      <td class="left">Token for referring to a data item</td>
+      <td class="left">query-contexts</td>
+      <td class="left">Contexts acceptable in query answers</td>
     </tr>
     <tr>
       <td class="right">9</td>
-      <td class="left">reserved</td>
-      <td class="left">Reserved for future use in RAINS</td>
+      <td class="left">query-types</td>
+      <td class="left">Acceptable object types for query</td>
     </tr>
     <tr>
       <td class="right">10</td>
-      <td class="left">reserved</td>
-      <td class="left">Reserved for future use in RAINS</td>
+      <td class="left">query-opts</td>
+      <td class="left">Set of query options requested</td>
     </tr>
     <tr>
       <td class="right">11</td>
@@ -667,77 +672,35 @@ li, p {
       <td class="left">Lexical range of Assertions in Shard</td>
     </tr>
     <tr>
-      <td class="right">12</td>
-      <td class="left">reserved</td>
-      <td class="left">Reserved for future use in RAINS</td>
-    </tr>
-    <tr>
-      <td class="right">13</td>
-      <td class="left">reserved</td>
-      <td class="left">Reserved for future use in RAINS</td>
-    </tr>
-    <tr>
-      <td class="right">14</td>
-      <td class="left">query-types</td>
-      <td class="left">acceptable object types for query</td>
-    </tr>
-    <tr>
-      <td class="right">15</td>
-      <td class="left">reserved</td>
-      <td class="left">Reserved for future use in RAINS</td>
-    </tr>
-    <tr>
-      <td class="right">16</td>
-      <td class="left">reserved</td>
-      <td class="left">Reserved for future use in RAINS</td>
-    </tr>
-    <tr>
-      <td class="right">17</td>
+      <td class="right">21</td>
       <td class="left">note-type</td>
       <td class="left">Notification type</td>
     </tr>
     <tr>
-      <td class="right">18</td>
-      <td class="left">reserved</td>
-      <td class="left">Reserved for future use in RAINS</td>
-    </tr>
-    <tr>
-      <td class="right">19</td>
-      <td class="left">reserved</td>
-      <td class="left">Reserved for future use in RAINS</td>
-    </tr>
-    <tr>
-      <td class="right">20</td>
-      <td class="left">reserved</td>
-      <td class="left">Reserved for future use in RAINS</td>
-    </tr>
-    <tr>
-      <td class="right">21</td>
-      <td class="left">reserved</td>
-      <td class="left">Reserved for future use in RAINS</td>
-    </tr>
-    <tr>
       <td class="right">22</td>
-      <td class="left">query-opts</td>
-      <td class="left">Set of query options requested</td>
+      <td class="left">note-data</td>
+      <td class="left">Additional notification data</td>
     </tr>
     <tr>
       <td class="right">23</td>
-      <td class="left">note-data</td>
-      <td class="left">Additional notification data</td>
+      <td class="left">content</td>
+      <td class="left">Content of a message, shard, or zone</td>
     </tr>
   </tbody>
 </table>
 <h1 id="rfc.section.5.2"><a href="#rfc.section.5.2">5.2.</a> <a href="#cbor-message" id="cbor-message">Message</a></h1>
 <p id="rfc.section.5.2.p.1">All interactions in RAINS take place in an outer envelope called a Message, which is a CBOR map tagged with the RAINS Message tag (hex 0xE99BA8, decimal 15309736).</p>
-<p id="rfc.section.5.2.p.2">A Message map MUST contain a content (0) key, whose value is an array of Message Sections; a Message Section is either an Assertion, Shard, Zone, or Query.</p>
+<p id="rfc.section.5.2.p.2">A Message map MAY contain a signatures (0) key, whose value is an array of Signatures over the entire message as defined in <a href="#cbor-signature">Section 5.10</a>, to be verified against the infrastructure key for the RAINS Server originating the message.</p>
 <p id="rfc.section.5.2.p.3">A Message map MAY contain a capabilities (1) key, whose value is described in {#cbor-capabilities}.</p>
-<p id="rfc.section.5.2.p.4">A Message map MAY contain a signatures (2) key, whose value is an array of Signatures over the entire message as defined in <a href="#cbor-signature">Section 5.10</a>, to be verified against the</p>
-<p id="rfc.section.5.2.p.5">A Message map MAY contain a token (8) key, whose value is either an integer or a UTF-8 string of maximum byte length 32. The token key may be used to refer to the message in future messages, or may refer to a past message or query by token. If the message is in response to a message or query containing a token, the message MUST contain that token.</p>
+<p id="rfc.section.5.2.p.4">A Message map MAY contain a token (2) key, whose value is either an integer or a UTF-8 string of maximum byte length 32. The token key may be used to refer to the message in future messages, or may refer to a past message or query by token. If the message is in response to a message or query containing a token, the message MUST contain that token.</p>
+<p id="rfc.section.5.2.p.5">A Message map MUST contain a content (23) key, whose value is an array of Message Sections; a Message Section is either an Assertion, Shard, Zone, or Query.</p>
 <h1 id="rfc.section.5.3"><a href="#rfc.section.5.3">5.3.</a> <a href="#message-section-header" id="message-section-header">Message Section header</a></h1>
 <p id="rfc.section.5.3.p.1">Each Message Section in the Message&#8217;s content value MUST be a two-element array. The first element in the array is the message section type, encoded as an integer as in <a href="#cbor-symtab">Section 5.1</a>. The second element in the array is the message section body, defined as in <a href="#cbor-assertion">Section 5.4</a>, <a href="#cbor-shard">Section 5.5</a>, <a href="#cbor-zone">Section 5.6</a>, <a href="#cbor-query">Section 5.7</a>, or <a href="#cbor-notification">Section 5.8</a>.</p>
 <p id="rfc.section.5.3.p.2">Section types are as in the following table, taken from <a href="#cbor-symtab">Section 5.1</a>:</p>
+<div id="rfc.table.2"/>
+<div id="tabsection"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
+  <caption>Message Section Type Codes</caption>
   <thead>
     <tr>
       <th class="right">Code</th>
@@ -775,33 +738,36 @@ li, p {
 </table>
 <h1 id="rfc.section.5.4"><a href="#rfc.section.5.4">5.4.</a> <a href="#cbor-assertion" id="cbor-assertion">Assertion body</a></h1>
 <p id="rfc.section.5.4.p.1">An Assertion body is a map. The keys present in this map depend on whether the Assertion is contained in a Message Section or in a Shard or Zone.</p>
-<p id="rfc.section.5.4.p.2">Assertions contained in Message Sections are &#8220;bare Assertions&#8221;. Since they cannot inherit any values from their containers, they MUST contain the signatures (2), subject-name (3), subject-zone (4), context (6), and objects (7) keys.</p>
-<p id="rfc.section.5.4.p.3">Assertions within a Shard or Zone are &#8220;contained Assertions&#8221;, and can inherit values from their containers. A contained Assertion MAY contain the signatures (2) key and MUST contain the subject-name (3) and objects (7) keys. It MAY contain subject-zone (4) and context (6) keys, but in this case the values of these keys MUST be identical to the values in the containing Shard or Zone.</p>
-<p id="rfc.section.5.4.p.4">The value of the signatures (2) key, if present, is an array of one or more Signatures as defined in <a href="#cbor-signature">Section 5.10</a>. If not present, the containing Shard or Zone MUST be signed. Signatures on a contained Assertion are generated as if the inherited values are present in the Assertion, whether actually present or not.</p>
-<p id="rfc.section.5.4.p.5">The value of the subject-name (3) key is a UTF-8 encoded <a href="#RFC3629">[RFC3629]</a> string containing the name of the subject of the assertion. The subject name never contains the zone in which the subject name; the fully-qualified name is obtained by joining the subject-name to the subject-zone with a &#8216;.&#8217; character.  The subject-name must be valid according to the nameset expression for the zone, if any.</p>
-<p id="rfc.section.5.4.p.6">The value of the subject-zone (4) key, if present, is a UTF-8 encoded string containing the name of the zone in which the assertion is made. If not present, the zone of the assertion is inherited from the containing Shard or Zone.</p>
-<p id="rfc.section.5.4.p.7">The value of the context (6) key, if present, is a UTF-8 encoded string containing the name of the context in which the assertion is valid. If not present, the context of the assertion is inherited from the containing Shard or Zone.</p>
-<p id="rfc.section.5.4.p.8">The value of the objects (7) key is an array of objects, as defined in <a href="#cbor-object">Section 5.9</a>.</p>
+<p id="rfc.section.5.4.p.2">Assertions contained in Message Sections are &#8220;bare Assertions&#8221;. Since they cannot inherit any values from their containers, they MUST contain the signatures (0), subject-name (3), subject-zone (4), context (6), and objects (7) keys.</p>
+<p id="rfc.section.5.4.p.3">Assertions within a Shard or Zone are &#8220;contained Assertions&#8221;, and can inherit values from their containers. A contained Assertion MUST contain the subject- name (3) and objects (7) keys. It MAY contain subject-zone (4) and context (6) keys, but in this case the values of these keys MUST be identical to the values in the containing Shard or Zone.</p>
+<p id="rfc.section.5.4.p.4">A contained Assertion SHOULD contain the signatures (0) key, since an unsigned contained Assertion cannot be used by a RAINS server to answer a query; it must be returned in a signed Shard or Zone.</p>
+<p id="rfc.section.5.4.p.5">The value of the signatures (0) key, if present, is an array of one or more Signatures as defined in <a href="#cbor-signature">Section 5.10</a>. If not present, the containing Shard or Zone MUST be signed. Signatures on a contained Assertion are generated as if the inherited subject-zone and context values are present in the Assertion, whether actually present or not. The signatures on the Assertion are to be verified against the appropriate key for the Zone containing the Assertion in the given context, as described in {{signatures- in-assertions}}.</p>
+<p id="rfc.section.5.4.p.6">The value of the subject-name (3) key is a UTF-8 encoded <a href="#RFC3629">[RFC3629]</a> string containing the name of the subject of the assertion. The subject name never contains the zone in which the subject name; the fully-qualified name is obtained by joining the subject-name to the subject-zone with a &#8216;.&#8217; character.  The subject-name must be valid according to the nameset expression for the zone, if any.</p>
+<p id="rfc.section.5.4.p.7">The value of the subject-zone (4) key, if present, is a UTF-8 encoded string containing the name of the zone in which the assertion is made. If not present, the zone of the assertion is inherited from the containing Shard or Zone.</p>
+<p id="rfc.section.5.4.p.8">The value of the context (6) key, if present, is a UTF-8 encoded string containing the name of the context in which the assertion is valid. If not present, the context of the assertion is inherited from the containing Shard or Zone.</p>
+<p id="rfc.section.5.4.p.9">The value of the objects (7) key is an array of objects, as defined in <a href="#cbor-object">Section 5.9</a>.</p>
 <h1 id="rfc.section.5.5"><a href="#rfc.section.5.5">5.5.</a> <a href="#cbor-shard" id="cbor-shard">Shard body</a></h1>
 <p id="rfc.section.5.5.p.1">A Shard body is a map. The keys present in the map depend on whether the Shard is contained in a Message Section or in a Zone.</p>
-<p id="rfc.section.5.5.p.2">Shards contained in Message Sections are &#8220;bare Shards&#8221;. Since they cannot inherit any values from their contained Zone, they MUST contain the content (0), signatures (2), subject-zone (4), and context (6) keys.</p>
-<p id="rfc.section.5.5.p.3">Shards within a Zone are &#8220;contained Shards&#8221;, and can inherit values from their containing Zone. A contained Shard MUST contain the content (0) key, and MAY contain the signatures (2) key and shard-range (11) keys. It MAY contain subject-zone (4) and context (6) keys, but in this case the values of these keys MUST be identical to the values in the containing Zone.</p>
-<p id="rfc.section.5.5.p.4">The value of the content (0) key is an array of Assertion bodies as defined in {#cbor-assertion}.</p>
-<p id="rfc.section.5.5.p.5">The value of the signatures (2) key, if present, is an array of one or more Signatures as defined in <a href="#cbor-signature">Section 5.10</a>. If not present, the containing Zone MUST be signed. Signatures on a contained Shard are generated as if the inherited values are present in the Shard, whether actually present or not.</p>
-<p id="rfc.section.5.5.p.6">The value of the subject-zone (4) key, if present, is a UTF-8 encoded string containing the name of the zone in which the Assertions within the Shard is made. If not present, the zone of the assertion is inherited from the containing Zone.</p>
-<p id="rfc.section.5.5.p.7">The value of the context (6) key, if present, is a UTF-8 encoded string containing the name of the context in which the Assertions within the Shard are valid. If not present, the context of the assertion is inherited from the containing Zone.</p>
-<p id="rfc.section.5.5.p.8">If the shard-range (11) key is present, the shard is lexicographically complete within the range described in its value: a mapping for a (subject-name, object-type) pair that should be between the two values given in the range but is not is asserted to not exist. Lexicographic sorting is done on subject names by ordering Unicode codepoints in ascending order; ordering on object types is done via their code values in <a href="#cbor-object">Section 5.9</a> in ascending order.</p>
-<p id="rfc.section.5.5.p.9">The shard-range value MUST be a four element array of (subject-name A, object-type A, subject-name B, object-type B) where A does not necessarily need to sort before B, and the (subject-name, object-type) pairs need not exist in the shard. The shard MUST NOT contain any assertions for subject-names outside the range.</p>
-<p id="rfc.section.5.5.p.10">If the shard-range key is not present, the shard is not lexicographically complete and MUST NOT be used to make assertions about nonexistance.</p>
+<p id="rfc.section.5.5.p.2">Shards contained in Message Sections are &#8220;bare Shards&#8221;. Since they cannot inherit any values from their contained Zone, they MUST contain the content (23), signatures (0), subject-zone (4), context (6), and may contain the shard-range (11) key.</p>
+<p id="rfc.section.5.5.p.3">Shards within a Zone are &#8220;contained Shards&#8221;, and can inherit values from their containing Zone. A contained Shard MUST contain the content (23) key, and MAY contain the shard-range(11) key. It MAY contain subject- zone (4) and context (6) keys, but in this case the values of these keys MUST be identical to the values in the containing Zone.</p>
+<p id="rfc.section.5.5.p.4">A contained Shard SHOULD contain the signatures (0) key if it also contains a shard-range (11) key, since an unsigned contained Shard cannot be used by a RAINS server to answer a query for nonexistence; it must be returned in a signed Zone.</p>
+<p id="rfc.section.5.5.p.5">The value of the content (23) key is an array of Assertion bodies as defined in {#cbor-assertion}.</p>
+<p id="rfc.section.5.5.p.6">The value of the signatures (0) key, if present, is an array of one or more Signatures as defined in <a href="#cbor-signature">Section 5.10</a>. If not present, the containing Zone MUST be signed. Signatures on a contained Shard are generated as if the inherited subject-zone and values are present in the Shard, whether actually present or not. The signatures on the Shard are to be verified against the appropriate key for the Zone containing the Shard in the given context, as described in <a href="#signatures-in-assertions">Section 4.1.2</a>.</p>
+<p id="rfc.section.5.5.p.7">The value of the subject-zone (4) key, if present, is a UTF-8 encoded string containing the name of the zone in which the Assertions within the Shard is made. If not present, the zone of the assertion is inherited from the containing Zone.</p>
+<p id="rfc.section.5.5.p.8">The value of the context (6) key, if present, is a UTF-8 encoded string containing the name of the context in which the Assertions within the Shard are valid. If not present, the context of the assertion is inherited from the containing Zone.</p>
+<p id="rfc.section.5.5.p.9">If the shard-range (11) key is present, the the shard is lexicographically complete within the range described in its value: a mapping for a (subject-name, object-type) pair that should be between the two values given in the range but is not is asserted to not exist. Lexicographic sorting is done on subject names by ordering Unicode codepoints in ascending order; ordering on object types is done via their code values in <a href="#cbor-object">Section 5.9</a> in ascending order.</p>
+<p id="rfc.section.5.5.p.10">The shard-range value MUST be a two element array of strings or nulls (subject-name A, subject-name B). A must lexicographically sort before B, but neither subject name need be present in the shard&#8217;s contents. If A is null, the shard begins at the beginning of the zone. If B is null, the shard ends at the end of the zone. The shard MUST NOT contain any assertions whose subject names sort before A or after B. In addition, the authority for the shard belongs to MUST NOT make any assertions during the period of validity of the shard&#8217;s signatures that would fall between subject-name A and subject-name B inclusive that are not contained within the shard (see {{runtime-consistency- checking}}).</p>
+<p id="rfc.section.5.5.p.11">If the shard-range key is not present, the shard is not lexicographically complete and MUST NOT be used to make assertions about nonexistance.</p>
 <h1 id="rfc.section.5.6"><a href="#rfc.section.5.6">5.6.</a> <a href="#cbor-zone" id="cbor-zone">Zone Message Section body</a></h1>
-<p id="rfc.section.5.6.p.1">A Zone body is a map. Zones MUST contain the content (0), signatures (2), subject-zone (4), and context (6) keys.</p>
-<p id="rfc.section.5.6.p.2">The value of the content (0) key is an array of Shard bodies as defined in {#cbor-shard} and/or Assertion bodies as defined in {#cbor-assertion}.</p>
-<p id="rfc.section.5.6.p.3">The value of the subject-zone (4) key is a UTF-8 encoded string containing the name of the Zone.</p>
-<p id="rfc.section.5.6.p.4">The value of the context (6) key is a UTF-8 encoded string containing the name of the context for which the Zone is valid.</p>
+<p id="rfc.section.5.6.p.1">A Zone body is a map. Zones MUST contain the content (23), signatures (0), subject-zone (4), and context (6) keys.</p>
+<p id="rfc.section.5.6.p.2">Signatures on the Zone are to be verified against the appropriate key for the Zone in the given context, as described in <a href="#signatures-in-assertions">Section 4.1.2</a>.</p>
+<p id="rfc.section.5.6.p.3">The value of the content (23) key is an array of Shard bodies as defined in {#cbor-shard} and/or Assertion bodies as defined in {#cbor-assertion}.</p>
+<p id="rfc.section.5.6.p.4">The value of the subject-zone (4) key is a UTF-8 encoded string containing the name of the Zone.</p>
+<p id="rfc.section.5.6.p.5">The value of the context (6) key is a UTF-8 encoded string containing the name of the context for which the Zone is valid.</p>
 <h1 id="rfc.section.5.7"><a href="#rfc.section.5.7">5.7.</a> <a href="#cbor-query" id="cbor-query">Query Message Section body</a></h1>
-<p id="rfc.section.5.7.p.1">A Query body is a map. Queries MUST contain the query-name (5), query-contexts (13), and query-type (14) keys. Queries MAY contain the token(8) key and the query-opts (22) key.</p>
+<p id="rfc.section.5.7.p.1">A Query body is a map. Queries MUST contain the query-name (5), query-contexts (8), and query-types (9) keys. Queries MAY contain the token (2) key and the query-opts (10) key.</p>
 <p id="rfc.section.5.7.p.2">The value of the query-name (5) key is a UTF-8 encoded string containing the fully qualified name that is the subject of the query.</p>
-<p id="rfc.section.5.7.p.3">The value of the query-contexts (13) key is an allowable context expression, as an array of context names as UTF-8 encoded strings. The allowable context expression is evaluated in-order, as follows:</p>
+<p id="rfc.section.5.7.p.3">The value of the query-contexts (8) key is an allowable context expression, as an array of context names as UTF-8 encoded strings. The allowable context expression is evaluated in-order, as follows:</p>
 <p/>
 
 <ul>
@@ -814,15 +780,18 @@ li, p {
 <p/>
 
 <ul>
-  <li>[&#8216;cx&#8211;.inf.ethz.ch&#8217;, &#8216;cx&#8211;any-&#8216;] means that answers in the &#8216;cx&#8211;.inf.ethz.ch&#8217; context are preferred, but any context is acceptable;</li>
-  <li>[&#8217;.&#8217;, &#8216;cx&#8211;.inf.ethz.ch&#8217;] means that only answers in the &#8216;cx&#8211;.inf.ethz.ch&#8217; or global contexts are acceptable, with the global context preferred;</li>
-  <li>[&#8217;.&#8217;, cx&#8211;0-.cx&#8211;.inf.ethz.ch&#8217;, &#8216;cx&#8211;any-&#8216;] means that answers in any context except &#8216;cx&#8211;.inf.ethz.ch&#8217; are acceptable, with the global context preferred.</li>
+  <li>[&#8216;cx&#8211;.inf.ethz.ch.&#8217;, &#8216;cx&#8211;any-&#8216;] means that answers in the &#8216;cx&#8211;.inf.ethz.ch.&#8217; context are preferred, but any context is acceptable;</li>
+  <li>[&#8217;.&#8217;, &#8216;cx&#8211;.inf.ethz.ch.&#8217;] means that only answers in the &#8216;cx&#8211;.inf.ethz.ch.&#8217; or global contexts are acceptable, with the global context preferred;</li>
+  <li>[&#8217;.&#8217;, cx&#8211;0-.cx&#8211;.inf.ethz.ch.&#8217;, &#8216;cx&#8211;any-&#8216;] means that answers in any context except &#8216;cx&#8211;.inf.ethz.ch.&#8217; are acceptable, with the global context preferred.</li>
 </ul>
 <p id="rfc.section.5.7.p.7">An empty context array in a query is taken to be equivalent to an array containing only [&#8217;.&#8217;, &#8216;cx&#8211;any-&#8216;]; i.e. any context acceptable, global context preferred.</p>
-<p id="rfc.section.5.7.p.8">The value of the query-type (14) key is an array of integers encoding the type(s) of objects (as in <a href="#cbor-object">Section 5.9</a>) acceptable in answers to the query.  All values in the query-type array are treated at equal priority: [2,3] means the querier is equally interested in both IPv4 and IPv6 addresses for the query-name.</p>
-<p id="rfc.section.5.7.p.9">The value of the token (8) key, if present, is either an integer or a UTF-8 string of maximum byte length 32. Future messages or notifications containing answers to this query MUST contain this token, if present.</p>
-<p id="rfc.section.5.7.p.10">The value of the query-opts (22) key, if present, is an array of integers in priority order of the querier&#8217;s preferences in tradeoffs in answering the query.</p>
+<p id="rfc.section.5.7.p.8">The value of the query-types (9) key is an array of integers encoding the type(s) of objects (as in <a href="#cbor-object">Section 5.9</a>) acceptable in answers to the query.  All values in the query-type array are treated at equal priority: [2,3] means the querier is equally interested in both IPv4 and IPv6 addresses for the query-name. An empty query-types array indicates that objects of any type are acceptable in answers to the query.</p>
+<p id="rfc.section.5.7.p.9">The value of the token (2) key, if present, is either an integer or a UTF-8 string of maximum byte length 32. Future messages or notifications containing answers to this query MUST contain this token, if present.</p>
+<p id="rfc.section.5.7.p.10">The value of the query-opts (10) key, if present, is an array of integers in priority order of the querier&#8217;s preferences in tradeoffs in answering the query.</p>
+<div id="rfc.table.3"/>
+<div id="tabqopts"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
+  <caption>Query Option Codes</caption>
   <thead>
     <tr>
       <th class="right">Code</th>
@@ -862,8 +831,11 @@ li, p {
 </table>
 <p id="rfc.section.5.7.p.11">Each server is free to determine how to minimize each performance metric requested; however, servers MUST NOT generate queries to other servers if &#8220;no information leakage&#8221; is specified, and servers MUST NOT return expired assertions unless &#8220;expired assertions acceptable&#8221; is specified.</p>
 <h1 id="rfc.section.5.8"><a href="#rfc.section.5.8">5.8.</a> <a href="#cbor-notification" id="cbor-notification">Notification Message Section body</a></h1>
-<p id="rfc.section.5.8.p.1">Notification Message Sections contain information about the operation of the RAINS protocol itself. A Notification Message Section body is a map which MUST contain the note-type (17) key and MAY contain the token (8) and note-data (23) keys. The value of the note-type key is encoded as an integer as in the following table:</p>
+<p id="rfc.section.5.8.p.1">Notification Message Sections contain information about the operation of the RAINS protocol itself. A Notification Message Section body is a map which MUST contain the note-type (21) key and MAY contain the token (2) and note-data (22) keys. The value of the note-type key is encoded as an integer as in the following table:</p>
+<div id="rfc.table.4"/>
+<div id="tabnotify"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
+  <caption>Notification Type Codes</caption>
   <thead>
     <tr>
       <th class="right">Code</th>
@@ -910,11 +882,14 @@ li, p {
   </tbody>
 </table>
 <p id="rfc.section.5.8.p.2">Note that the status codes are chosen to be mnemonically similar to status codes for HTTP <a href="#RFC7231">[RFC7231]</a>. Details of the meaning of each status code are given in <a href="#protocol-def">Section 6</a>.</p>
-<p id="rfc.section.5.8.p.3">The value of the token (8) key, if present, is either an integer or a UTF-8 string of maximum byte length 32. If the notification is in response to a message or query containing a token, the notification MUST contain that token.</p>
-<p id="rfc.section.5.8.p.4">The value of the note-data (23) key, if present, is a UTF-8 encoded string with additional information about the notification, intended to be displayed to an administrator to help debug the issue identified by the negotiation.</p>
+<p id="rfc.section.5.8.p.3">The value of the token (2) key, if present, is either an integer or a UTF-8 string of maximum byte length 32. If the notification is in response to a message or query containing a token, the notification MUST contain that token.</p>
+<p id="rfc.section.5.8.p.4">The value of the note-data (22) key, if present, is a UTF-8 encoded string with additional information about the notification, intended to be displayed to an administrator to help debug the issue identified by the negotiation.</p>
 <h1 id="rfc.section.5.9"><a href="#rfc.section.5.9">5.9.</a> <a href="#cbor-object" id="cbor-object">Object</a></h1>
 <p id="rfc.section.5.9.p.1">Objects are encoded as arrays in CBOR, where the first element is the type of the object, encoded as an integer in the following table:</p>
+<div id="rfc.table.5"/>
+<div id="tabobj"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
+  <caption>Object type codes</caption>
   <thead>
     <tr>
       <th class="right">Code</th>
@@ -978,14 +953,9 @@ li, p {
       <td class="left">infrakey</td>
       <td class="left">public key for RAINS infrastructure</td>
     </tr>
-    <tr>
-      <td class="right">12-23</td>
-      <td class="left">reserved</td>
-      <td class="left">Reserved for future use in RAINS</td>
-    </tr>
   </tbody>
 </table>
-<p id="rfc.section.5.9.p.2">A name (1) object contains a name associated with a name as an alias. It is represented as a two-element array. The second element is a fully-qualified name as a UTF-8 encoded string.</p>
+<p id="rfc.section.5.9.p.2">A name (1) object contains a name associated with a name as an alias. It is represented as a three-element array. The second element is a fully-qualified name as a UTF-8 encoded string. The third type is an array of object type codes for which the alias is valid, with the same semantics as the query-types (9) key in queries (see <a href="#cbor-query">Section 5.7</a>).</p>
 <p id="rfc.section.5.9.p.3">An ip6-addr (2) object contains an IPv6 address associated with a name. It is represented as a two element array. The second element is a byte array of length 16 containing an IPv6 address in network byte order.</p>
 <p id="rfc.section.5.9.p.4">An ip4-addr (3) object contains an IPv4 address associated with a name. It is represented as a two element array. The second element is a byte array of length 4 containing an IPv4 address in network byte order.</p>
 <p id="rfc.section.5.9.p.5">A redirection (4) object contains the fully-qualified name of a RAINS authority server for a named zone. It is represented as a two-element array.  The second element is a fully-qualified name of an RAINS authority server as a UTF-8 encoded string.</p>
@@ -998,27 +968,30 @@ li, p {
 <p id="rfc.section.5.9.p.12">An infrakey (11) object contains the public key used to generate signatures on messages by a named RAINS server, by which a RAINS message signature may be verified by a receiver. It is identical in structure to a delegation object, as defined in <a href="#cbor-signature">Section 5.10</a>.</p>
 <h1 id="rfc.section.5.10"><a href="#rfc.section.5.10">5.10.</a> <a href="#cbor-signature" id="cbor-signature">Signatures, delegation keys, and RAINS infrastructure keys</a></h1>
 <p id="rfc.section.5.10.p.1">RAINS supports multiple signature algorithms and hash functions for signing assertions for cryptographic algorithm agility <a href="#RFC7696">[RFC7696]</a>. A RAINS signature algorithm identifier specifies the signature algorithm; a hash function for generating the HMAC; a method for generating, verifying, and interpreting hash chain tokens in signatures; and the format of the encodings of the signature values in Assertions, Shards, Zones, and Messages, as well as of public key values in delegation objects.</p>
-<p id="rfc.section.5.10.p.2">RAINS signatures have four common elements: the algorithm identifier, a valid-since timestamp, a valid-until timestamp, and a hash chain token.  Signatures are represented as an array of these four values followed by additional elements containing the signature data itself, according to the algorithm identifier.</p>
+<p id="rfc.section.5.10.p.2">RAINS signatures have three common elements: the algorithm identifier, a valid-since timestamp, and a valid-until timestamp.  Signatures are represented as an array of these three values followed by additional elements containing the signature data itself, according to the algorithm identifier.</p>
 <p id="rfc.section.5.10.p.3">Valid-since and valid-until timestamps are represented as CBOR integers counting seconds since the UNIX epoch UTC, identified with tag value 1 and encoded as in section 2.4.1 of <a href="#RFC7049">[RFC7049]</a>. A signature MUST have a valid-until timestamp. If a signature has no specified valid-since time (i.e., is valid from the beginning of time until its valid-until timestamp), the valid-since time MAY be null (as in Table 2 in Section 2.3 of <a href="#RFC7049">[RFC7049]</a>).</p>
 <p id="rfc.section.5.10.p.4">Hash chain tokens and their use are specified in the appropriate subsection of this section for the given algorithm identifier.</p>
-<p id="rfc.section.5.10.p.5">Signatures in RAINS are generated over a normalized serialized CBOR object (a Message; or an Assertion, Shard, or Zone section body). To normalize and serialize an object for sigining or verifying:</p>
+<p id="rfc.section.5.10.p.5">Signatures in RAINS are generated over a normalized serialized CBOR object (a Message; or an Assertion, Shard, or Zone section body). To normalize and serialize an object for signing:</p>
 <p/>
 
 <ul>
-  <li>Remove all signatures from the object.</li>
-  <li>Add a new &#8220;blank&#8221; signature to the object, containing Null in the place of any elements containing signature data.</li>
-  <li>Serialize the object, emitting all keys in CBOR maps in ascending numerical order. Note that when serializing anything with a Content array, the order of the content array is preserved. If the serialized object is a Message, it should be tagged with the RAINS tag.</li>
-  <li>Generate a signature on the resulting byte stream according to the algorithm selected, and fill the resulting values into the &#8220;blank&#8221; signature; or verify the signature of the resulting byte stream according to the algorithm selected.</li>
+  <li>Serialize the object with a stub for the signature to be generated:  <ul><li>Strip all other signatures during serialization by omitting all signatures (0) keys and their values. When signing a shard or zone, the signatures on contained assertions, if present, must be omitted too. When signing a message, the signatures on contained assertions, shards, and zones must be omitted.</li><li>Add subject zone and context to contained shards and assertions if not present, inheriting them from their containing shard or zone.</li><li>Create a stub signature within an array within a signatures (0) key at the appropriate place in the object, containing the algorithm ID, timestamps and hash chain token, if present, but a null value in the place of the signature content.</li><li>Normalize the serialized object by emitting all keys in CBOR maps in ascending numerical order. Note that when serializing anything with a Content array, the order of the content array is preserved.</li><li>If the serialized object is a Message, it should be tagged with the RAINS tag.</li></ul></li>
+  <li>Generate a signature on the resulting byte stream according to the algorithm selected.</li>
+  <li>Add the full signature to the signatures array at the appropriate point in the object.</li>
 </ul>
-<p id="rfc.section.5.10.p.7">The following algorithms are supported:</p>
+<p id="rfc.section.5.10.p.7">To verify a signature, generate the byte stream as for signing, then verify the signature according to the algorithm selected.</p>
+<p id="rfc.section.5.10.p.8">The following algorithms are supported:</p>
+<div id="rfc.table.6"/>
+<div id="tabsig"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
+  <caption>Defined signature algorithms</caption>
   <thead>
     <tr>
       <th class="right">Code</th>
       <th class="left">Signatures</th>
       <th class="left">Hash/HMAC</th>
       <th class="left">Format</th>
-      <th class="left">Token</th>
+      <th class="left">Revocation Token</th>
     </tr>
   </thead>
   <tbody>
@@ -1027,10 +1000,24 @@ li, p {
       <td class="left">ecdsa-256</td>
       <td class="left">sha-256</td>
       <td class="left">See <a href="#ecdsa-format">Section 5.10.1</a></td>
-      <td class="left">See <a href="#hash-chain-rev">Section 5.10.2</a></td>
+      <td class="left">None</td>
     </tr>
     <tr>
       <td class="right">3</td>
+      <td class="left">ecdsa-384</td>
+      <td class="left">sha-384</td>
+      <td class="left">See <a href="#ecdsa-format">Section 5.10.1</a></td>
+      <td class="left">None</td>
+    </tr>
+    <tr>
+      <td class="right">4</td>
+      <td class="left">ecdsa-256</td>
+      <td class="left">sha-256</td>
+      <td class="left">See <a href="#ecdsa-format">Section 5.10.1</a></td>
+      <td class="left">See <a href="#hash-chain-rev">Section 5.10.2</a></td>
+    </tr>
+    <tr>
+      <td class="right">5</td>
       <td class="left">ecdsa-384</td>
       <td class="left">sha-384</td>
       <td class="left">See <a href="#ecdsa-format">Section 5.10.1</a></td>
@@ -1040,11 +1027,11 @@ li, p {
 </table>
 <h1 id="rfc.section.5.10.1"><a href="#rfc.section.5.10.1">5.10.1.</a> <a href="#ecdsa-format" id="ecdsa-format">ECDSA signature and public key format</a></h1>
 <p id="rfc.section.5.10.1.p.1">ECDSA public keys consist of a single value, called &#8220;Q&#8221; in <a href="#FIPS-186-3">[FIPS-186-3]</a>. Q is a simple bit string that represents the uncompressed form of a curve point, concatenated together as &#8220;x | y&#8221;. The third element in a RAINS delegation object is the Q bit string encoded as a CBOR byte array. RAINS delegation objects for ECDSA-256 public keys are therefore represented as the array [5, 2, Q]; and for ECDSA-384 public keys as [5, 3, Q].</p>
-<p id="rfc.section.5.10.1.p.2">ECDSA signatures are a combination of two non-negative integers, called &#8220;r&#8221; and &#8220;s&#8221; in <a href="#FIPS-186-3">[FIPS-186-3]</a>. A Signature using ECDSA is represented using a five element CBOR array, with the fifth element being &#8220;r | s&#8221; such that r is represented as a byte array as described in Section C.2 of <a href="#FIPS-186-3">[FIPS-186-3]</a>, and s represented as a byte array as described in Section C.2 of <a href="#FIPS-186-3">[FIPS-186-3]</a>. For ECDSA-256 signatures, each integer MUST be represented as a 32-byte array. For ECDSA-384 signatures, each integer MUST be represented as a 48-byte array.  RAINS signatures using ECDSA-256 are therefore the array [2, valid-from, valid-until, token, r|s]; and for ECDSA-384 the array [3, valid-from, valid-until, token, r|s].</p>
+<p id="rfc.section.5.10.1.p.2">ECDSA signatures are a combination of two non-negative integers, called &#8220;r&#8221; and &#8220;s&#8221; in <a href="#FIPS-186-3">[FIPS-186-3]</a>. A Signature using ECDSA is represented using a four-element CBOR array, with the fourth element being &#8220;r | s&#8221; such that r is represented as a byte array as described in Section C.2 of <a href="#FIPS-186-3">[FIPS-186-3]</a>, and s represented as a byte array as described in Section C.2 of <a href="#FIPS-186-3">[FIPS-186-3]</a>.  For ECDSA-256 signatures, each integer MUST be represented as a 32-byte array.  For ECDSA-384 signatures, each integer MUST be represented as a 48-byte array.  RAINS signatures using ECDSA-256 are therefore the array [2, valid-from, valid-until, r|s]; and for ECDSA-384 the array [3, valid-from, valid-until, r|s].</p>
 <p id="rfc.section.5.10.1.p.3">ECDSA-256 signatures and public keys use the P-256 curve as defined in <a href="#FIPS-186-3">[FIPS-186-3]</a>.  ECDSA-384 signatures and public keys use the P-384 curve as defined in <a href="#FIPS-186-3">[FIPS-186-3]</a>.</p>
 <p id="rfc.section.5.10.1.p.4">All RAINS servers MUST implement ECDSA-256 and ECDSA-384.</p>
 <h1 id="rfc.section.5.10.2"><a href="#rfc.section.5.10.2">5.10.2.</a> <a href="#hash-chain-rev" id="hash-chain-rev">Hash-chain based revocation</a></h1>
-<p id="rfc.section.5.10.2.p.1">Hash-chain based revocation allows a signature (and the Assertion, Shard, or Zone it protects) to be replaced before it expires. To use hash-chain based revocation, a signing entity generates a hash chain from a known seed using the hash function specified by the signature algorithm in use, and places the Nth value derived therefrom in the hash chain revocation token on a signature.</p>
+<p id="rfc.section.5.10.2.p.1">Hash-chain based revocation allows a signature (and the Assertion, Shard, or Zone it protects) to be replaced before it expires. To use hash-chain based revocation, a signing entity generates a hash chain from a known seed using the hash function specified by the signature algorithm in use, and places the Nth value derived therefrom in the hash chain revocation token on a signature.  When used, this token appears as a byte array after the signature data in the signature array.</p>
 <p id="rfc.section.5.10.2.p.2">A revocation can be issued by generating a new section and signing it, revealing the N-1st value from the hash chain in the revocation token. To allow a recipient of a revoked section to verify the revocation, the following restrictions on what can replace what apply:</p>
 <p/>
 
@@ -1053,7 +1040,6 @@ li, p {
   <li>A Shard can only be replaced by another Shard with an identical shard-range key, within the same Context and Zone. Incomplete Shards cannot be replaced.</li>
   <li>A Zone can only be replaced by another Zone with an identical name within the same Context.</li>
 </ul>
-<p id="rfc.section.5.10.2.p.4">Signing entities can decline to use hash-chain based revocation by replacing the revocation token with Null.</p>
 <h1 id="rfc.section.5.11"><a href="#rfc.section.5.11">5.11.</a> <a href="#cbor-certinfo" id="cbor-certinfo">Certificate information format</a></h1>
 <p id="rfc.section.5.11.p.1">[EDITOR&#8217;S NOTE: Not yet defined. Write me. This should be largely in line with TLSA; determine if there&#8217;s any guidance from implementation experience we should consider, as well.]</p>
 <h1 id="rfc.section.5.12"><a href="#rfc.section.5.12">5.12.</a> <a href="#cbor-nameset" id="cbor-nameset">Name expression format</a></h1>
