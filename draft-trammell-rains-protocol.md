@@ -330,7 +330,8 @@ A signature over an assertion contains the following information elements:
   Revocation tokens are generally based on hash chains, meaning that a
   signature with a revocation token "down" the chain from a given token
   supercedes it. The format and mechanism used by the revocation token is
-  determined by the alogrithm used. (Note that revocation is a presently unspecified feature in the protocol; see {{hash-chain-rev}}.)
+  determined by the alogrithm used. (Note that revocation is a presently 
+  unspecified feature in the protocol; see {{hash-chain-rev}}.)
 
 The signature protects all the information in an assertion as well as its own
 valid-since and valid-until values and the revocation token; it does not
@@ -465,7 +466,8 @@ querier before the query's Valid-Until time.
 ## Address to Object Mapping
 
 In contrast to the current domain name system, information about addresses is
-stored in a completely separate tree, keyed by address and prefix. An address assertion consists of the following elements: 
+stored in a completely separate tree, keyed by address and prefix. An address 
+assertion consists of the following elements: 
 
 - Context: name of the context in which the assertion is valid;
   see {{context-in-address-assertions}}.
@@ -577,15 +579,15 @@ and notification maps is given in the symbol table below:
 | 2    | token          | Token for referring to a data item            |
 | 3    | subject-name   | Subject name in an assertion                  |
 | 4    | subject-zone   | Zone name in an assertion                     |
-| 5    | query-name     | Qualified subject name in a query             |
+| 5    | subject-addr   | Subject address in address assertion or zone  |
 | 6    | context        | Context of an assertion                       |
 | 7    | objects        | Objects of an assertion                       |
-| 8    | query-contexts | Contexts acceptable in query answers          |
-| 9    | query-types    | Acceptable object types for query             |
-| 10   | query-opts     | Set of query options requested                |
+| 8    | query-name     | Fully qualified name for a query              |
+| 9    | query-contexts | Contexts acceptable in query answers          |
+| 10   | query-types    | Acceptable object types for query             |
 | 11   | shard-range    | Lexical range of Assertions in Shard          |
 | 12   | query-expires  | Absolute timestamp for query expiration       |
-| 20   | subject-addr   | Subject address in reverse assertion or zone  |
+| 13   | query-opts     | Set of query options requested                |
 | 21   | note-type      | Notification type                             |
 | 22   | note-data      | Additional notification data                  |
 | 23   | content        | Content of a message, shard, or zone          |
@@ -760,18 +762,18 @@ containing the name of the context for which the Zone is valid.
 
 ## Query Message Section body {#cbor-query}
 
-A Query body is a map. Queries MUST contain the the token (2), query-name (5),
-query-contexts (8), and query-types (9) keys. Queries MAY contain query-opts
-(10) and query-expires (12) keys.
+A Query body is a map. Queries MUST contain the the token (2), query-name (8),
+query-contexts (9), and query-types (10) keys. Queries MAY contain query-opts
+(13) and query-expires (12) keys.
 
 The value of the token (2) key, is a byte array off maximum length
 32. Future messages or notifications containing answers to this query MUST
 contain this token, if present. See {{cbor-tokens}}.
 
-The value of the query-name (5) key is a UTF-8 encoded string containing the
+The value of the query-name (8) key is a UTF-8 encoded string containing the
 fully qualified name that is the subject of the query.
 
-The value of the query-contexts (8) key is an allowable context expression, as an
+The value of the query-contexts (9) key is an allowable context expression, as an
 array of context names as UTF-8 encoded strings. The allowable context
 expression is evaluated in-order, as follows:
 
@@ -798,14 +800,19 @@ An empty context array in a query is taken to be equivalent to an array
 containing only ['.', 'cx--any-']; i.e. any context acceptable, global context
 preferred.
 
-The value of the query-types (9) key is an array of integers encoding the
+The value of the query-types (10) key is an array of integers encoding the
 type(s) of objects (as in {{cbor-object}}) acceptable in answers to the query.
 All values in the query-type array are treated at equal priority: [2,3] means
 the querier is equally interested in both IPv4 and IPv6 addresses for the
 query-name. An empty query-types array indicates that objects of any type are
 acceptable in answers to the query.
 
-The value of the query-opts (10) key, if present, is an array of integers in
+The value of the query-expires (12) key, if present, is a CBOR integer
+counting seconds since the UNIX epoch UTC, identified with tag value 1 and
+encoded as in section 2.4.1 of {{RFC7049}}. After the query-expires time, the
+query will have been considered not answered by the original issuer.
+
+The value of the query-opts (13) key, if present, is an array of integers in
 priority order of the querier's preferences in tradeoffs in answering the
 query, as in {{tabqopts}}.
 
@@ -843,14 +850,53 @@ Option 8 specifies that a querier's interest in a query is strictly ephemeral,
 and that future assertions related to this query SHOULD NOT be proactively
 pushed to the querier.
 
-The value of the query-expires (12) key, if present, is a CBOR integers
-counting seconds since the UNIX epoch UTC, identified with tag value 1 and
-encoded as in section 2.4.1 of {{RFC7049}}. After the query-expires time, the
-query will have been considered not answered by the original issuer.
-
 ## Address Assertion Message Section body {#cbor-revassert}
 
-[EDITOR'S NOTE write me]
+An Address Assertion body is a map. The keys present in this map depend on whether the
+Assertion is contained in a Message Section or in an Address Zone.
+
+Address Assertions contained in Message Sections are "bare Address
+Assertions", and MUST contain the signatures (0), subject-addr (5),
+context (6), and objects (7) keys.
+
+Address Assertions contained in an Address Zone are "contained Address
+Assertions", and can inherit their context from and be signed within their
+containing Zone. A contained Address Assertion MUST contain the 
+subject-addr (5) and objects (7) keys. It MAY contain the context (6) key, but in
+this case the value of this keys MUST be identical to the value in the
+containing Address Zone.
+
+A contained Address Assertion SHOULD contain the signatures (0) key, since an
+unsigned contained Address Assertion cannot be used by a RAINS server to
+answer a query; it must be returned in a signed Address Zone.
+
+The value of the signatures (0) key, if present, is an array of one or more
+Signatures as defined in {{cbor-signature}}. If not present, the containing
+Address Zone MUST be signed. Signatures on a contained Address Assertion are
+generated as if the inherited context value are present in
+the Assertion, whether actually present or not. The signatures on the
+Assertion are to be verified against the appropriate key for the Address Zone
+containing the Assertion in the given context, as described in 
+{{signatures-in-assertions}}.
+
+The value of the subject-addr (5) key is a three element CBOR array. The first
+element of the array is the address family encoded as an object type, 2 for
+IPv6 addresses and 3 for IPv4 addresses. The second element is the prefix
+length encoded as an integer, 0-128 for IPv6 and 0-32 for IPv4. The third
+element is the address, encoded as in {{cbor-object}}. Subject addresses with
+the maximum prefix length for the address family are subject host addresses,
+and are nameable; subject addresses with less than the maximum prefix length
+are subject network addresses, and are delegatable.
+
+The value of the context (6) key, if present, is a UTF-8 string
+containing the name of the context in which the Address Assertion is valid. If
+not present, the context of the Address Assertion is inherited from the
+containing Address Zone. See {{context-in-address-assertions}}.
+
+The value of the objects (7) key is an array of objects, as defined in
+{{cbor-object}}. Only object types redirection, delegation, and registrant are
+available for subject network addresses, and only object type name is
+available for subject host addresses.
 
 ## Address Zone Message Section body {#cbor-revzone}
 
@@ -1702,7 +1748,7 @@ cache. If so, it discards the old information, and caches the new section.
 
 - A method for clients to discover local oracles needs to be specified.
 - Reverse DNS must be added. Instead of in-addr.arpa., the RAINS facility
-  should treat reverse lookups as first-order, with subject-address instead of
+  should treat reverse lookups as first-order, with subject-addr instead of
   subject-name in assertions and queries.
 - Consider making negative answers less expensive by allowing a hash of a
   shard with a negative answer proof to be sent back, and checked with a "no
