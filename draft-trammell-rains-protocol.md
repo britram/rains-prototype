@@ -27,11 +27,14 @@ author:
 normative:
     I-D.trammell-inip-pins:
     RFC0793:
+    RFC1918:
     RFC2119:
     RFC2782:
     RFC3629:
+    RFC4193:
     RFC4727:
     RFC5246:
+    RFC5280:
     RFC7049:
     FIPS-186-3:
       author:
@@ -42,9 +45,12 @@ normative:
 
 informative:
     RFC1035:
+    RFC4291:
+    RFC4632:
     RFC5226:
     RFC5905:
     RFC6605:
+    RFC6698:
     RFC7231:
     RFC7624:
     RFC7696:
@@ -135,6 +141,9 @@ from DNS as presently defined and implemented:
   registrants available in the naming system at runtime.
 - Sets of valid characters and rules for valid names are defined on a per-zone
   basis, and can be verified at runtime.
+- Reverse lookups are done using a completely separate tree, supporting
+  delegations of any prefix length, in accordance with CIDR {{RFC4632}} and
+  the IPv6 addressing architecture {{RFC4291}}.
 
 Instead of using a custom binary framing as DNS, RAINS uses Concise Binary
 Object Representation {{RFC7049}}, partially in an effort to make
@@ -193,8 +202,7 @@ query services on their behalf.
 # Information Model
 
 Messages in the RAINS Protocol are made up of two kinds of elements: Assertion
-and Query. A third type of element, Answer, binds a Query to a set of
-Assertions in response to a Query.
+and Query.
 
 The information model in this section omits information elements required by
 the resolution mechanism itself; these are defined in more detail in 
@@ -248,10 +256,10 @@ The Types supported for each assertion are:
   name is not allowed by a valid signed Zone-Nameset expression is taken to be
   invalid, even if it has a valid signature. The details of this type will be
   described in a separate document.
-- Registrar: Information about the organization that caused a Subject name 
+- Zone-Registrar: Information about the organization that caused a Subject name 
   to exist, for registrant-level names.
-- Registrant: Information about the organization responsible for a Subject name, 
-  for registrant-level names.
+- Zone-Registrant: Information about the organization responsible for a 
+  Subject name, for registrant-level names.
 
 For a given {subject, type} tuple, multiple assertions can be valid at a given
 point in time; the union of the object values of all of these assertions is
@@ -322,7 +330,7 @@ A signature over an assertion contains the following information elements:
   Revocation tokens are generally based on hash chains, meaning that a
   signature with a revocation token "down" the chain from a given token
   supercedes it. The format and mechanism used by the revocation token is
-  determined by the alogrithm used.
+  determined by the alogrithm used. (Note that revocation is a presently unspecified feature in the protocol; see {{hash-chain-rev}}.)
 
 The signature protects all the information in an assertion as well as its own
 valid-since and valid-until values and the revocation token; it does not
@@ -391,9 +399,8 @@ elements:
 - Types: a set of assertion types the querier is interested in.
 - Valid-Until: an optional client-generated timestamp for the query after 
   which it expires and should not be answered.
-- Token: an optional client-generated token for the query, which can be used
-  in the answer to refer to the query (instead of the answer containing the
-  query itself).
+- Query Token: a client-generated token for the query, which can be used
+  in the answer to refer to the query.
 
 A query expresses interest about all the given types of assertion in all the
 specified contexts; more complex expressions of which types in which contexts
@@ -439,14 +446,11 @@ As with assertion contexts, developing conventions for query contexts for
 different situations will require implementation and deployment experience,
 and is a subject for future work.
 
-## Answer
+### Answers to Queries
 
 An answer consists of a set of assertions, shards, and/or zones which respond
-to a query, bound to that query. It consists of the following information elements:
-
-- Query: the query this answer applies to. If the query was issued with a
-  token, the query in the answer may omit all content except the token.
-- Content: a set of assertions and/or shards answering the query.
+to a query. If the query contained a token, it is bound to that query via the
+token.
 
 The content of an answer depends on whether the answer is positive or negative.
 A positive answer contains the information requested in the smallest atomic
@@ -457,6 +461,84 @@ is illegal within the zone.
 
 A query is taken to have an inconclusive answer when no answer returns to the
 querier before the query's Valid-Until time.
+
+## Address to Object Mapping
+
+In contrast to the current domain name system, information about addresses is
+stored in a completely separate tree, keyed by address and prefix. An address assertion consists of the following elements: 
+
+- Context: name of the context in which the assertion is valid;
+  see {{context-in-address-assertions}}.
+- Subject: address about which the assertion is made, consisting of an address
+  family, address, and prefix length. A subject may be a network address
+  (where the prefix length is less than the address length for the given
+  address family) or a host address (where the prefix length is equal to the
+  address length for the given address family)
+- Type: the type of information about the Subject contained in the 
+  assertion. Each Assertion is about a single type of data.
+- Object: the data of the indicated type associated with the Subject
+- Signatures: one or more signatures generated by the authority for the
+  Assertion. Signatures contain a time interval during which they are considered
+  valid, and may contain a revocation token allowing them to be revoked before
+  the end of the time interval, as in {{signatures-in-assertions}}.
+
+The following object types are available:
+
+- Delegation: the authority associated with the subject network address. 
+  The Object contains a public key by which the authority can be identified. Only available for network address subjects.
+- Redirection: The name(s) of one or more a RAINS servers providing authority
+  service for the authority associated with the subject network address.
+  The Object contains a set of names. Only available for network address subjects.
+- Name: one or more names associated with the subject network address.
+  The Object contains a set of names. Only available for host address subjects.
+- Zone-Registrant: Information about the organization responsible for a 
+  network. Only available for network address subjects.
+
+Assertions about addresses can be grouped into Zones. An address Zone has the following information elements:
+
+- Context: name of the context in which the assertions in the zone are valid;
+  see {{context-in-address-assertions}}.
+- Zone: subject address of the zone, consisting of an address family,
+  address, and prefix length. The prefix length must be less than the address
+  length for the given address family.
+- Content: a set of assertions and/or shards sharing the context and zone.
+- Signatures: one or more signatures generated by the authority for the
+  shard; see {{signatures-in-assertions}}.
+
+Queries for addresses are similar to those for names, and consist of the following information elements:
+
+- Context: Context in which the query is made; this must match the assertion 
+  context as in {{context-in-address-assertions}}.
+- Subject: the address about which the query is made, consisting of an address
+  family, address, and prefix length. 
+- Types: a set of assertion types the querier is interested in, as above.
+- Valid-Until: an optional client-generated timestamp for the query after 
+  which it expires and should not be answered.
+- Query Token: a client-generated token for the query, which can be used
+  in the answer to refer to the query.
+
+### Context in Address Assertions
+
+Just as in forward Assertions, Assertion contexts are used in address
+assertions to determine the scope of an address assertion, and the signature
+chain used to verify it.
+
+- The global addressing context for each address family is identified by the
+  special context name `.'. For both IPv4 and IPv6 addresses, this is rooted at IANA, which delegates to the RIRs, which then delegates to LIRs and to address-holding registries.
+- Local contexts associated with a given authority in a forward tree can 
+  also make assertions about addresses. As with contexts in forward 
+  assertions, the authority-part and
+  the context-part of a local context name are divided by a context marker 
+  ('cx--'). The authority-part directly identifies the authority whose key was
+  used to sign the assertion; assertions within a local context are only valid
+  if signed by the identified authority. Authorities have complete control
+  over how the contexts under their namespaces are arranged, and over the names 
+  within those contexts. 
+
+Each local context may have a root address space zone (0/0), but these root
+address spaces may only delegate addresses that are reserved for local use
+{{RFC1918}} {{RFC4193}}. Local context assertions for other addresses are
+invalid.
 
 # Data Model {#cbor}
 
@@ -502,6 +584,8 @@ and notification maps is given in the symbol table below:
 | 9    | query-types    | Acceptable object types for query             |
 | 10   | query-opts     | Set of query options requested                |
 | 11   | shard-range    | Lexical range of Assertions in Shard          |
+| 12   | query-expires  | Absolute timestamp for query expiration       |
+| 20   | subject-addr   | Subject address in reverse assertion or zone  |
 | 21   | note-type      | Notification type                             |
 | 22   | note-data      | Additional notification data                  |
 | 23   | content        | Content of a message, shard, or zone          |
@@ -520,11 +604,8 @@ message.
 A Message map MAY contain a capabilities (1) key, whose value is described in
 {#cbor-capabilities}.
 
-A Message map MAY contain a token (2) key, whose value is either an integer or
-a UTF-8 string of maximum byte length 32. The token key may be used to refer
-to the message in future messages, or may refer to a past message or query by
-token. If the message is in response to a message or query containing a token,
-the message MUST contain that token.
+A Message map MUST contain a token (2) key, whose value is a byte array of
+maximum length 32. See {{cbor-tokens}}.
 
 A Message map MUST contain a content (23) key, whose value is an array of
 Message Sections; a Message Section is either an Assertion, Shard, Zone, or
@@ -534,20 +615,20 @@ Query.
 
 Each Message Section in the Message's content value MUST be a two-element
 array. The first element in the array is the message section type, encoded as
-an integer as in {{cbor-symtab}}. The second element in the array is the
-message section body, defined as in {{cbor-assertion}}, {{cbor-shard}},
-{{cbor-zone}}, {{cbor-query}}, or {{cbor-notification}}.
-
-Section types are as in the following table, taken from {{cbor-symtab}}:
+an integer as in {{cbor-symtab}}. The second element in the array is a message
+section body, a CBOR map defined as in the subsections shown in {{cbor-symtab}}:
 
 {: #tabsection title="Message Section Type Codes"}
 
 | Code | Name         | Description                                   |
 |-----:|--------------|-----------------------------------------------|
 | 1    | assertion    | Assertion (see {{cbor-assertion}})            |
+| -1   | revassertion | Address Assertion (see {{cbor-revassert}})    |
 | 2    | shard        | Shard (see {{cbor-shard}})                    |
 | 3    | zone         | Zone (see {{cbor-zone}})                      |
+| -3   | revzone      | Address Zone (see {{cbor-revzone}})           |
 | 4    | query        | Query (see {{cbor-query}})                    |
+| -4   | revquery     | Address Query (see {{cbor-revquery}}          |
 | 23   | notification | Notification (see {{cbor-notification}})      |
 
 ## Assertion body {#cbor-assertion}
@@ -576,8 +657,8 @@ Shard or Zone MUST be signed. Signatures on a contained Assertion are
 generated as if the inherited subject-zone and context values are present in
 the Assertion, whether actually present or not. The signatures on the
 Assertion are to be verified against the appropriate key for the Zone
-containing the Assertion in the given context, as described in {{signatures-
-in-assertions}}.
+containing the Assertion in the given context, as described in 
+{{signatures-in-assertions}}.
 
 The value of the subject-name (3) key is a UTF-8 encoded {{RFC3629}} string
 containing the name of the subject of the assertion. The subject name never
@@ -654,8 +735,8 @@ the end of the zone. The shard MUST NOT contain any assertions whose subject
 names sort before A or after B. In addition, the authority for the shard belongs to
 MUST NOT make any assertions during the period of validity of the shard's
 signatures that would fall between subject-name A and subject-name B inclusive
-that are not contained within the shard (see {{runtime-consistency-
-checking}}).
+that are not contained within the shard 
+(see {{runtime-consistency-checking}}).
 
 If the shard-range key is not present, the shard is not lexicographically
 complete and MUST NOT be used to make assertions about nonexistance.
@@ -679,9 +760,13 @@ containing the name of the context for which the Zone is valid.
 
 ## Query Message Section body {#cbor-query}
 
-A Query body is a map. Queries MUST contain the query-name (5), query-contexts (8),
-and query-types (9) keys. Queries MAY contain the token (2) key and the 
-query-opts (10) key.
+A Query body is a map. Queries MUST contain the the token (2), query-name (5),
+query-contexts (8), and query-types (9) keys. Queries MAY contain query-opts
+(10) and query-expires (12) keys.
+
+The value of the token (2) key, is a byte array off maximum length
+32. Future messages or notifications containing answers to this query MUST
+contain this token, if present. See {{cbor-tokens}}.
 
 The value of the query-name (5) key is a UTF-8 encoded string containing the
 fully qualified name that is the subject of the query.
@@ -720,13 +805,9 @@ the querier is equally interested in both IPv4 and IPv6 addresses for the
 query-name. An empty query-types array indicates that objects of any type are
 acceptable in answers to the query.
 
-The value of the token (2) key, if present, is either an integer or a UTF-8
-string of maximum byte length 32. Future messages or notifications containing
-answers to this query MUST contain this token, if present.
-
 The value of the query-opts (10) key, if present, is an array of integers in
 priority order of the querier's preferences in tradeoffs in answering the
-query.
+query, as in {{tabqopts}}.
 
 {: #tabqopts title="Query Option Codes"}
 
@@ -737,20 +818,55 @@ query.
 | 3    | Minimize information leakage beyond first hop                  |
 | 4    | No information leakage beyond first hop: cached answers only   |
 | 5    | Expired assertions are acceptable                              |
-| 6    | Enable token tracing                                           |
+| 6    | Enable query token tracing                                     |
 | 7    | Disable verification delegation (client protocol only)         |
+| 8    | Suppress proactive caching of future assertions                |
 
-Each server is free to determine how to minimize each performance metric
-requested; however, servers MUST NOT generate queries to other servers if "no
-information leakage" is specified, and servers MUST NOT return expired
-assertions unless "expired assertions acceptable" is specified.
+Options 1-5 specify performance/privacy tradeoffs. Each server is free to
+determine how to minimize each performance metric requested; however, servers
+MUST NOT generate queries to other servers if "no information leakage" is
+specified, and servers MUST NOT return expired assertions unless "expired
+assertions acceptable" is specified.
+
+Option 6 specifies that a given token (see {{cbor-tokens}}) should be used on
+all queries resulting from a given query, allowing traceability through an
+entire RAINS infrastructure. It is meant for debugging purposes. 
+
+By default, a client service will perform verification of negative queries and
+return a 404 No Assertion Exists for queries with a consistent proof of non-
+existence, within a message signed by the query service's infrakey. Option 7
+disables this behavior, and causes the query service to return the shard
+proving nonexistence for verification by the client. It is intended to be used
+with untrusted query services.
+
+Option 8 specifies that a querier's interest in a query is strictly ephemeral,
+and that future assertions related to this query SHOULD NOT be proactively
+pushed to the querier.
+
+The value of the query-expires (12) key, if present, is a CBOR integers
+counting seconds since the UNIX epoch UTC, identified with tag value 1 and
+encoded as in section 2.4.1 of {{RFC7049}}. After the query-expires time, the
+query will have been considered not answered by the original issuer.
+
+## Address Assertion Message Section body {#cbor-revassert}
+
+[EDITOR'S NOTE write me]
+
+## Address Zone Message Section body {#cbor-revzone}
+
+[EDITOR'S NOTE write me]
+
+## Address Query Message Section body {#cbor-revquery}
+
+[EDITOR'S NOTE write me]
 
 ## Notification Message Section body {#cbor-notification}
 
 Notification Message Sections contain information about the operation of the
 RAINS protocol itself. A Notification Message Section body is a map which MUST
-contain the note-type (21) key and MAY contain the token (2) and note-data (22) keys. The
-value of the note-type key is encoded as an integer as in the following table:
+contain the token (2) and note-type (21) keys and MAY contain the note-data
+(22) key. The value of the note-type key is encoded as an integer as in the
+{{tabnotify}}.
 
 {: #tabnotify title="Notification Type Codes"}
 
@@ -770,9 +886,9 @@ Note that the status codes are chosen to be mnemonically similar to status
 codes for HTTP {{RFC7231}}. Details of the meaning of each status code are
 given in {{protocol-def}}.
 
-The value of the token (2) key, if present, is either an integer or a UTF-8
-string of maximum byte length 32. If the notification is in response to a
-message or query containing a token, the notification MUST contain that token.
+The value of the token (2) key is a byte array of maximum length 32, which
+MUST contain the token of the message or query to which the notification is a
+response. See {{cbor-tokens}}.
 
 The value of the note-data (22) key, if present, is a UTF-8 encoded string
 with additional information about the notification, intended to be displayed
@@ -826,13 +942,15 @@ array. The second element is a signature algorithm identifier as in
 for the given algorithm identifier.
 
 A nameset (6) object contains an expression defining which names are allowed
-and which names are disallowed in a given zone. It is represented as an N-
-element array, as defined in {{cbor-nameset}}
+and which names are disallowed in a given zone. It is represented as a two-
+element array. The second element is a nameset expression to be applied to
+each name element within the zone without an intervening delegation, as
+defined in {{cbor-nameset}}
 
 A cert-info (7) object contains an expression binding a certificate or
 certificate authority to a name, such that connections to the name must either
 use the bound certificate or a certificate signed by a bound authority. It is
-represented as an N-element array, as defined in {{cbor-certinfo}}.
+represented as an five-element array, as defined in {{cbor-certinfo}}.
 
 A service-info (8) object gives information about a named service. Services
 are named as in {{RFC2782}}. It is represented as a four-element array. The
@@ -841,29 +959,142 @@ as a UTF-8 string. The third element is a transport port number as a positive
 integer in the range 0-65535. The fourth element is a priority as a positive
 integer, with lower numbers having higher priority.
 
-A registrar (9) object gives the name and other identifying information of
-the registrar (the organization which caused the name to be added to the
+A registrar (9) object gives the name and other identifying information of the
+registrar (the organization which caused the name to be added to the
 namespace) for organization-level names. It is represented as a UTF-8 string
-containing identifying information chosen by the registrar according to the
-registry's policy.
+of maximum length 256 bytes containing identifying information chosen by the
+registrar according to the registry's policy.
 
 A registrant (10) object gives information about the registrant of an
-organization-level name. It is represented as a UTF-8 string containing this
-information, with a format chosen by the registrar according to the registry's
-policy.
+organization-level name. It is represented as a UTF-8 string with a maximum
+length of 4096 bytes containing this information, with a format chosen by the
+registrar according to the registry's policy.
 
 An infrakey (11) object contains the public key used to generate signatures on
 messages by a named RAINS server, by which a RAINS message signature may be
 verified by a receiver. It is identical in structure to a delegation object,
 as defined in {{cbor-signature}}.
 
+### Certificate information format {#cbor-certinfo}
+
+A cert-info object contains information about the certificate(s) that can be
+used to authenticate a transport-layer association with a named entity. It is
+encoded as a file-element array. The first element is the RAINS object type
+(7). The second element is the protocol family specifier, describing the
+cryptographic protocol used to connect, as defined in {{tabcertproto}}. The
+protocol family defines the format of certificate data to be hashed. The third
+element is the certificate usage specifier as in {{tabcertusage}}, describing
+the constraint imposed by the assertion. These are defined to be compatible
+with Certificate Usages in the TLSA RRTYPE for DANE {{RFC6698}}. The fourth
+element is the hash algorithm identifier, defining the hash algorithm used to
+generate the certificate data. The fifth item is the data itself, whose format
+is defined by the protocol family and hash algorithm.
+
+{: #tabcertproto title="Certificate information protocol families"}
+
+| Code | Protocol family                            | Certificate format |
+|-----:|--------------------------------------------|--------------------|
+|    0 | Unspecified                                | Unspecified        |
+|    1 | Transport Layer Security (TLS) {{RFC5246}} | {{RFC5280}}        |
+
+Protocol family 0 leaves the protocol family unspecified; client validation
+and usage of cert-info assertions, and the protocol used to connect, are up to
+the client, and no information is stored in RAINS. Protocol family 1 specifies
+Transport Layer Security version 1.2 {{RFC5246}} or a subsequent version,
+secured with PKIX {{RFC5280}} certificates.
+
+{: #tabcertusage title="Certificate information usage values"}
+
+| Code | Certificate usage                |
+|-----:|----------------------------------|
+|    2 | Trust Anchor Certificate         |
+|    3 | End-Entity Certificate           |
+
+A trust anchor certificate constraint specifies a certificate that MUST appear
+as the trust anchor for the certificate presented by the subject of the
+assertion on a connection attempt. An end-entity certificate constraint
+specifies a certificate that MUST be presented by the subject of the assertion
+on a connection attempt.
+
+{: #tabcerthash title="Certificate information hash algorithms"}
+
+| Code | Hash/HMAC | Notes                                 |
+|-----:|-----------|---------------------------------------|
+| 0    | None      | Data contains full certificate        | 
+| 1    | sha-256   | Data contains SHA-256 hash (32 bytes) |
+| 2    | sha-512   | Data contains SHA-512 hash (64 bytes) |
+| 3    | sha-384   | Data contains SHA-384 hash (48 bytes) |
+
+Code 0 is used to store full certificates in RAINS assertions, while other
+codes are used to store hashes for verification.
+
+For example, in a cert-info object with values [ 7, 1, 3, 3, (data) ], the
+data would be a 48 SHA-384 hash of the ASN.1 DER-encoded X.509v3 certificate
+(see Section 4.1 of {{RFC5280}}) to be presented by the endpoint on a
+connection attempt with TLS version 1.2 or later.
+
+### Name expression format {#cbor-nameset}
+
+The nameset expression is represented as a UTF-8 string encoding a modified POSIX
+Extended Regular Expression format (see POSIX.2) to be applied to each element
+of a name within the zone. A name containing an element that does not match
+the valid nameset expression for a zone is not valid within the zone, and the
+nameset assertion can be used to prove nonexistence.
+
+The POSIX character classes :alnum:, :alpha:, :ascii:, :digit:, :lower:, and :upper: are available in these regular expressions, where:
+
+- :lower: matches all codepoints within the Unicode general category "Letter, lowercase"
+- :upper: matches all codepoints within the Unicode general category "Letter, uppercase"
+- :alpha: matches all codepoints within the Unicode general category "Letter".
+- :digit: matches all codepoints within the Unicode general category "Number, decimal digit"
+- :alnum: is the union of :alpha: and :digit:
+- :ascii: matches all codepoints in the range 0x20-0x7f
+
+In addition, each Unicode block is available as a character class, with the syntax :ublkXXXX: where XXXX is a 4 or 5 digit, zero-prefixed hex encoding of the first codepoint in the block. For example, the Cyrillic block is available as :ublk0400:.
+
+Unicode escapes are supported in these regular expressions; the sequence
+\uXXXX where XXXX is a 4 or 5 digit, possibly zero-prefixed hex encoding of
+the codepoint, is substituted with that codepoint.
+
+Set operations (intersection and subtraction) are available on character
+classes. Two character class or range expressions in a bracket expression
+joined by the sequence && are equivalent to the intersection of the two
+character classes or ranges. Two character class or range expressions in a
+bracket expression joined by the sequence -- are equivalent to the subtraction
+of the second character class or range from the first.
+
+For example, the nameset expression:
+
+[[:ublk0400:]&&[:lower:][:digit:]]+
+
+matches any name made up of one or more lowercase Cyrillic letters and digits. The same expression can be implemented with a range instead of a character class:
+
+[\u0400-\u04ff&&[:lower:][:digit:]]
+
+## Tokens in queries and messages {#cbor-tokens}
+
+Messages, queries, and notifications all contain an opaque token (2) key,
+whose content is a byte array of maximum length 32, and is used to link
+Messages to the Queries they respond to, and Notifications to the Messages
+they respond to. Tokens MUST be treated as opaque values by RAINS servers.
+
+A Message sent in response to a Query MUST contain the token in that Query.
+Otherwise, the Message SHOULD contain a token selected by the server
+originating it, so that future Notifications can be linked to the message
+causing it. Likewise, a Notification sent in response to a Message MUST
+contain the token from the Message causing it.
+
+When a server creates a new query to forward to another server in response to
+a query it received, it MUST NOT use the same token on the delegated query
+as on the received query, unless option 6 Enable Tracing is present in the
+received, in which case it MUST use the same token. 
+
 ## Signatures, delegation keys, and RAINS infrastructure keys {#cbor-signature}
 
 RAINS supports multiple signature algorithms and hash functions for signing
 assertions for cryptographic algorithm agility {{RFC7696}}. A RAINS signature
 algorithm identifier specifies the signature algorithm; a hash function for
-generating the HMAC; a method for generating, verifying, and interpreting hash
-chain tokens in signatures; and the format of the encodings of the signature
+generating the HMAC and the format of the encodings of the signature
 values in Assertions, Shards, Zones, and Messages, as well as of public key
 values in delegation objects.
 
@@ -879,9 +1110,6 @@ encoded as in section 2.4.1 of {{RFC7049}}. A signature MUST have a
 valid-until timestamp. If a signature has no specified valid-since time (i.e.,
 is valid from the beginning of time until its valid-until timestamp), the
 valid-since time MAY be null (as in Table 2 in Section 2.3 of {{RFC7049}}).
-
-Hash chain tokens and their use are specified in the appropriate subsection of
-this section for the given algorithm identifier.
 
 Signatures in RAINS are generated over a normalized serialized CBOR object (a
 Message; or an Assertion, Shard, or Zone section body). To normalize and
@@ -923,12 +1151,10 @@ The following algorithms are supported:
 
 {: #tabsig title="Defined signature algorithms"}
 
-| Code | Signatures | Hash/HMAC | Format               | Revocation Token       |
-|-----:|------------|-----------|----------------------|------------------------|
-| 2    | ecdsa-256  | sha-256   | See {{ecdsa-format}} | None                   |
-| 3    | ecdsa-384  | sha-384   | See {{ecdsa-format}} | None                   |
-| 4    | ecdsa-256  | sha-256   | See {{ecdsa-format}} | See {{hash-chain-rev}} |
-| 5    | ecdsa-384  | sha-384   | See {{ecdsa-format}} | See {{hash-chain-rev}} |
+| Code | Signatures | Hash/HMAC | Format               |
+|-----:|------------|-----------|----------------------|
+| 2    | ecdsa-256  | sha-256   | See {{ecdsa-format}} |
+| 3    | ecdsa-384  | sha-384   | See {{ecdsa-format}} |
 
 ### ECDSA signature and public key format {#ecdsa-format}
 
@@ -955,48 +1181,11 @@ ECDSA-384 signatures and public keys use the P-384 curve as defined in {{FIPS-18
 
 All RAINS servers MUST implement ECDSA-256 and ECDSA-384.
 
-### Hash-chain based revocation {#hash-chain-rev}
-
-Hash-chain based revocation allows a signature (and the Assertion, Shard, or
-Zone it protects) to be replaced before it expires. To use hash-chain based
-revocation, a signing entity generates a hash chain from a known seed using
-the hash function specified by the signature algorithm in use, and places the
-Nth value derived therefrom in the hash chain revocation token on a signature.
-When used, this token appears as a byte array after the signature data in the
-signature array.
-
-A revocation can be issued by generating a new section and signing it,
-revealing the N-1st value from the hash chain in the revocation token. To
-allow a recipient of a revoked section to verify the revocation, the following
-restrictions on what can replace what apply:
-
-- An Assertion can only be replaced by another Assertion with the same 
-  Subject within the same Context and Zone, containing an Objects array 
-  of the same length containing the same types of Objects. To delete Object 
-  values, those values can be replaced with Null in the replacing Assertion.
-- A Shard can only be replaced by another Shard with an identical shard-range 
-  key, within the same Context and Zone. Incomplete Shards cannot be replaced.
-- A Zone can only be replaced by another Zone with an identical name within 
-  the same Context.
-
-## Certificate information format {#cbor-certinfo}
-
-[EDITOR'S NOTE: Not yet defined. Write me. This should be largely in line with
-TLSA; determine if there's any guidance from implementation experience we
-should consider, as well.]
-
-## Name expression format {#cbor-nameset}
-
-[EDITOR'S NOTE: Not yet defined. Write me. For discussion within the INIP. 
-The expression language is primarily intended to solve the same problem the
-IDNA tables to -- acceptable character sets and character set mixing --
-although a general-purpose expression language that allows arbitrary matching
-of whole names would be more flexible.]
-
 ## Capabilities {#cbor-capabilities}
 
-When a RAINS server or client sends the first message in a stream to a peer, it MAY expose optional
-capabilities to its peer using the capabilities (1) key. This key contains either:
+When a RAINS server or client sends the first message in a stream to a peer,
+it MAY expose optional capabilities to its peer using the capabilities (1)
+key. This key contains either:
 
 - an array of uniform resource names specifying capabilities supported by the
   sending server, taken from the table below, with each name encoded as a
@@ -1034,16 +1223,17 @@ named zone) or from external configuration values.
 
 # RAINS Protocol Definition {#protocol-def}
 
-As noted in {{cbor}}, RAINS is a message-exchange protocol that uses
-CBOR {{RFC7049}} as its framing. Since CBOR is self-framing -- a CBOR parser
-can determine when a CBOR object is complete at the point at which it has read
-its final byte -- RAINS requires no external framing. It can therefore run
-over any streaming, multistreaming, or message-oriented transport protocol. In
+As noted in {{cbor}}, RAINS is a message-exchange protocol that uses CBOR
+{{RFC7049}} as its framing. Since CBOR is self-framing -- a CBOR parser can
+determine when a CBOR object is complete at the point at which it has read its
+final byte -- RAINS requires no external framing. It can therefore run over
+any streaming, multistreaming, or message-oriented transport protocol. In
 order to protect query confidentiality, and support rapid deployment over a
 ubiquitously implemented transport, RAINS is defined in this document to run
 over persistent TLS 1.2 connections {{RFC5246}} over TCP {{RFC0793}} with
-mutual authentication. The TLS certificates of RAINS server peers can be
-verified as specified in the certificate assertions for those servers.
+mutual authentication between servers, and authentication of servers by
+clients. The TLS certificates of RAINS server peers can be verified as
+specified in the cert-info assertions for those servers.
 
 RAINS servers MUST support this transport; future transports can be negotiated
 using the capabilities mechanism after bootstrapping using TLS 1.2. As RAINS
@@ -1062,9 +1252,13 @@ in {{protocol-client}}.
 ## Message processing {#protocol-processing}
 
 Once a transport is established, any server may validly send a message with
-any content to any other server. Upon receipt of a message, a server parses it, and:
+any content to any other server. A client may send messages containing queries
+to servers, and a server may sent messages containing anything other than
+queries to clients.
 
-- notes the token on the message. If present, the token MUST be present on any
+Upon receipt of a message, a server or client parses it, and:
+
+- notes the token on the message. This token MUST be present on any
   messages sent in reply to this message.
 - processes any capabilities present, replacing the set of capabilities known
   for the peer with the set present in the message. If the present
@@ -1074,21 +1268,26 @@ any content to any other server. Upon receipt of a message, a server parses it, 
 - splits the contents into its constituent message sections, processing them
   independently.
 
-On receipt of an assertion, shard, or zone message section, the server:
+On receipt of an assertion, shard, or zone message section, a server:
 
 - verifies its consistency (see {{runtime-consistency-checking}}). If the
   section is not consistent, it prepares to send a notification of type 403
   Inconsistent Message to the peer, and discards the section. Otherwise, it:
 - determines whether it answers an outstanding query; if so, it prepares to
   forward the section to the server that issued the query.
-- determines whether it replaces any information presently in its cache (see
-  {{hash-chain-rev}}). If so, it discards the old information, and caches the
-  new section.
 - determines whether it is likely to answer a future query, according to its 
   configuration, policy, and query history; if so, it caches the section.
 
-On receipt of a query, the server:
+On receipt of an assertion, shard, or zone message section, a client:
 
+- determines whether it answers an outstanding query; if so, it considers the query answered. It then:
+- determines whether it is likely to answer a future query, according to its 
+  configuration, policy, and query history; if so, it caches the section.
+
+On receipt of a query, a server:
+
+- determines whether it has expired by checking the query-expires value. 
+  If so, it drops the query silently. If not, it:
 - determines whether it has a stored assertion, shard, and/or zone message
   section which answers the query. If so, it prepares to return the most
   specific such section with the signature of the longest remaining validity to the
@@ -1097,7 +1296,7 @@ On receipt of a query, the server:
   so, and if option 5 (expired assertions acceptable) is also specified, it
   then checks to see if it has any cached sections that answer the query on
   which signatures are expired; otherwise, processing stops. If the query does
-  not specify option 4, delegation proceeds as follows:
+  not specify option 4, delegation proceeds as follows: the server:
 - determines whether it has other non-authoritative servers it can forward the
   query to, according to its configuration and policy, and in compliance with
   any query options (see {{cbor-query}}). If so, it prepares to forward the
@@ -1115,11 +1314,18 @@ response to the peer from which it received the query.
 When a server creates a new query to forward to another server in response to
 a query it received, it SHOULD NOT use the same token on the delegated query
 as on the received query, unless option 6 Enable Tracing is present in the
-received , in which case it MUST use the same token. The Enable Tracing option
-is designed to allow debugging of query processing across multiple servers,
-and MUST NOT be enabled by default.
+received, in which case it MUST use the same token. The Enable Tracing option
+is designed to allow debugging of query processing across multiple servers, It
+SHOULD only be enabled by clients designed explicitly for debugging RAINS
+itself, and MUST NOT be enabled by default by client resolvers.
 
-On receipt of a notification, the server's behavior depends on the notification type:
+When a server creates a new query to forward to another server in response to
+a query it received, and the received query contains a query-expires time, the
+delegated query MUST contain the same query-expires time. If the received
+query contains no query-expires time, the delegated query MAY contain a query-
+expires time of the server's choosing, according to its configuration.
+
+On receipt of a notification, a server's behavior depends on the notification type:
 
 - For type 100 "Connection Heartbeat", the server does nothing: these null
   messages are used to keep long-lived connections open in the presence of
@@ -1137,9 +1343,27 @@ On receipt of a notification, the server's behavior depends on the notification 
   implementation or configuration error conditions which will require human
   intervention to mitigate.
 
-The first message a server sends to a peer after a new connection is
-established SHOULD contain a capabilities section, if the server supports any
-optional capabilities. See {{cbor-capabilities}}.
+On receipt of a notification, a client's behavior depends on the notification type:
+
+- For type 100 "Connection Heartbeat", the client does nothing, as above.
+- For type 399 "Capability hash not understood", the client prepares to send a
+  full capabilities list on the next message it sends to the peer.
+- For type 404 "No assertion exists", the client takes the query to be
+  unanswerable. It may reissue the query with query option 7 to do the
+  verification of nonexistence again, if the server from which it received the
+  notification is untrusted.
+- For type 413 "Message too large" the client notes that large messages may 
+  not be sent to a peer and tries again (see {{protocol-limits}}), or logs
+  the error along with the note-data content.
+- For type 400 "Malformed message", type 403 "Inconsistent message", type 500
+  "Server error", or type 501 "Server not capable", the client logs the error
+  along with the note-data content, as these notifications generally represent
+  implementation or configuration error conditions which will require human
+  intervention to mitigate.
+
+The first message a server or client sends to a peer after a new connection is
+established SHOULD contain a capabilities section, if the server or client
+supports any optional capabilities. See {{cbor-capabilities}}.
 
 If the server is configured to keep long-running connections open, due to the
 presence of network behaviors that may drop state for idle connections, it
@@ -1164,7 +1388,7 @@ on their configuration and policy:
 RAINS servers MUST accept messages up to 65536 bytes in length, but MAY accept
 messages of greater length, subject to resource limitations of the server. A
 server with resource limitations MUST respond to a message rejected due to
-length restrictions with a notification of type 414 (Message Too Large). A
+length restrictions with a notification of type 413 (Message Too Large). A
 server that receives a type 413 notification must note that the peer sending
 the message only accepts messages smaller than the largest message it's
 successfully sent that peer, or cap messages to that peer to 65536 bytes in
@@ -1177,16 +1401,20 @@ grouped into shards that will fit into 65536-byte messages, to allow servers
 to reply using these shards when full-zone transfers are not possible due to
 message size limitations.
 
-## Runtime consistency checking
+## Runtime Consistency Checking
 
 The data model used by the RAINS protocol allows inconsistent information to
 be asserted, all resulting from misconfigured or misbehaving authority
-servers. For example, a shard valid at a given point in time can be marked
-lexically complete, but not contain an assertion within its lexical range,
-which is also valid at that point. This would allow both proof of the presence
-and absence of an assertion at the same time, which is clearly nonsensical.
+servers. The following types of inconsistency are possible:
 
-RAINS relies on runtime consistency checking to mitigate this problem: each
+- A lexically complete shard may omit an assertion within its shard-range
+  which is valid at the same time as the shard.
+- A zone may omit an assertion within its zone which is valid at the same time
+  as the zone.
+- An assertion prohibited by its zone's nameset may be valid at the same time
+  as the zone's nameset assertion.
+
+RAINS relies on runtime consistency checking to mitigate inconsistency: each
 server receiving an assertion, shard, or zone SHOULD, subject to resource
 constraints, ensure that it is consistent with other information it has, and
 if not, discard all assertions, shards, and zones in its cache, log the error,
@@ -1223,7 +1451,8 @@ specific clients.
 # RAINS Client Protocol {#protocol-client}
 
 The protocol used by clients to issue queries to and receive responses from an
-query service is a subset of the full RAINS protocol, with the following differences:
+query service is a subset of the full RAINS protocol, with the following
+differences:
 
 - Clients only process assertion, shard, zone, and notification sections;
   sending a query to a client results in a 400 Malformed Message notification.
@@ -1236,30 +1465,27 @@ query service is a subset of the full RAINS protocol, with the following differe
 Since signature verification is resource-intensive, clients delegate signature
 verification to query servers by default. The query server signs the message
 containing results for a query using its own key (published as an infrakey
-object associated with the query server's name), and a validity time corresponding
-to the signature it verified with the longest lifetime, stripping other
-signatures from the reply. This behavior can be disabled by a client by
-specifying query option 7, allowing the client to do its own verification.
+object associated with the query server's name), and a validity time
+corresponding to the signature it verified with the longest lifetime,
+stripping other signatures from the reply. This behavior can be disabled by a
+client by specifying query option 7, allowing the client to do its own
+verification.
 
 # Deployment Considerations
 
 The following subsections discuss issues that must be considered in any
 deployment of RAINS at scale.
 
-## Assertion lifetime management
+## Assertion Lifetime Management
 
 An assertion can contain multiple signatures, each with a different lifetime.
 Signature lifetimes are equivalent to a time to live in the present DNS:
 authorities should compute a new signature for each validity period, and make
 these new signatures available when old ones are expiring.
 
-If an unexpected change to an assertion is necessary, the hash chain based
-replacement mechanism described in {{hash-chain-rev}} provides a way for an
-authority to replace signed assertions with new information or with Null
-objects, in the case of deletion.
-
 Since assertion lifetime management is based on a real-time clock expressed in
-UTC, RAINS servers MUST use a clock synchronization protocol such as NTP {{RFC5905}}.
+UTC, RAINS servers MUST use a clock synchronization protocol such as NTP
+{{RFC5905}}.
 
 ## Secret Key Management
 
@@ -1276,6 +1502,14 @@ being necessary, authority servers have an additional signer interface, from
 which they will accept and cache any assertion, shard, or zone for which they
 are authority servers until at least the end of validity of the last
 signature, provided the signature is verifiable.
+
+## Unsigned Contained Assertions
+
+Although RAINS supports Shards and Zones containing unsigned assertions,
+protecting the integrity of those Assertions by the signature on the Shard or
+Zone, it is RECOMMENDED that authorities sign each Assertion, even those
+contained within a Shard or Zone, in order to minimize the size of positive
+answers to queries.
 
 ## Query Service Discovery
 
@@ -1403,14 +1637,77 @@ details.
 
 # Acknowledgments
 
-Thanks to Daniele Asoni, Laurent Chuat, Ted Hardie, Joe Hildebrand, Tobias
-Klausmann, Steve Matsumoto, Adrian Perrig, Raphael Reischuk, Stephen Shirley,
-Andrew Sullivan, and Suzanne Woolf for the discussions leading to the design
-of this protocol.
+Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Ted Hardie, Joe
+Hildebrand, Tobias Klausmann, Steve Matsumoto, Adrian Perrig, Raphael
+Reischuk, Stephen Shirley, Andrew Sullivan, and Suzanne Woolf for the
+discussions leading to the design of this protocol.
 
 --- back
 
+# Directions for future experimentation
+
+The following features were suggested during the design of RAINS, but have
+been left out of the current revision of the specification to allow additional
+experimentation with them before they are completely specified.
+
+## Revocation based on hash chains {#hash-chain-rev}
+
+RAINS assertions are scoped in temporal validity by the lifetimes on their
+signatures. This is operationally equivalent to TTL in the current DNS. An
+assertion which becomes invalid can simply not be renewed by its authority.
+However, very dynamic infrastructures may require impractical numbers of
+signatures, and could benefit from longer validity times. Allowing an
+assertion to be revoked would make this possible.
+
+Hash-chain based revocation allows a signature (and the Assertion, Shard, or
+Zone it protects) to be replaced before it expires. To use hash-chain based
+revocation, a signing entity generates a hash chain from a known seed using
+the hash function specified by the signature algorithm in use, and places the
+Nth value derived therefrom in the hash chain revocation token on a signature.
+When used, this token appears as a byte array after the signature data in the
+signature array.
+
+A revocation can be issued by generating a new section and signing it,
+revealing the N-1st value from the hash chain in the revocation token. To
+allow a recipient of a revoked section to verify the revocation, the following
+restrictions on what can replace what apply:
+
+- An Assertion can only be replaced by another Assertion with the same 
+  Subject within the same Context and Zone, containing an Objects array 
+  of the same length containing the same types of Objects. To delete Object 
+  values, those values can be replaced with Null in the replacing Assertion.
+- A Shard can only be replaced by another Shard with an identical shard-range 
+  key, within the same Context and Zone. Incomplete Shards cannot be replaced.
+- A Zone can only be replaced by another Zone with an identical name within 
+  the same Context.
+
+Two codepoints have been reserved to support experimentation with this mechanism, as shown in {{tabsigrev}}. 
+
+{: #tabsigrev title="Defined signature algorithms"}
+
+| Code | Signatures | Hash/HMAC | Format               | Revocation |
+|-----:|------------|-----------|----------------------|------------|
+| 23   | ecdsa-256  | sha-256   | See {{ecdsa-format}} | hash-chain |
+| 24   | ecdsa-384  | sha-384   | See {{ecdsa-format}} | hash-chain |
+
+The main open question for experimentation is how to ensure that a revocation
+is properly propagated through a RAINS infrastructure; this may require
+protocol changes to work reliably.
+
+To support this experiment, a server must additionally evaluate an assertion
+it receives to determine whether it replaces any information presently in its
+cache. If so, it discards the old information, and caches the new section.
+
 # Open Issues
 
-- The format of the nameset and certinfo object types needs to be specified.
 - A method for clients to discover local oracles needs to be specified.
+- Reverse DNS must be added. Instead of in-addr.arpa., the RAINS facility
+  should treat reverse lookups as first-order, with subject-address instead of
+  subject-name in assertions and queries.
+- Consider making negative answers less expensive by allowing a hash of a
+  shard with a negative answer proof to be sent back, and checked with a "no
+  hashed negative answers" query option. This would increase complexity
+  somewhat, because it would require the (re-)addition of an Answer section,
+  which could contain such a beast.
+- Consider adding semantics to note-data for automated reaction to an error.
+  Specifically, notification codes 400, 403, and 413 could use additional data.
