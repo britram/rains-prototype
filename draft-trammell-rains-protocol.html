@@ -7,7 +7,7 @@
 
   <title>RAINS (Another Internet Naming Service) Protocol Specification</title>
 
-  <style type="text/css">/*<![CDATA[*/
+<style type="text/css">/*<![CDATA[*/
 @viewport {
   zoom: 1.0;
   width: extend-to-zoom;
@@ -265,7 +265,7 @@ li, p {
   .github-fork-ribbon-wrapper {
     position: fixed;
   }
-  /*]]>*/</style>
+/*]]>*/</style>
 
   <link href="#rfc.toc" rel="Contents"/>
 <link href="#rfc.section.1" rel="Chapter" title="1 Introduction"/>
@@ -697,8 +697,8 @@ li, p {
     </tr>
     <tr>
       <td class="right">5</td>
-      <td class="left">query-name</td>
-      <td class="left">Qualified subject name in a query</td>
+      <td class="left">subject-addr</td>
+      <td class="left">Subject address in address assertion or zone</td>
     </tr>
     <tr>
       <td class="right">6</td>
@@ -712,18 +712,18 @@ li, p {
     </tr>
     <tr>
       <td class="right">8</td>
+      <td class="left">query-name</td>
+      <td class="left">Fully qualified name for a query</td>
+    </tr>
+    <tr>
+      <td class="right">9</td>
       <td class="left">query-contexts</td>
       <td class="left">Contexts acceptable in query answers</td>
     </tr>
     <tr>
-      <td class="right">9</td>
+      <td class="right">10</td>
       <td class="left">query-types</td>
       <td class="left">Acceptable object types for query</td>
-    </tr>
-    <tr>
-      <td class="right">10</td>
-      <td class="left">query-opts</td>
-      <td class="left">Set of query options requested</td>
     </tr>
     <tr>
       <td class="right">11</td>
@@ -736,9 +736,9 @@ li, p {
       <td class="left">Absolute timestamp for query expiration</td>
     </tr>
     <tr>
-      <td class="right">20</td>
-      <td class="left">subject-addr</td>
-      <td class="left">Subject address in reverse assertion or zone</td>
+      <td class="right">13</td>
+      <td class="left">query-opts</td>
+      <td class="left">Set of query options requested</td>
     </tr>
     <tr>
       <td class="right">21</td>
@@ -848,10 +848,10 @@ li, p {
 <p id="rfc.section.5.6.p.4">The value of the subject-zone (4) key is a UTF-8 encoded string containing the name of the Zone.</p>
 <p id="rfc.section.5.6.p.5">The value of the context (6) key is a UTF-8 encoded string containing the name of the context for which the Zone is valid.</p>
 <h1 id="rfc.section.5.7"><a href="#rfc.section.5.7">5.7.</a> <a href="#cbor-query" id="cbor-query">Query Message Section body</a></h1>
-<p id="rfc.section.5.7.p.1">A Query body is a map. Queries MUST contain the the token (2), query-name (5), query-contexts (8), and query-types (9) keys. Queries MAY contain query-opts (10) and query-expires (12) keys.</p>
+<p id="rfc.section.5.7.p.1">A Query body is a map. Queries MUST contain the the token (2), query-name (8), query-contexts (9), and query-types (10) keys. Queries MAY contain query-opts (13) and query-expires (12) keys.</p>
 <p id="rfc.section.5.7.p.2">The value of the token (2) key, is a byte array off maximum length 32. Future messages or notifications containing answers to this query MUST contain this token, if present. See <a href="#cbor-tokens">Section 5.13</a>.</p>
-<p id="rfc.section.5.7.p.3">The value of the query-name (5) key is a UTF-8 encoded string containing the fully qualified name that is the subject of the query.</p>
-<p id="rfc.section.5.7.p.4">The value of the query-contexts (8) key is an allowable context expression, as an array of context names as UTF-8 encoded strings. The allowable context expression is evaluated in-order, as follows:</p>
+<p id="rfc.section.5.7.p.3">The value of the query-name (8) key is a UTF-8 encoded string containing the fully qualified name that is the subject of the query.</p>
+<p id="rfc.section.5.7.p.4">The value of the query-contexts (9) key is an allowable context expression, as an array of context names as UTF-8 encoded strings. The allowable context expression is evaluated in-order, as follows:</p>
 <p/>
 
 <ul>
@@ -869,8 +869,9 @@ li, p {
   <li>[&#8217;.&#8217;, cx&#8211;0-.cx&#8211;.inf.ethz.ch.&#8217;, &#8216;cx&#8211;any-&#8216;] means that answers in any context except &#8216;cx&#8211;.inf.ethz.ch.&#8217; are acceptable, with the global context preferred.</li>
 </ul>
 <p id="rfc.section.5.7.p.8">An empty context array in a query is taken to be equivalent to an array containing only [&#8217;.&#8217;, &#8216;cx&#8211;any-&#8216;]; i.e. any context acceptable, global context preferred.</p>
-<p id="rfc.section.5.7.p.9">The value of the query-types (9) key is an array of integers encoding the type(s) of objects (as in <a href="#cbor-object">Section 5.12</a>) acceptable in answers to the query.  All values in the query-type array are treated at equal priority: [2,3] means the querier is equally interested in both IPv4 and IPv6 addresses for the query-name. An empty query-types array indicates that objects of any type are acceptable in answers to the query.</p>
-<p id="rfc.section.5.7.p.10">The value of the query-opts (10) key, if present, is an array of integers in priority order of the querier&#8217;s preferences in tradeoffs in answering the query, as in <a href="#tabqopts">Table 3</a>.</p>
+<p id="rfc.section.5.7.p.9">The value of the query-types (10) key is an array of integers encoding the type(s) of objects (as in <a href="#cbor-object">Section 5.12</a>) acceptable in answers to the query.  All values in the query-type array are treated at equal priority: [2,3] means the querier is equally interested in both IPv4 and IPv6 addresses for the query-name. An empty query-types array indicates that objects of any type are acceptable in answers to the query.</p>
+<p id="rfc.section.5.7.p.10">The value of the query-expires (12) key, if present, is a CBOR integer counting seconds since the UNIX epoch UTC, identified with tag value 1 and encoded as in section 2.4.1 of <a href="#RFC7049">[RFC7049]</a>. After the query-expires time, the query will have been considered not answered by the original issuer.</p>
+<p id="rfc.section.5.7.p.11">The value of the query-opts (13) key, if present, is an array of integers in priority order of the querier&#8217;s preferences in tradeoffs in answering the query, as in <a href="#tabqopts">Table 3</a>.</p>
 <div id="rfc.table.3"/>
 <div id="tabqopts"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -916,13 +917,19 @@ li, p {
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.5.7.p.11">Options 1-5 specify performance/privacy tradeoffs. Each server is free to determine how to minimize each performance metric requested; however, servers MUST NOT generate queries to other servers if &#8220;no information leakage&#8221; is specified, and servers MUST NOT return expired assertions unless &#8220;expired assertions acceptable&#8221; is specified.</p>
-<p id="rfc.section.5.7.p.12">Option 6 specifies that a given token (see <a href="#cbor-tokens">Section 5.13</a>) should be used on all queries resulting from a given query, allowing traceability through an entire RAINS infrastructure. It is meant for debugging purposes.</p>
-<p id="rfc.section.5.7.p.13">By default, a client service will perform verification of negative queries and return a 404 No Assertion Exists for queries with a consistent proof of non- existence, within a message signed by the query service&#8217;s infrakey. Option 7 disables this behavior, and causes the query service to return the shard proving nonexistence for verification by the client. It is intended to be used with untrusted query services.</p>
-<p id="rfc.section.5.7.p.14">Option 8 specifies that a querier&#8217;s interest in a query is strictly ephemeral, and that future assertions related to this query SHOULD NOT be proactively pushed to the querier.</p>
-<p id="rfc.section.5.7.p.15">The value of the query-expires (12) key, if present, is a CBOR integers counting seconds since the UNIX epoch UTC, identified with tag value 1 and encoded as in section 2.4.1 of <a href="#RFC7049">[RFC7049]</a>. After the query-expires time, the query will have been considered not answered by the original issuer.</p>
+<p id="rfc.section.5.7.p.12">Options 1-5 specify performance/privacy tradeoffs. Each server is free to determine how to minimize each performance metric requested; however, servers MUST NOT generate queries to other servers if &#8220;no information leakage&#8221; is specified, and servers MUST NOT return expired assertions unless &#8220;expired assertions acceptable&#8221; is specified.</p>
+<p id="rfc.section.5.7.p.13">Option 6 specifies that a given token (see <a href="#cbor-tokens">Section 5.13</a>) should be used on all queries resulting from a given query, allowing traceability through an entire RAINS infrastructure. It is meant for debugging purposes.</p>
+<p id="rfc.section.5.7.p.14">By default, a client service will perform verification of negative queries and return a 404 No Assertion Exists for queries with a consistent proof of non- existence, within a message signed by the query service&#8217;s infrakey. Option 7 disables this behavior, and causes the query service to return the shard proving nonexistence for verification by the client. It is intended to be used with untrusted query services.</p>
+<p id="rfc.section.5.7.p.15">Option 8 specifies that a querier&#8217;s interest in a query is strictly ephemeral, and that future assertions related to this query SHOULD NOT be proactively pushed to the querier.</p>
 <h1 id="rfc.section.5.8"><a href="#rfc.section.5.8">5.8.</a> <a href="#cbor-revassert" id="cbor-revassert">Address Assertion Message Section body</a></h1>
-<p id="rfc.section.5.8.p.1">[EDITOR&#8217;S NOTE write me]</p>
+<p id="rfc.section.5.8.p.1">An Address Assertion body is a map. The keys present in this map depend on whether the Assertion is contained in a Message Section or in an Address Zone.</p>
+<p id="rfc.section.5.8.p.2">Address Assertions contained in Message Sections are &#8220;bare Address Assertions&#8221;, and MUST contain the signatures (0), subject-addr (5), context (6), and objects (7) keys.</p>
+<p id="rfc.section.5.8.p.3">Address Assertions contained in an Address Zone are &#8220;contained Address Assertions&#8221;, and can inherit their context from and be signed within their containing Zone. A contained Address Assertion MUST contain the subject-addr (5) and objects (7) keys. It MAY contain the context (6) key, but in this case the value of this keys MUST be identical to the value in the containing Address Zone.</p>
+<p id="rfc.section.5.8.p.4">A contained Address Assertion SHOULD contain the signatures (0) key, since an unsigned contained Address Assertion cannot be used by a RAINS server to answer a query; it must be returned in a signed Address Zone.</p>
+<p id="rfc.section.5.8.p.5">The value of the signatures (0) key, if present, is an array of one or more Signatures as defined in <a href="#cbor-signature">Section 5.14</a>. If not present, the containing Address Zone MUST be signed. Signatures on a contained Address Assertion are generated as if the inherited context value are present in the Assertion, whether actually present or not. The signatures on the Assertion are to be verified against the appropriate key for the Address Zone containing the Assertion in the given context, as described in <a href="#signatures-in-assertions">Section 4.1.2</a>.</p>
+<p id="rfc.section.5.8.p.6">The value of the subject-addr (5) key is a three element CBOR array. The first element of the array is the address family encoded as an object type, 2 for IPv6 addresses and 3 for IPv4 addresses. The second element is the prefix length encoded as an integer, 0-128 for IPv6 and 0-32 for IPv4. The third element is the address, encoded as in <a href="#cbor-object">Section 5.12</a>. Subject addresses with the maximum prefix length for the address family are subject host addresses, and are nameable; subject addresses with less than the maximum prefix length are subject network addresses, and are delegatable.</p>
+<p id="rfc.section.5.8.p.7">The value of the context (6) key, if present, is a UTF-8 string containing the name of the context in which the Address Assertion is valid. If not present, the context of the Address Assertion is inherited from the containing Address Zone. See <a href="#context-in-address-assertions">Section 4.3.1</a>.</p>
+<p id="rfc.section.5.8.p.8">The value of the objects (7) key is an array of objects, as defined in <a href="#cbor-object">Section 5.12</a>. Only object types redirection, delegation, and registrant are available for subject network addresses, and only object type name is available for subject host addresses.</p>
 <h1 id="rfc.section.5.9"><a href="#rfc.section.5.9">5.9.</a> <a href="#cbor-revzone" id="cbor-revzone">Address Zone Message Section body</a></h1>
 <p id="rfc.section.5.9.p.1">[EDITOR&#8217;S NOTE write me]</p>
 <h1 id="rfc.section.5.10"><a href="#rfc.section.5.10">5.10.</a> <a href="#cbor-revquery" id="cbor-revquery">Address Query Message Section body</a></h1>
@@ -1623,7 +1630,7 @@ li, p {
 
 <ul>
   <li>A method for clients to discover local oracles needs to be specified.</li>
-  <li>Reverse DNS must be added. Instead of in-addr.arpa., the RAINS facility should treat reverse lookups as first-order, with subject-address instead of subject-name in assertions and queries.</li>
+  <li>Reverse DNS must be added. Instead of in-addr.arpa., the RAINS facility should treat reverse lookups as first-order, with subject-addr instead of subject-name in assertions and queries.</li>
   <li>Consider making negative answers less expensive by allowing a hash of a shard with a negative answer proof to be sent back, and checked with a &#8220;no hashed negative answers&#8221; query option. This would increase complexity somewhat, because it would require the (re-)addition of an Answer section, which could contain such a beast.</li>
   <li>Consider adding semantics to note-data for automated reaction to an error.  Specifically, notification codes 400, 403, and 413 could use additional data.</li>
 </ul>

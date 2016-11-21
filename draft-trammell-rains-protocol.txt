@@ -85,27 +85,27 @@ Table of Contents
      5.6.  Zone Message Section body . . . . . . . . . . . . . . . .  20
      5.7.  Query Message Section body  . . . . . . . . . . . . . . .  20
      5.8.  Address Assertion Message Section body  . . . . . . . . .  23
-     5.9.  Address Zone Message Section body . . . . . . . . . . . .  23
-     5.10. Address Query Message Section body  . . . . . . . . . . .  23
-     5.11. Notification Message Section body . . . . . . . . . . . .  23
-     5.12. Object  . . . . . . . . . . . . . . . . . . . . . . . . .  24
-       5.12.1.  Certificate information format . . . . . . . . . . .  27
-       5.12.2.  Name expression format . . . . . . . . . . . . . . .  28
-     5.13. Tokens in queries and messages  . . . . . . . . . . . . .  29
+     5.9.  Address Zone Message Section body . . . . . . . . . . . .  24
+     5.10. Address Query Message Section body  . . . . . . . . . . .  24
+     5.11. Notification Message Section body . . . . . . . . . . . .  24
+     5.12. Object  . . . . . . . . . . . . . . . . . . . . . . . . .  25
+       5.12.1.  Certificate information format . . . . . . . . . . .  28
+       5.12.2.  Name expression format . . . . . . . . . . . . . . .  29
+     5.13. Tokens in queries and messages  . . . . . . . . . . . . .  30
      5.14. Signatures, delegation keys, and RAINS infrastructure
-           keys  . . . . . . . . . . . . . . . . . . . . . . . . . .  30
-       5.14.1.  ECDSA signature and public key format  . . . . . . .  31
-     5.15. Capabilities  . . . . . . . . . . . . . . . . . . . . . .  32
-   6.  RAINS Protocol Definition . . . . . . . . . . . . . . . . . .  33
-     6.1.  Message processing  . . . . . . . . . . . . . . . . . . .  33
-     6.2.  Message Transmission  . . . . . . . . . . . . . . . . . .  37
-     6.3.  Message Limits  . . . . . . . . . . . . . . . . . . . . .  37
-     6.4.  Runtime Consistency Checking  . . . . . . . . . . . . . .  38
-     6.5.  Integrity and Confidentiality Protection  . . . . . . . .  38
-   7.  RAINS Client Protocol . . . . . . . . . . . . . . . . . . . .  39
-   8.  Deployment Considerations . . . . . . . . . . . . . . . . . .  39
-     8.1.  Assertion Lifetime Management . . . . . . . . . . . . . .  39
-     8.2.  Secret Key Management . . . . . . . . . . . . . . . . . .  40
+           keys  . . . . . . . . . . . . . . . . . . . . . . . . . .  31
+       5.14.1.  ECDSA signature and public key format  . . . . . . .  32
+     5.15. Capabilities  . . . . . . . . . . . . . . . . . . . . . .  33
+   6.  RAINS Protocol Definition . . . . . . . . . . . . . . . . . .  34
+     6.1.  Message processing  . . . . . . . . . . . . . . . . . . .  34
+     6.2.  Message Transmission  . . . . . . . . . . . . . . . . . .  38
+     6.3.  Message Limits  . . . . . . . . . . . . . . . . . . . . .  38
+     6.4.  Runtime Consistency Checking  . . . . . . . . . . . . . .  39
+     6.5.  Integrity and Confidentiality Protection  . . . . . . . .  39
+   7.  RAINS Client Protocol . . . . . . . . . . . . . . . . . . . .  40
+   8.  Deployment Considerations . . . . . . . . . . . . . . . . . .  40
+     8.1.  Assertion Lifetime Management . . . . . . . . . . . . . .  40
+     8.2.  Secret Key Management . . . . . . . . . . . . . . . . . .  41
 
 
 
@@ -114,21 +114,21 @@ Trammell                  Expires May 25, 2017                  [Page 2]
 Internet-Draft                    RAINS                    November 2016
 
 
-     8.3.  Unsigned Contained Assertions . . . . . . . . . . . . . .  40
-     8.4.  Query Service Discovery . . . . . . . . . . . . . . . . .  40
+     8.3.  Unsigned Contained Assertions . . . . . . . . . . . . . .  41
+     8.4.  Query Service Discovery . . . . . . . . . . . . . . . . .  41
      8.5.  Transition using translation between RAINS and DNS
-           information models  . . . . . . . . . . . . . . . . . . .  40
-   9.  Experimental Design and Evaluation  . . . . . . . . . . . . .  42
-   10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  42
-   11. Security Considerations . . . . . . . . . . . . . . . . . . .  43
-   12. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  43
-   13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  43
-     13.1.  Normative References . . . . . . . . . . . . . . . . . .  43
-     13.2.  Informative References . . . . . . . . . . . . . . . . .  44
-   Appendix A.  Directions for future experimentation  . . . . . . .  46
-     A.1.  Revocation based on hash chains . . . . . . . . . . . . .  46
-   Appendix B.  Open Issues  . . . . . . . . . . . . . . . . . . . .  48
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  48
+           information models  . . . . . . . . . . . . . . . . . . .  41
+   9.  Experimental Design and Evaluation  . . . . . . . . . . . . .  43
+   10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  43
+   11. Security Considerations . . . . . . . . . . . . . . . . . . .  44
+   12. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  44
+   13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  44
+     13.1.  Normative References . . . . . . . . . . . . . . . . . .  44
+     13.2.  Informative References . . . . . . . . . . . . . . . . .  45
+   Appendix A.  Directions for future experimentation  . . . . . . .  47
+     A.1.  Revocation based on hash chains . . . . . . . . . . . . .  47
+   Appendix B.  Open Issues  . . . . . . . . . . . . . . . . . . . .  49
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  49
 
 1.  Introduction
 
@@ -855,24 +855,24 @@ Internet-Draft                    RAINS                    November 2016
    |      |                |                                           |
    |    4 | subject-zone   | Zone name in an assertion                 |
    |      |                |                                           |
-   |    5 | query-name     | Qualified subject name in a query         |
+   |    5 | subject-addr   | Subject address in address assertion or   |
+   |      |                | zone                                      |
    |      |                |                                           |
    |    6 | context        | Context of an assertion                   |
    |      |                |                                           |
    |    7 | objects        | Objects of an assertion                   |
    |      |                |                                           |
-   |    8 | query-contexts | Contexts acceptable in query answers      |
+   |    8 | query-name     | Fully qualified name for a query          |
    |      |                |                                           |
-   |    9 | query-types    | Acceptable object types for query         |
+   |    9 | query-contexts | Contexts acceptable in query answers      |
    |      |                |                                           |
-   |   10 | query-opts     | Set of query options requested            |
+   |   10 | query-types    | Acceptable object types for query         |
    |      |                |                                           |
    |   11 | shard-range    | Lexical range of Assertions in Shard      |
    |      |                |                                           |
    |   12 | query-expires  | Absolute timestamp for query expiration   |
    |      |                |                                           |
-   |   20 | subject-addr   | Subject address in reverse assertion or   |
-   |      |                | zone                                      |
+   |   13 | query-opts     | Set of query options requested            |
    |      |                |                                           |
    |   21 | note-type      | Notification type                         |
    |      |                |                                           |
@@ -1111,8 +1111,8 @@ Internet-Draft                    RAINS                    November 2016
 5.7.  Query Message Section body
 
    A Query body is a map.  Queries MUST contain the the token (2),
-   query-name (5), query-contexts (8), and query-types (9) keys.
-   Queries MAY contain query-opts (10) and query-expires (12) keys.
+   query-name (8), query-contexts (9), and query-types (10) keys.
+   Queries MAY contain query-opts (13) and query-expires (12) keys.
 
 
 
@@ -1126,10 +1126,10 @@ Internet-Draft                    RAINS                    November 2016
    32.  Future messages or notifications containing answers to this
    query MUST contain this token, if present.  See Section 5.13.
 
-   The value of the query-name (5) key is a UTF-8 encoded string
+   The value of the query-name (8) key is a UTF-8 encoded string
    containing the fully qualified name that is the subject of the query.
 
-   The value of the query-contexts (8) key is an allowable context
+   The value of the query-contexts (9) key is an allowable context
    expression, as an array of context names as UTF-8 encoded strings.
    The allowable context expression is evaluated in-order, as follows:
 
@@ -1163,13 +1163,13 @@ Internet-Draft                    RAINS                    November 2016
    array containing only ['.', 'cx-any-']; i.e. any context acceptable,
    global context preferred.
 
-   The value of the query-types (9) key is an array of integers encoding
-   the type(s) of objects (as in Section 5.12) acceptable in answers to
-   the query.  All values in the query-type array are treated at equal
-   priority: [2,3] means the querier is equally interested in both IPv4
-   and IPv6 addresses for the query-name.  An empty query-types array
-   indicates that objects of any type are acceptable in answers to the
-   query.
+   The value of the query-types (10) key is an array of integers
+   encoding the type(s) of objects (as in Section 5.12) acceptable in
+   answers to the query.  All values in the query-type array are treated
+   at equal priority: [2,3] means the querier is equally interested in
+   both IPv4 and IPv6 addresses for the query-name.  An empty query-
+   types array indicates that objects of any type are acceptable in
+   answers to the query.
 
 
 
@@ -1178,7 +1178,13 @@ Trammell                  Expires May 25, 2017                 [Page 21]
 Internet-Draft                    RAINS                    November 2016
 
 
-   The value of the query-opts (10) key, if present, is an array of
+   The value of the query-expires (12) key, if present, is a CBOR
+   integer counting seconds since the UNIX epoch UTC, identified with
+   tag value 1 and encoded as in section 2.4.1 of [RFC7049].  After the
+   query-expires time, the query will have been considered not answered
+   by the original issuer.
+
+   The value of the query-opts (13) key, if present, is an array of
    integers in priority order of the querier's preferences in tradeoffs
    in answering the query, as in Table 3.
 
@@ -1220,12 +1226,6 @@ Internet-Draft                    RAINS                    November 2016
    By default, a client service will perform verification of negative
    queries and return a 404 No Assertion Exists for queries with a
    consistent proof of non- existence, within a message signed by the
-   query service's infrakey.  Option 7 disables this behavior, and
-   causes the query service to return the shard proving nonexistence for
-   verification by the client.  It is intended to be used with untrusted
-   query services.
-
-
 
 
 
@@ -1234,19 +1234,74 @@ Trammell                  Expires May 25, 2017                 [Page 22]
 Internet-Draft                    RAINS                    November 2016
 
 
+   query service's infrakey.  Option 7 disables this behavior, and
+   causes the query service to return the shard proving nonexistence for
+   verification by the client.  It is intended to be used with untrusted
+   query services.
+
    Option 8 specifies that a querier's interest in a query is strictly
    ephemeral, and that future assertions related to this query SHOULD
    NOT be proactively pushed to the querier.
 
-   The value of the query-expires (12) key, if present, is a CBOR
-   integers counting seconds since the UNIX epoch UTC, identified with
-   tag value 1 and encoded as in section 2.4.1 of [RFC7049].  After the
-   query-expires time, the query will have been considered not answered
-   by the original issuer.
-
 5.8.  Address Assertion Message Section body
 
-   [EDITOR'S NOTE write me]
+   An Address Assertion body is a map.  The keys present in this map
+   depend on whether the Assertion is contained in a Message Section or
+   in an Address Zone.
+
+   Address Assertions contained in Message Sections are "bare Address
+   Assertions", and MUST contain the signatures (0), subject-addr (5),
+   context (6), and objects (7) keys.
+
+   Address Assertions contained in an Address Zone are "contained
+   Address Assertions", and can inherit their context from and be signed
+   within their containing Zone.  A contained Address Assertion MUST
+   contain the subject-addr (5) and objects (7) keys.  It MAY contain
+   the context (6) key, but in this case the value of this keys MUST be
+   identical to the value in the containing Address Zone.
+
+   A contained Address Assertion SHOULD contain the signatures (0) key,
+   since an unsigned contained Address Assertion cannot be used by a
+   RAINS server to answer a query; it must be returned in a signed
+   Address Zone.
+
+   The value of the signatures (0) key, if present, is an array of one
+   or more Signatures as defined in Section 5.14.  If not present, the
+   containing Address Zone MUST be signed.  Signatures on a contained
+   Address Assertion are generated as if the inherited context value are
+   present in the Assertion, whether actually present or not.  The
+   signatures on the Assertion are to be verified against the
+   appropriate key for the Address Zone containing the Assertion in the
+   given context, as described in Section 4.1.2.
+
+   The value of the subject-addr (5) key is a three element CBOR array.
+   The first element of the array is the address family encoded as an
+   object type, 2 for IPv6 addresses and 3 for IPv4 addresses.  The
+   second element is the prefix length encoded as an integer, 0-128 for
+   IPv6 and 0-32 for IPv4.  The third element is the address, encoded as
+   in Section 5.12.  Subject addresses with the maximum prefix length
+   for the address family are subject host addresses, and are nameable;
+
+
+
+
+Trammell                  Expires May 25, 2017                 [Page 23]
+
+Internet-Draft                    RAINS                    November 2016
+
+
+   subject addresses with less than the maximum prefix length are
+   subject network addresses, and are delegatable.
+
+   The value of the context (6) key, if present, is a UTF-8 string
+   containing the name of the context in which the Address Assertion is
+   valid.  If not present, the context of the Address Assertion is
+   inherited from the containing Address Zone.  See Section 4.3.1.
+
+   The value of the objects (7) key is an array of objects, as defined
+   in Section 5.12.  Only object types redirection, delegation, and
+   registrant are available for subject network addresses, and only
+   object type name is available for subject host addresses.
 
 5.9.  Address Zone Message Section body
 
@@ -1285,7 +1340,8 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 23]
+
+Trammell                  Expires May 25, 2017                 [Page 24]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1341,7 +1397,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 24]
+Trammell                  Expires May 25, 2017                 [Page 25]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1397,7 +1453,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 25]
+Trammell                  Expires May 25, 2017                 [Page 26]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1453,7 +1509,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 26]
+Trammell                  Expires May 25, 2017                 [Page 27]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1509,7 +1565,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 27]
+Trammell                  Expires May 25, 2017                 [Page 28]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1565,7 +1621,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 28]
+Trammell                  Expires May 25, 2017                 [Page 29]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1621,7 +1677,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 29]
+Trammell                  Expires May 25, 2017                 [Page 30]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1677,7 +1733,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 30]
+Trammell                  Expires May 25, 2017                 [Page 31]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1733,7 +1789,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 31]
+Trammell                  Expires May 25, 2017                 [Page 32]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1789,7 +1845,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 32]
+Trammell                  Expires May 25, 2017                 [Page 33]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1845,7 +1901,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 33]
+Trammell                  Expires May 25, 2017                 [Page 34]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1901,7 +1957,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 34]
+Trammell                  Expires May 25, 2017                 [Page 35]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1957,7 +2013,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 35]
+Trammell                  Expires May 25, 2017                 [Page 36]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2013,7 +2069,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 36]
+Trammell                  Expires May 25, 2017                 [Page 37]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2069,7 +2125,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 37]
+Trammell                  Expires May 25, 2017                 [Page 38]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2125,7 +2181,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 38]
+Trammell                  Expires May 25, 2017                 [Page 39]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2181,7 +2237,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 39]
+Trammell                  Expires May 25, 2017                 [Page 40]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2237,7 +2293,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 40]
+Trammell                  Expires May 25, 2017                 [Page 41]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2293,7 +2349,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 41]
+Trammell                  Expires May 25, 2017                 [Page 42]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2349,7 +2405,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 42]
+Trammell                  Expires May 25, 2017                 [Page 43]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2405,7 +2461,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 43]
+Trammell                  Expires May 25, 2017                 [Page 44]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2461,7 +2517,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 44]
+Trammell                  Expires May 25, 2017                 [Page 45]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2517,7 +2573,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 45]
+Trammell                  Expires May 25, 2017                 [Page 46]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2573,7 +2629,7 @@ A.1.  Revocation based on hash chains
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 46]
+Trammell                  Expires May 25, 2017                 [Page 47]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2629,7 +2685,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 47]
+Trammell                  Expires May 25, 2017                 [Page 48]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2641,7 +2697,7 @@ Appendix B.  Open Issues
 
    o  Reverse DNS must be added.  Instead of in-addr.arpa., the RAINS
       facility should treat reverse lookups as first-order, with
-      subject-address instead of subject-name in assertions and queries.
+      subject-addr instead of subject-name in assertions and queries.
 
    o  Consider making negative answers less expensive by allowing a hash
       of a shard with a negative answer proof to be sent back, and
@@ -2685,4 +2741,4 @@ Author's Address
 
 
 
-Trammell                  Expires May 25, 2017                 [Page 48]
+Trammell                  Expires May 25, 2017                 [Page 49]
