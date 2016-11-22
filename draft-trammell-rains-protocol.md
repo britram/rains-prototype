@@ -763,10 +763,10 @@ containing the name of the context for which the Zone is valid.
 ## Query Message Section body {#cbor-query}
 
 A Query body is a map. Queries MUST contain the the token (2), query-name (8),
-query-contexts (9), and query-types (10) keys. Queries MAY contain query-opts
-(13) and query-expires (12) keys.
+query-contexts (9), and query-types (10) keys. Queries MAY contain the query-
+expires (12) and query-opts (13) keys.
 
-The value of the token (2) key, is a byte array off maximum length
+The value of the token (2) key, is a byte array of maximum length
 32. Future messages or notifications containing answers to this query MUST
 contain this token, if present. See {{cbor-tokens}}.
 
@@ -852,7 +852,9 @@ pushed to the querier.
 
 ## Address Assertion Message Section body {#cbor-revassert}
 
-An Address Assertion body is a map. The keys present in this map depend on whether the
+Assertions about addresses are similar to assertions about names, but keyed by
+address and restricted in terms of the objects they can contain. An Address
+Assertion body is a map. The keys present in this map depend on whether the
 Assertion is contained in a Message Section or in an Address Zone.
 
 Address Assertions contained in Message Sections are "bare Address
@@ -900,11 +902,68 @@ available for subject host addresses.
 
 ## Address Zone Message Section body {#cbor-revzone}
 
-[EDITOR'S NOTE write me]
+Assertions about addresses can be grouped into zones, where all the assertions
+within the zone are contained within the zone's address. These Address Zones
+are similar to Zones containing assertions about names, but are keyed by
+network address and restricted in their semantics.
+
+An Address Zone body is a map. Zones MUST contain the content (23), signatures (0),
+subject-addr (5), and context (6) keys. 
+
+Signatures on the Zone are to be verified against the appropriate key for the
+Zone in the given context, as described in {{signatures-in-assertions}}.
+
+The value of the subject-addr (5) key is a three element CBOR array. The first
+element of the array is the address family encoded as an object type, 2 for
+IPv6 addresses and 3 for IPv4 addresses. The second element is the prefix
+length encoded as an integer, 0-127 for IPv6 and 0-31 for IPv4. The third
+element is the address, encoded as in {{cbor-object}}. Only subject network
+addresses are acceptable for Address Zones.
+
+The value of the content (23) key is an array of Address Assertion bodies as
+defined in {#cbor-revassert}. The Address Assertions within the content array
+MUST fall completely within the network designated by the subject-addr value.
+
+The value of the context (6) key is a UTF-8 encoded string
+containing the name of the context for which the Zone is valid.
 
 ## Address Query Message Section body {#cbor-revquery}
 
-[EDITOR'S NOTE write me]
+Queries for assertions about addresses are similar to queries for assertions
+about names, but have semantic restrictions similar to those for Address
+Assertions and Address Zones. An address query may have only one context.
+
+An Address Query body is a map. Queries MUST contain the the token (2), subject-addr (5),
+context (6), and query-types (10) keys. Queries MAY contain query-opts
+(13) and query-expires (12) keys.
+
+The value of the token (2) key, is a byte array of maximum length
+32. Future messages or notifications containing answers to this query MUST
+contain this token, if present. See {{cbor-tokens}}.
+
+The value of the subject-addr (5) key is a three-element CBOR array. The first
+element of the array is the address family encoded as an object type, 2 for
+IPv6 addresses and 3 for IPv4 addresses. The second element is the prefix
+length encoded as an integer, 0-128 for IPv6 and 0-32 for IPv4. The third
+element is the address, encoded as in {{cbor-object}}. 
+
+The value of the context (6) key is a UTF-8 encoded string containing the name
+of the context for which the Query is valid. Unlike queries for names, queries
+for Address Queries can only pertain to a single context.  
+See {{context-in-address-assertions}} for more.
+
+The value of the query-expires (12) key, if present, is a CBOR integer
+counting seconds since the UNIX epoch UTC, identified with tag value 1 and
+encoded as in section 2.4.1 of {{RFC7049}}. After the query-expires time, the
+query will have been considered not answered by the original issuer.
+
+The value of the query-opts (13) key, if present, is an array of integers in
+priority order of the querier's preferences in tradeoffs in answering the
+query, as in {{tabqopts}}. See {{cbor-query}} for more.
+
+Any Address Assertion relating to an address containing the address queried
+for is considered to respond to the query, with more-specific prefixes being
+preferred over less-specific.
 
 ## Notification Message Section body {#cbor-notification}
 
@@ -1115,7 +1174,7 @@ For example, the nameset expression:
 
 matches any name made up of one or more lowercase Cyrillic letters and digits. The same expression can be implemented with a range instead of a character class:
 
-[\u0400-\u04ff&&[:lower:][:digit:]]
+[\u0400-\u04ff&&[:lower:][:digit:]]+
 
 ## Tokens in queries and messages {#cbor-tokens}
 
