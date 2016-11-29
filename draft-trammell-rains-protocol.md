@@ -1818,9 +1818,6 @@ cache. If so, it discards the old information, and caches the new section.
 # Open Issues
 
 - A method for clients to discover local oracles needs to be specified.
-- Reverse DNS must be added. Instead of in-addr.arpa., the RAINS facility
-  should treat reverse lookups as first-order, with subject-addr instead of
-  subject-name in assertions and queries.
 - Consider making negative answers less expensive by allowing a hash of a
   shard with a negative answer proof to be sent back, and checked with a "no
   hashed negative answers" query option. This would increase complexity
