@@ -520,8 +520,8 @@ li, p {
   <li>Address: one or more addresses associated with the name (replaces DNS A and AAAA RTYPEs). The Object contains a set of Addresses. An Address is an {address-family, value} tuple.</li>
   <li>Service-Info: one or more layer 4 ports and hostnames associated with a service name (replaces DNS SRV RRTYPE). The object contains a {hostname, port-number, priority tuple}.</li>
   <li>Name: one or more names associated with the name (roughly equivalent to DNS CNAME). The Object contains a set of names.</li>
-  <li>Certificate: a certificate which must appear at a specified location in the certificate chain presented on a connection attempt with the named entity (roughly equivalent to DNS TLSA). The details of this type will be described in a separate document.</li>
-  <li>Zone-Nameset: an expression of the set of names allowed within a zone; e.g.  Unicode scripts or codepages in which names in the zone may be issued. This allows a zone to set policy on names in support of the distinguishability property in <a href="#I-D.trammell-inip-pins">[I-D.trammell-inip-pins]</a> that can be checked by RAINS servers at runtime. An assertion about a Subject within a Zone whose name is not allowed by a valid signed Zone-Nameset expression is taken to be invalid, even if it has a valid signature. The details of this type will be described in a separate document.</li>
+  <li>Certificate: a certificate which must appear at a specified location in the certificate chain presented on a connection attempt with the named entity (roughly equivalent to DNS TLSA).</li>
+  <li>Zone-Nameset: an expression of the set of names allowed within a zone; e.g.  Unicode scripts or codepages in which names in the zone may be issued. This allows a zone to set policy on names in support of the distinguishability property in <a href="#I-D.trammell-inip-pins">[I-D.trammell-inip-pins]</a> that can be checked by RAINS servers at runtime. An assertion about a Subject within a Zone whose name is not allowed by a valid signed Zone-Nameset expression is taken to be invalid, even if it has a valid signature.</li>
   <li>Zone-Registrar: Information about the organization that caused a Subject name to exist, for registrant-level names.</li>
   <li>Zone-Registrant: Information about the organization responsible for a Subject name, for registrant-level names.</li>
   <li>Infrastructure Key: Information about public keys used for object security within the RAINS infrastructure itself. The Object contains a public key by which a named RAINS server can be identified.</li>
@@ -600,6 +600,7 @@ li, p {
   <li>Types: a set of assertion types the querier is interested in.</li>
   <li>Valid-Until: an optional client-generated timestamp for the query after which it expires and should not be answered.</li>
   <li>Query Token: a client-generated token for the query, which can be used in the answer to refer to the query.</li>
+  <li>Options: a set of options by which a client may specify tradeoffs (e.g. privacy for performance).</li>
 </ul>
 <p id="rfc.section.4.2.p.3">A query expresses interest about all the given types of assertion in all the specified contexts; more complex expressions of which types in which contexts must be asked using multiple queries. Preferences for tradeoffs (freshness, bandwidth efficiency, latency, privacy preservation) in servicing a query may be bound to the query using query options.</p>
 <h1 id="rfc.section.4.2.1"><a href="#rfc.section.4.2.1">4.2.1.</a> <a href="#context-in-queries" id="context-in-queries">Context in Queries</a></h1>
