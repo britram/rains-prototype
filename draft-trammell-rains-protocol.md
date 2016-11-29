@@ -246,16 +246,14 @@ The Types supported for each assertion are:
   CNAME). The Object contains a set of names.
 - Certificate: a certificate which must appear at a specified location in the
   certificate chain presented on a connection attempt with the named entity
-  (roughly equivalent to DNS TLSA). The details of this type will be described 
-  in a separate document.
+  (roughly equivalent to DNS TLSA).
 - Zone-Nameset: an expression of the set of names allowed within a zone; e.g.
   Unicode scripts or codepages in which names in the zone may be issued. This
   allows a zone to set policy on names in support of the distinguishability
   property in {{I-D.trammell-inip-pins}} that can be checked by RAINS 
   servers at runtime. An assertion about a Subject within a Zone whose
   name is not allowed by a valid signed Zone-Nameset expression is taken to be
-  invalid, even if it has a valid signature. The details of this type will be
-  described in a separate document.
+  invalid, even if it has a valid signature.
 - Zone-Registrar: Information about the organization that caused a Subject name 
   to exist, for registrant-level names.
 - Zone-Registrant: Information about the organization responsible for a 
@@ -415,6 +413,8 @@ elements:
   which it expires and should not be answered.
 - Query Token: a client-generated token for the query, which can be used
   in the answer to refer to the query.
+- Options: a set of options by which a client may specify tradeoffs 
+  (e.g. privacy for performance).
 
 A query expresses interest about all the given types of assertion in all the
 specified contexts; more complex expressions of which types in which contexts
