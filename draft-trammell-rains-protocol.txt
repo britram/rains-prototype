@@ -65,47 +65,47 @@ Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   3
    2.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   4
-   3.  Architecture  . . . . . . . . . . . . . . . . . . . . . . . .   5
+   3.  Architecture  . . . . . . . . . . . . . . . . . . . . . . . .   6
    4.  Information Model . . . . . . . . . . . . . . . . . . . . . .   6
      4.1.  Assertion . . . . . . . . . . . . . . . . . . . . . . . .   6
        4.1.1.  Context in Assertions . . . . . . . . . . . . . . . .   8
        4.1.2.  Signatures in Assertions  . . . . . . . . . . . . . .   9
        4.1.3.  Shards and Zones  . . . . . . . . . . . . . . . . . .  10
+       4.1.4.  Zone-Reflexive Assertions . . . . . . . . . . . . . .  11
      4.2.  Query . . . . . . . . . . . . . . . . . . . . . . . . . .  11
-       4.2.1.  Context in Queries  . . . . . . . . . . . . . . . . .  11
-       4.2.2.  Answers to Queries  . . . . . . . . . . . . . . . . .  12
+       4.2.1.  Context in Queries  . . . . . . . . . . . . . . . . .  12
+       4.2.2.  Answers to Queries  . . . . . . . . . . . . . . . . .  13
      4.3.  Address to Object Mapping . . . . . . . . . . . . . . . .  13
-       4.3.1.  Context in Address Assertions . . . . . . . . . . . .  14
+       4.3.1.  Context in Address Assertions . . . . . . . . . . . .  15
    5.  Data Model  . . . . . . . . . . . . . . . . . . . . . . . . .  15
-     5.1.  Symbol Table  . . . . . . . . . . . . . . . . . . . . . .  15
-     5.2.  Message . . . . . . . . . . . . . . . . . . . . . . . . .  16
-     5.3.  Message Section header  . . . . . . . . . . . . . . . . .  17
-     5.4.  Assertion body  . . . . . . . . . . . . . . . . . . . . .  18
-     5.5.  Shard body  . . . . . . . . . . . . . . . . . . . . . . .  19
-     5.6.  Zone Message Section body . . . . . . . . . . . . . . . .  20
-     5.7.  Query Message Section body  . . . . . . . . . . . . . . .  20
-     5.8.  Address Assertion Message Section body  . . . . . . . . .  23
-     5.9.  Address Zone Message Section body . . . . . . . . . . . .  24
-     5.10. Address Query Message Section body  . . . . . . . . . . .  25
-     5.11. Notification Message Section body . . . . . . . . . . . .  25
-     5.12. Object  . . . . . . . . . . . . . . . . . . . . . . . . .  26
-       5.12.1.  Certificate information format . . . . . . . . . . .  29
-       5.12.2.  Name expression format . . . . . . . . . . . . . . .  30
-     5.13. Tokens in queries and messages  . . . . . . . . . . . . .  32
+     5.1.  Symbol Table  . . . . . . . . . . . . . . . . . . . . . .  16
+     5.2.  Message . . . . . . . . . . . . . . . . . . . . . . . . .  17
+     5.3.  Message Section header  . . . . . . . . . . . . . . . . .  18
+     5.4.  Assertion body  . . . . . . . . . . . . . . . . . . . . .  19
+     5.5.  Shard body  . . . . . . . . . . . . . . . . . . . . . . .  20
+     5.6.  Zone Message Section body . . . . . . . . . . . . . . . .  21
+     5.7.  Query Message Section body  . . . . . . . . . . . . . . .  21
+     5.8.  Address Assertion Message Section body  . . . . . . . . .  24
+     5.9.  Address Zone Message Section body . . . . . . . . . . . .  25
+     5.10. Address Query Message Section body  . . . . . . . . . . .  26
+     5.11. Notification Message Section body . . . . . . . . . . . .  26
+     5.12. Object  . . . . . . . . . . . . . . . . . . . . . . . . .  27
+       5.12.1.  Certificate information format . . . . . . . . . . .  30
+       5.12.2.  Name expression format . . . . . . . . . . . . . . .  31
+     5.13. Tokens in queries and messages  . . . . . . . . . . . . .  33
      5.14. Signatures, delegation keys, and RAINS infrastructure
-           keys  . . . . . . . . . . . . . . . . . . . . . . . . . .  32
-       5.14.1.  ECDSA signature and public key format  . . . . . . .  34
-     5.15. Capabilities  . . . . . . . . . . . . . . . . . . . . . .  34
-   6.  RAINS Protocol Definition . . . . . . . . . . . . . . . . . .  35
-     6.1.  Message processing  . . . . . . . . . . . . . . . . . . .  36
-     6.2.  Message Transmission  . . . . . . . . . . . . . . . . . .  39
-     6.3.  Message Limits  . . . . . . . . . . . . . . . . . . . . .  39
-     6.4.  Runtime Consistency Checking  . . . . . . . . . . . . . .  40
-     6.5.  Integrity and Confidentiality Protection  . . . . . . . .  40
-   7.  RAINS Client Protocol . . . . . . . . . . . . . . . . . . . .  41
-   8.  Deployment Considerations . . . . . . . . . . . . . . . . . .  42
-     8.1.  Assertion Lifetime Management . . . . . . . . . . . . . .  42
-     8.2.  Secret Key Management . . . . . . . . . . . . . . . . . .  42
+           keys  . . . . . . . . . . . . . . . . . . . . . . . . . .  33
+       5.14.1.  ECDSA signature and public key format  . . . . . . .  35
+     5.15. Capabilities  . . . . . . . . . . . . . . . . . . . . . .  35
+   6.  RAINS Protocol Definition . . . . . . . . . . . . . . . . . .  36
+     6.1.  Message processing  . . . . . . . . . . . . . . . . . . .  37
+     6.2.  Message Transmission  . . . . . . . . . . . . . . . . . .  40
+     6.3.  Message Limits  . . . . . . . . . . . . . . . . . . . . .  40
+     6.4.  Runtime Consistency Checking  . . . . . . . . . . . . . .  41
+     6.5.  Integrity and Confidentiality Protection  . . . . . . . .  41
+   7.  RAINS Client Protocol . . . . . . . . . . . . . . . . . . . .  42
+   8.  Deployment Considerations . . . . . . . . . . . . . . . . . .  43
+     8.1.  Assertion Lifetime Management . . . . . . . . . . . . . .  43
 
 
 
@@ -114,21 +114,22 @@ Trammell                  Expires June 2, 2017                  [Page 2]
 Internet-Draft                    RAINS                    November 2016
 
 
-     8.3.  Unsigned Contained Assertions . . . . . . . . . . . . . .  42
-     8.4.  Query Service Discovery . . . . . . . . . . . . . . . . .  42
+     8.2.  Secret Key Management . . . . . . . . . . . . . . . . . .  43
+     8.3.  Unsigned Contained Assertions . . . . . . . . . . . . . .  43
+     8.4.  Query Service Discovery . . . . . . . . . . . . . . . . .  43
      8.5.  Transition using translation between RAINS and DNS
-           information models  . . . . . . . . . . . . . . . . . . .  43
-   9.  Experimental Design and Evaluation  . . . . . . . . . . . . .  44
-   10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  45
-   11. Security Considerations . . . . . . . . . . . . . . . . . . .  45
-   12. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  45
-   13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  46
-     13.1.  Normative References . . . . . . . . . . . . . . . . . .  46
-     13.2.  Informative References . . . . . . . . . . . . . . . . .  47
-   Appendix A.  Directions for future experimentation  . . . . . . .  48
-     A.1.  Revocation based on hash chains . . . . . . . . . . . . .  49
-   Appendix B.  Open Issues  . . . . . . . . . . . . . . . . . . . .  50
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  50
+           information models  . . . . . . . . . . . . . . . . . . .  44
+   9.  Experimental Design and Evaluation  . . . . . . . . . . . . .  45
+   10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  46
+   11. Security Considerations . . . . . . . . . . . . . . . . . . .  46
+   12. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  46
+   13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  47
+     13.1.  Normative References . . . . . . . . . . . . . . . . . .  47
+     13.2.  Informative References . . . . . . . . . . . . . . . . .  48
+   Appendix A.  Directions for future experimentation  . . . . . . .  49
+     A.1.  Revocation based on hash chains . . . . . . . . . . . . .  50
+   Appendix B.  Open Issues  . . . . . . . . . . . . . . . . . . . .  51
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  51
 
 1.  Introduction
 
@@ -161,7 +162,6 @@ Internet-Draft                    RAINS                    November 2016
    o  All assertions have validity within a specific context.  A context
       determines the rules for chaining signatures to verify validity of
       an assertion.  The global context is a special case of context,
-      which uses chains from the global naming root key.  The use of
 
 
 
@@ -170,6 +170,7 @@ Trammell                  Expires June 2, 2017                  [Page 3]
 Internet-Draft                    RAINS                    November 2016
 
 
+      which uses chains from the global naming root key.  The use of
       context explicitly separates global usage of the DNS from local
       usage thereof, and allows other application-specific naming
       constraints to be bound to names; see Section 4.1.1.  Queries are
@@ -216,8 +217,7 @@ Internet-Draft                    RAINS                    November 2016
 
    o  Subject: The name to which an assertion pertains.
 
-   o  Object: A type/value pair of information about a name within an
-      assertion.
+
 
 
 
@@ -225,6 +225,9 @@ Trammell                  Expires June 2, 2017                  [Page 4]
 
 Internet-Draft                    RAINS                    November 2016
 
+
+   o  Object: A type/value pair of information about a name within an
+      assertion.
 
    o  Query: An expression of interest in certain types of objects
       pertaining to a subject name in one or more contexts.  See
@@ -267,12 +270,9 @@ Internet-Draft                    RAINS                    November 2016
       RAINS Servers to retrieve assertions on behalf of applications
       that wish to connect to named services in the Internet.
 
-3.  Architecture
 
-   The RAINS architecture is simple, and resembles the architecture of
-   DNS.  A RAINS Server is an entity that provides transient and/or
-   permanent storage for assertions about names, and a lookup function
-   that finds assertions for a given query about a name, either by
+
+
 
 
 
@@ -282,6 +282,12 @@ Trammell                  Expires June 2, 2017                  [Page 5]
 Internet-Draft                    RAINS                    November 2016
 
 
+3.  Architecture
+
+   The RAINS architecture is simple, and resembles the architecture of
+   DNS.  A RAINS Server is an entity that provides transient and/or
+   permanent storage for assertions about names, and a lookup function
+   that finds assertions for a given query about a name, either by
    searching local storage or by delegating to another RAINS server.
    RAINS servers can take on any or all of three roles:
 
@@ -322,6 +328,16 @@ Internet-Draft                    RAINS                    November 2016
 
    o  Subject: name about which the assertion is made.
 
+
+
+
+
+
+Trammell                  Expires June 2, 2017                  [Page 6]
+
+Internet-Draft                    RAINS                    November 2016
+
+
    o  Zone: name of the zone in which the assertion is made.  The fully
       qualified name of the subject is made by appending the zone name
       to the subject name with a domain name separator ('.').
@@ -330,13 +346,6 @@ Internet-Draft                    RAINS                    November 2016
       assertion.  Each Assertion is about a single type of data.
 
    o  Object: the data of the indicated type associated with the Subject
-
-
-
-Trammell                  Expires June 2, 2017                  [Page 6]
-
-Internet-Draft                    RAINS                    November 2016
-
 
    o  Signatures: one or more signatures generated by the authority for
       the Assertion.  Signatures contain a time interval during which
@@ -377,15 +386,6 @@ Internet-Draft                    RAINS                    November 2016
       zone may be issued.  This allows a zone to set policy on names in
       support of the distinguishability property in
       [I-D.trammell-inip-pins] that can be checked by RAINS servers at
-      runtime.  An assertion about a Subject within a Zone whose name is
-      not allowed by a valid signed Zone-Nameset expression is taken to
-      be invalid, even if it has a valid signature.  The details of this
-      type will be described in a separate document.
-
-   o  Zone-Registrar: Information about the organization that caused a
-      Subject name to exist, for registrant-level names.
-
-
 
 
 
@@ -394,8 +394,27 @@ Trammell                  Expires June 2, 2017                  [Page 7]
 Internet-Draft                    RAINS                    November 2016
 
 
+      runtime.  An assertion about a Subject within a Zone whose name is
+      not allowed by a valid signed Zone-Nameset expression is taken to
+      be invalid, even if it has a valid signature.  The details of this
+      type will be described in a separate document.
+
+   o  Zone-Registrar: Information about the organization that caused a
+      Subject name to exist, for registrant-level names.
+
    o  Zone-Registrant: Information about the organization responsible
       for a Subject name, for registrant-level names.
+
+   o  Infrastructure Key: Information about public keys used for object
+      security within the RAINS infrastructure itself.  The Object
+      contains a public key by which a named RAINS server can be
+      identified.
+
+   o  External Key: Information about public keys used for additional
+      signatures on assertions.  The external key is usually discovered
+      outside RAINS, and can be verified by comparison with the key
+      stored in a RAINS assertion.  The Object contains an external
+      public key.
 
    For a given {subject, type} tuple, multiple assertions can be valid
    at a given point in time; the union of the object values of all of
@@ -422,6 +441,15 @@ Internet-Draft                    RAINS                    November 2016
       the contexts under their namespaces are arranged, and over the
       names within those contexts.
 
+
+
+
+
+Trammell                  Expires June 2, 2017                  [Page 8]
+
+Internet-Draft                    RAINS                    November 2016
+
+
    Assertion context is the mechanism by which RAINS provides explicit
    inconsistency (see section 5.3.2 of [I-D.trammell-inip-pins]).  Some
    examples illustrate how context works:
@@ -440,15 +468,6 @@ Internet-Draft                    RAINS                    November 2016
       manage visibility of assertions outside the enterprise: explicit
       context makes accidental leakage of both queries and assertions
       easier to detect and avoid.
-
-
-
-
-
-Trammell                  Expires June 2, 2017                  [Page 8]
-
-Internet-Draft                    RAINS                    November 2016
-
 
    o  Contexts make captive-portal interactions more explicit: a captive
       portal resolver could respond to a query for a common website
@@ -480,6 +499,13 @@ Internet-Draft                    RAINS                    November 2016
    o  Valid-Since: a timestamp of the start of validity of this
       signature.
 
+
+
+Trammell                  Expires June 2, 2017                  [Page 9]
+
+Internet-Draft                    RAINS                    November 2016
+
+
    o  Valid-Until: a timestamp of the end of validity of this signature.
 
    o  Signature: the cryptographic signature itself, whose format is
@@ -497,14 +523,6 @@ Internet-Draft                    RAINS                    November 2016
    The signature protects all the information in an assertion as well as
    its own valid-since and valid-until values and the revocation token;
    it does not protect other signatures on the assertion.
-
-
-
-
-Trammell                  Expires June 2, 2017                  [Page 9]
-
-Internet-Draft                    RAINS                    November 2016
-
 
 4.1.3.  Shards and Zones
 
@@ -537,6 +555,13 @@ Internet-Draft                    RAINS                    November 2016
    all assertions (zone, context, signature) within the shard may be
    omitted from the assertions themselves.
 
+
+
+Trammell                  Expires June 2, 2017                 [Page 10]
+
+Internet-Draft                    RAINS                    November 2016
+
+
    A zone is the entire set of shards subject to a given authority
    within a given context.  There are three kinds of zones; treating
    these zones differently may allow lookup protocol optimizations:
@@ -555,13 +580,6 @@ Internet-Draft                    RAINS                    November 2016
 
    A zone has the following information elements:
 
-
-
-Trammell                  Expires June 2, 2017                 [Page 10]
-
-Internet-Draft                    RAINS                    November 2016
-
-
    o  Context: name of the context in which the assertions in the zone
       are valid; see Section 4.1.1 above.
 
@@ -575,6 +593,12 @@ Internet-Draft                    RAINS                    November 2016
 
    o  Kind: delegation-only, final, or mixed; see above.
 
+4.1.4.  Zone-Reflexive Assertions
+
+   A zone may make an assertion about itself by using an empty subject
+   name.  This facility can be used for any assertion type, but is
+   especially useful for self-signing root zones.
+
 4.2.  Query
 
    A query is a request for a set of assertions supporting a conclusion
@@ -586,6 +610,13 @@ Internet-Draft                    RAINS                    November 2016
 
    o  Qualified-Subject: the name about which the query is made.  The
       subject name in a query must be fully-qualified.
+
+
+
+Trammell                  Expires June 2, 2017                 [Page 11]
+
+Internet-Draft                    RAINS                    November 2016
+
 
    o  Types: a set of assertion types the querier is interested in.
 
@@ -610,14 +641,6 @@ Internet-Draft                    RAINS                    November 2016
    However, there are a few additional considerations.  An assertion can
    only exist with a specific context, while queries may accept answers
    in multiple contexts.  The Contexts part of a query is a sequence of
-
-
-
-Trammell                  Expires June 2, 2017                 [Page 11]
-
-Internet-Draft                    RAINS                    November 2016
-
-
    context specifiers taken to be in order of decreasing priority.  A
    special null context (represented by the empty string) indicates that
    assertions in any context will be accepted.  Any context in the
@@ -642,6 +665,15 @@ Internet-Draft                    RAINS                    November 2016
    fra.cx- (Frankfurt), and ams.cx- (Amsterdam) contexts within cdn-
    zones .some-cdn.com.  In all cases, the assertions themselves will be
    signed by the authority for cdn-zones.some-cdn.com, accurately
+
+
+
+
+Trammell                  Expires June 2, 2017                 [Page 12]
+
+Internet-Draft                    RAINS                    November 2016
+
+
    representing that it is the CDN, not the owner of the related name in
    the global context, that is making the assertion.
 
@@ -664,15 +696,6 @@ Internet-Draft                    RAINS                    November 2016
 
    A query is taken to have an inconclusive answer when no answer
    returns to the querier before the query's Valid-Until time.
-
-
-
-
-
-Trammell                  Expires June 2, 2017                 [Page 12]
-
-Internet-Draft                    RAINS                    November 2016
-
 
 4.3.  Address to Object Mapping
 
@@ -698,6 +721,15 @@ Internet-Draft                    RAINS                    November 2016
    o  Signatures: one or more signatures generated by the authority for
       the Assertion.  Signatures contain a time interval during which
       they are considered valid, and may contain a revocation token
+
+
+
+
+Trammell                  Expires June 2, 2017                 [Page 13]
+
+Internet-Draft                    RAINS                    November 2016
+
+
       allowing them to be revoked before the end of the time interval,
       as in Section 4.1.2.
 
@@ -721,14 +753,6 @@ Internet-Draft                    RAINS                    November 2016
 
    Assertions about addresses can be grouped into Zones.  An address
    Zone has the following information elements:
-
-
-
-
-Trammell                  Expires June 2, 2017                 [Page 13]
-
-Internet-Draft                    RAINS                    November 2016
-
 
    o  Context: name of the context in which the assertions in the zone
       are valid; see Section 4.3.1.
@@ -755,6 +779,13 @@ Internet-Draft                    RAINS                    November 2016
    o  Types: a set of assertion types the querier is interested in, as
       above.
 
+
+
+Trammell                  Expires June 2, 2017                 [Page 14]
+
+Internet-Draft                    RAINS                    November 2016
+
+
    o  Valid-Until: an optional client-generated timestamp for the query
       after which it expires and should not be answered.
 
@@ -778,14 +809,6 @@ Internet-Draft                    RAINS                    November 2016
       forward assertions, the authority-part and the context-part of a
       local context name are divided by a context marker ('cx-').  The
       authority-part directly identifies the authority whose key was
-
-
-
-Trammell                  Expires June 2, 2017                 [Page 14]
-
-Internet-Draft                    RAINS                    November 2016
-
-
       used to sign the assertion; assertions within a local context are
       only valid if signed by the identified authority.  Authorities
       have complete control over how the contexts under their namespaces
@@ -811,6 +834,14 @@ Internet-Draft                    RAINS                    November 2016
    RAINS messages and data items.  A common registry of map keys is
    given in Table 1.  RAINS implementations MUST ignore map keys the do
    not understand.  Integer map keys in the range -22 to +23 are
+
+
+
+Trammell                  Expires June 2, 2017                 [Page 15]
+
+Internet-Draft                    RAINS                    November 2016
+
+
    reserved for the use of future versions or extensions to the RAINS
    protocol.
 
@@ -837,7 +868,32 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 15]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Trammell                  Expires June 2, 2017                 [Page 16]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -893,7 +949,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 16]
+Trammell                  Expires June 2, 2017                 [Page 17]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -949,7 +1005,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 17]
+Trammell                  Expires June 2, 2017                 [Page 18]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1005,7 +1061,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 18]
+Trammell                  Expires June 2, 2017                 [Page 19]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1061,7 +1117,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 19]
+Trammell                  Expires June 2, 2017                 [Page 20]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1117,7 +1173,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 20]
+Trammell                  Expires June 2, 2017                 [Page 21]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1173,7 +1229,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 21]
+Trammell                  Expires June 2, 2017                 [Page 22]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1229,7 +1285,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 22]
+Trammell                  Expires June 2, 2017                 [Page 23]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1285,7 +1341,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 23]
+Trammell                  Expires June 2, 2017                 [Page 24]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1341,7 +1397,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 24]
+Trammell                  Expires June 2, 2017                 [Page 25]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1397,7 +1453,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 25]
+Trammell                  Expires June 2, 2017                 [Page 26]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1453,7 +1509,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 26]
+Trammell                  Expires June 2, 2017                 [Page 27]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1509,7 +1565,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 27]
+Trammell                  Expires June 2, 2017                 [Page 28]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1565,7 +1621,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 28]
+Trammell                  Expires June 2, 2017                 [Page 29]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1621,7 +1677,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 29]
+Trammell                  Expires June 2, 2017                 [Page 30]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1677,7 +1733,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 30]
+Trammell                  Expires June 2, 2017                 [Page 31]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1733,7 +1789,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 31]
+Trammell                  Expires June 2, 2017                 [Page 32]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1789,7 +1845,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 32]
+Trammell                  Expires June 2, 2017                 [Page 33]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1845,7 +1901,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 33]
+Trammell                  Expires June 2, 2017                 [Page 34]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1901,7 +1957,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 34]
+Trammell                  Expires June 2, 2017                 [Page 35]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -1957,7 +2013,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 35]
+Trammell                  Expires June 2, 2017                 [Page 36]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2013,7 +2069,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 36]
+Trammell                  Expires June 2, 2017                 [Page 37]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2069,7 +2125,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 37]
+Trammell                  Expires June 2, 2017                 [Page 38]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2125,7 +2181,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 38]
+Trammell                  Expires June 2, 2017                 [Page 39]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2181,7 +2237,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 39]
+Trammell                  Expires June 2, 2017                 [Page 40]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2237,7 +2293,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 40]
+Trammell                  Expires June 2, 2017                 [Page 41]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2293,7 +2349,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 41]
+Trammell                  Expires June 2, 2017                 [Page 42]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2349,7 +2405,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 42]
+Trammell                  Expires June 2, 2017                 [Page 43]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2405,7 +2461,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 43]
+Trammell                  Expires June 2, 2017                 [Page 44]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2461,7 +2517,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 44]
+Trammell                  Expires June 2, 2017                 [Page 45]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2517,7 +2573,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 45]
+Trammell                  Expires June 2, 2017                 [Page 46]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2573,7 +2629,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 46]
+Trammell                  Expires June 2, 2017                 [Page 47]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2629,7 +2685,7 @@ Internet-Draft                    RAINS                    November 2016
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 47]
+Trammell                  Expires June 2, 2017                 [Page 48]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2685,7 +2741,7 @@ Appendix A.  Directions for future experimentation
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 48]
+Trammell                  Expires June 2, 2017                 [Page 49]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2741,7 +2797,7 @@ A.1.  Revocation based on hash chains
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 49]
+Trammell                  Expires June 2, 2017                 [Page 50]
 
 Internet-Draft                    RAINS                    November 2016
 
@@ -2797,4 +2853,4 @@ Author's Address
 
 
 
-Trammell                  Expires June 2, 2017                 [Page 50]
+Trammell                  Expires June 2, 2017                 [Page 51]
