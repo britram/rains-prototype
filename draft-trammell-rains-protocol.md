@@ -1804,8 +1804,8 @@ Two codepoints have been reserved to support experimentation with this mechanism
 
 | Code | Signatures | Hash/HMAC | Format               | Revocation |
 |-----:|------------|-----------|----------------------|------------|
-| 23   | ecdsa-256  | sha-256   | See {{ecdsa-format}} | hash-chain |
-| 24   | ecdsa-384  | sha-384   | See {{ecdsa-format}} | hash-chain |
+| 24   | ecdsa-256  | sha-256   | See {{ecdsa-format}} | hash-chain |
+| 25   | ecdsa-384  | sha-384   | See {{ecdsa-format}} | hash-chain |
 
 The main open question for experimentation is how to ensure that a revocation
 is properly propagated through a RAINS infrastructure; this may require
