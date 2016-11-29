@@ -2749,9 +2749,9 @@ Internet-Draft                    RAINS                    November 2016
     +------+------------+-----------+--------------------+------------+
     | Code | Signatures | Hash/HMAC | Format             | Revocation |
     +------+------------+-----------+--------------------+------------+
-    |   23 | ecdsa-256  | sha-256   | See Section 5.14.1 | hash-chain |
+    |   24 | ecdsa-256  | sha-256   | See Section 5.14.1 | hash-chain |
     |      |            |           |                    |            |
-    |   24 | ecdsa-384  | sha-384   | See Section 5.14.1 | hash-chain |
+    |   25 | ecdsa-384  | sha-384   | See Section 5.14.1 | hash-chain |
     +------+------------+-----------+--------------------+------------+
 
                   Table 10: Defined signature algorithms
