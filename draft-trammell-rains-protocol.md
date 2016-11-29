@@ -1019,6 +1019,7 @@ the object, encoded as an integer in the following table:
 | 9     | registrar    | registrar information                   |
 | 10    | registrant   | registrant information                  |
 | 11    | infrakey     | public key for RAINS infrastructure     |
+| 12    | extrakey     | external public key for subject         |
 
 A name (1) object contains a name associated with a name as an alias. It is
 represented as a three-element array. The second element is a fully-qualified
@@ -1039,7 +1040,7 @@ authority server for a named zone. It is represented as a two-element array.
 The second element is a fully-qualified name of an RAINS authority server as a
 UTF-8 encoded string.
 
-A delegation (5) object contains the public key used to generate signatures
+A delegation (5) object contains a public key used to generate signatures
 on assertions in a named zone, and by which a delegation of a name within a
 zone to a subordinate zone may be verified. It is represented as an N-element
 array. The second element is a signature algorithm identifier as in 
@@ -1075,10 +1076,21 @@ organization-level name. It is represented as a UTF-8 string with a maximum
 length of 4096 bytes containing this information, with a format chosen by the
 registrar according to the registry's policy.
 
-An infrakey (11) object contains the public key used to generate signatures on
+An infrakey (11) object contains a public key used to generate signatures on
 messages by a named RAINS server, by which a RAINS message signature may be
 verified by a receiver. It is identical in structure to a delegation object,
-as defined in {{cbor-signature}}.
+as defined in {{cbor-signature}}. Infrakey signatures are especially useful
+for clients which delegate verification to their query servers to authenticate
+the messages sent by the query server.
+
+An extrakey (12) object contains a public key used to generate signatures on
+assertions in a named zone outside of the normal delegation chain. It is
+identical in structure to a delegation object, as defined in {{cbor-
+signature}}. An extrakey may be matched with a public key obtained through
+other means for additional authentication of an assertion. Extrakeys are
+different from delegation keys in that they may not be used in the delegation
+chain: an extrakey signature is valid only on assertions of object types other
+than delegation.
 
 ### Certificate information format {#cbor-certinfo}
 
