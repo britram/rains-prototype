@@ -1,7 +1,7 @@
 ---
 title: RAINS (Another Internet Naming Service) Protocol Specification
 abbrev: RAINS
-docname: draft-trammell-rains-protocol-01
+docname: draft-trammell-rains-protocol-02
 date: 
 category: exp
 
@@ -42,6 +42,7 @@ normative:
           ins: NIST
       title: Digital Signature Standard FIPS 186-3
       date: June 2009
+    RFC8032:
 
 informative:
     RFC1035:
@@ -1283,8 +1284,35 @@ The following algorithms are supported:
 
 | Code | Signatures | Hash/HMAC | Format               |
 |-----:|------------|-----------|----------------------|
-| 2    | ecdsa-256  | sha-256   | See {{ecdsa-format}} |
-| 3    | ecdsa-384  | sha-384   | See {{ecdsa-format}} |
+| 1    | ed25519    | sha-512   | See {{eddsa-format}} |
+| 2    | ed448      | shake256  | See {{eddsa-format}} |
+| 3    | ecdsa-256  | sha-256   | See {{ecdsa-format}} |
+| 4    | ecdsa-384  | sha-384   | See {{ecdsa-format}} |
+
+### EdDSA signature and public key format {#eddsa-format}
+
+EdDSA public keys consist of a single value, a 32-byte bit string generated as
+in Section 5.1.5 of {{RFC8032}} for Ed25519, and a 57-byte bit string
+generated as in Section 5.2.5 of {{RFC8032}} for Ed448. The third element in a
+RAINS delegation object is this bit string encoded as a CBOR byte array. RAINS
+delegation objects for Ed25519 keys are therefore represented by the array [5,
+1, k]; and for Ed448 keys as [5, 2, k].
+
+Ed25519 and Ed448 signatures are are a combination of two non-negative
+integers, called "R" and "S" in sections 5.1.6 and 5.2.6, respectively, of
+{{RFC8032}}. An Ed25519 signature is represented as a 64-byte array containing
+the the concatenation of R and S, and an Ed448 signature is represented as a
+114-byte array containing the concatenation of R and S. RAINS signatures using
+Ed25519 are therefore the array [1, valid-from, valid-until, R|S]; using Ed448
+the array [2, valid-from, valid-until, R|S].
+
+Ed25519 keys are generated as in Section 5.1.5 of {{RFC8032}}, and Ed448 keys
+as in Section 5.2.5 of {{RFC8032}}.  Ed25519 signatures are generated from a
+normalized serialized CBOR object as in Section 5.1.6 of {{RFC8032}}, and
+Ed448 signatures as in section 5.2.6 of {{RFC8032}}.
+
+RAINS Server and Client implementations MUST support Ed25519 signatures for
+delegation.
 
 ### ECDSA signature and public key format {#ecdsa-format}
 
@@ -1293,7 +1321,7 @@ is a simple bit string that represents the uncompressed form of a curve point,
 concatenated together as "x | y". The third element in a RAINS delegation
 object is the Q bit string encoded as a CBOR byte array. RAINS delegation
 objects for ECDSA-256 public keys are therefore represented as the array 
-[5, 2, Q]; and for ECDSA-384 public keys as [5, 3, Q].
+[5, 3, Q]; and for ECDSA-384 public keys as [5, 4, Q].
 
 ECDSA signatures are a combination of two non-negative integers, called "r"
 and "s" in {{FIPS-186-3}}. A Signature using ECDSA is represented using a
@@ -1302,14 +1330,14 @@ represented as a byte array as described in Section C.2 of {{FIPS-186-3}}, and
 s represented as a byte array as described in Section C.2 of {{FIPS-186-3}}.
 For ECDSA-256 signatures, each integer MUST be represented as a 32-byte array.
 For ECDSA-384 signatures, each integer MUST be represented as a 48-byte array.
-RAINS signatures using ECDSA-256 are therefore the array [2, valid-from,
-valid-until, r|s]; and for ECDSA-384 the array [3, valid-from, valid-until,
+RAINS signatures using ECDSA-256 are therefore the array [3, valid-from,
+valid-until, r|s]; and for ECDSA-384 the array [4, valid-from, valid-until,
 r|s].
 
 ECDSA-256 signatures and public keys use the P-256 curve as defined in {{FIPS-186-3}}.
 ECDSA-384 signatures and public keys use the P-384 curve as defined in {{FIPS-186-3}}.
 
-All RAINS servers MUST implement ECDSA-256 and ECDSA-384.
+ECDSA-256 and ECDSA-384 support are primarily meant for compatibility with and migration from existing DNSSEC deployments; see {{dns-transition}}.
 
 ## Capabilities {#cbor-capabilities}
 
@@ -1644,18 +1672,17 @@ answers to queries.
 ## Query Service Discovery
 
 A client that will not do its own verification must be able to discover the
-oracle server(s) it should trust for resolution. Integration with e.g. DHCP or
-selection of a local multicast discovery method are left to a future revision
-of this document.
+query server(s) it should trust for resolution. Integration with DHCP is left
+to a future revision of this document.
 
 In any case, clients MUST provide a configuration interface to allow a user to
 specify (by address or name) and/or constrain (by certificate property) a
-preferred/trusted oracle. This would allow client on an untrusted network to
-use an untrusted locally-available oracle to discover a preferred oracle
+preferred/trusted query server. This would allow client on an untrusted network to
+use an untrusted locally-available query server to discover a preferred query server
 (doing key verification on its own for bootstrapping), before connecting to
-that oracle for normal name resolution.
+that query server for normal name resolution.
 
-## Transition using translation between RAINS and DNS information models
+## Transition using translation between RAINS and DNS information models {#dns-transition}
 
 Full adoption of RAINS would require changes to every client device (replacing
 DNS stub resolvers with RAINS clients) and name server on the Internet. In
