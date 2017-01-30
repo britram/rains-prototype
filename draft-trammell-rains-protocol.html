@@ -7,7 +7,8 @@
 
   <title>RAINS (Another Internet Naming Service) Protocol Specification</title>
 
-  <style type="text/css">/*<![CDATA[*/
+  
+<style type="text/css">/*<![CDATA[*/
 @viewport {
   zoom: 1.0;
   width: extend-to-zoom;
@@ -73,7 +74,11 @@ ul.toc li {
   padding-bottom: 5px;
   margin: 0;
 }
-ul.toc, ul.toc ul {
+ul.toc ul {
+  margin: 0;
+}
+/* xml2rfc nests ul directly inside ul which messes with the style badly */
+ul.toc, ul.toc>ul, ul.toc ul>ul {
   margin: 0 0 0 1.5em;
 }
 
@@ -208,6 +213,9 @@ ol, ul, li, p {
 li, p {
   margin-left: 0;
 }
+address {
+  font-style: normal;
+}
 
 .github-fork-ribbon-wrapper {
   display: none;
@@ -267,6 +275,7 @@ li, p {
   }
   /*]]>*/</style>
 
+
   <link href="#rfc.toc" rel="Contents"/>
 <link href="#rfc.section.1" rel="Chapter" title="1 Introduction"/>
 <link href="#rfc.section.2" rel="Chapter" title="2 Terminology"/>
@@ -299,7 +308,8 @@ li, p {
 <link href="#rfc.section.5.12.2" rel="Chapter" title="5.12.2 Name expression format"/>
 <link href="#rfc.section.5.13" rel="Chapter" title="5.13 Tokens in queries and messages"/>
 <link href="#rfc.section.5.14" rel="Chapter" title="5.14 Signatures, delegation keys, and RAINS infrastructure keys"/>
-<link href="#rfc.section.5.14.1" rel="Chapter" title="5.14.1 ECDSA signature and public key format"/>
+<link href="#rfc.section.5.14.1" rel="Chapter" title="5.14.1 EdDSA signature and public key format"/>
+<link href="#rfc.section.5.14.2" rel="Chapter" title="5.14.2 ECDSA signature and public key format"/>
 <link href="#rfc.section.5.15" rel="Chapter" title="5.15 Capabilities"/>
 <link href="#rfc.section.6" rel="Chapter" title="6 RAINS Protocol Definition"/>
 <link href="#rfc.section.6.1" rel="Chapter" title="6.1 Message processing"/>
@@ -331,8 +341,8 @@ li, p {
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Trammell, B." />
-  <meta name="dct.identifier" content="urn:ietf:id:draft-trammell-rains-protocol-01" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-11-29" />
+  <meta name="dct.identifier" content="urn:ietf:id:draft-trammell-rains-protocol-02" />
+  <meta name="dct.issued" scheme="ISO8601" content="2017-1-30" />
   <meta name="dct.abstract" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in " />
   <meta name="description" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in " />
 
@@ -353,10 +363,10 @@ li, p {
 </tr>
 <tr>
   <td class="left">Intended status: Experimental</td>
-  <td class="right">November 29, 2016</td>
+  <td class="right">January 30, 2017</td>
 </tr>
 <tr>
-  <td class="left">Expires: June 2, 2017</td>
+  <td class="left">Expires: August 3, 2017</td>
   <td class="right"></td>
 </tr>
 
@@ -365,7 +375,7 @@ li, p {
   </table>
 
   <p class="title">RAINS (Another Internet Naming Service) Protocol Specification<br />
-  <span class="filename">draft-trammell-rains-protocol-01</span></p>
+  <span class="filename">draft-trammell-rains-protocol-02</span></p>
   
   <h1 id="rfc.abstract">
   <a href="#rfc.abstract">Abstract</a>
@@ -377,11 +387,11 @@ li, p {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on June 2, 2017.</p>
+<p>This Internet-Draft will expire on August 3, 2017.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
-<p>Copyright (c) 2016 IETF Trust and the persons identified as the document authors.  All rights reserved.</p>
+<p>Copyright (c) 2017 IETF Trust and the persons identified as the document authors.  All rights reserved.</p>
 <p>This document is subject to BCP 78 and the IETF Trust's Legal Provisions Relating to IETF Documents (http://trustee.ietf.org/license-info) in effect on the date of publication of this document.  Please review these documents carefully, as they describe your rights and restrictions with respect to this document.  Code Components extracted from this document must include Simplified BSD License text as described in Section 4.e of the Trust Legal Provisions and are provided without warranty as described in the Simplified BSD License.</p>
 
   
@@ -420,7 +430,8 @@ li, p {
 <li>5.12.2.   <a href="#rfc.section.5.12.2">Name expression format</a></li>
 </ul><li>5.13.   <a href="#rfc.section.5.13">Tokens in queries and messages</a></li>
 <li>5.14.   <a href="#rfc.section.5.14">Signatures, delegation keys, and RAINS infrastructure keys</a></li>
-<ul><li>5.14.1.   <a href="#rfc.section.5.14.1">ECDSA signature and public key format</a></li>
+<ul><li>5.14.1.   <a href="#rfc.section.5.14.1">EdDSA signature and public key format</a></li>
+<li>5.14.2.   <a href="#rfc.section.5.14.2">ECDSA signature and public key format</a></li>
 </ul><li>5.15.   <a href="#rfc.section.5.15">Capabilities</a></li>
 </ul><li>6.   <a href="#rfc.section.6">RAINS Protocol Definition</a></li>
 <ul><li>6.1.   <a href="#rfc.section.6.1">Message processing</a></li>
@@ -1234,24 +1245,41 @@ li, p {
   </thead>
   <tbody>
     <tr>
+      <td class="right">1</td>
+      <td class="left">ed25519</td>
+      <td class="left">sha-512</td>
+      <td class="left">See <a href="#eddsa-format">Section 5.14.1</a></td>
+    </tr>
+    <tr>
       <td class="right">2</td>
-      <td class="left">ecdsa-256</td>
-      <td class="left">sha-256</td>
-      <td class="left">See <a href="#ecdsa-format">Section 5.14.1</a></td>
+      <td class="left">ed448</td>
+      <td class="left">shake256</td>
+      <td class="left">See <a href="#eddsa-format">Section 5.14.1</a></td>
     </tr>
     <tr>
       <td class="right">3</td>
+      <td class="left">ecdsa-256</td>
+      <td class="left">sha-256</td>
+      <td class="left">See <a href="#ecdsa-format">Section 5.14.2</a></td>
+    </tr>
+    <tr>
+      <td class="right">4</td>
       <td class="left">ecdsa-384</td>
       <td class="left">sha-384</td>
-      <td class="left">See <a href="#ecdsa-format">Section 5.14.1</a></td>
+      <td class="left">See <a href="#ecdsa-format">Section 5.14.2</a></td>
     </tr>
   </tbody>
 </table>
-<h1 id="rfc.section.5.14.1"><a href="#rfc.section.5.14.1">5.14.1.</a> <a href="#ecdsa-format" id="ecdsa-format">ECDSA signature and public key format</a></h1>
-<p id="rfc.section.5.14.1.p.1">ECDSA public keys consist of a single value, called &#8220;Q&#8221; in <a href="#FIPS-186-3">[FIPS-186-3]</a>. Q is a simple bit string that represents the uncompressed form of a curve point, concatenated together as &#8220;x | y&#8221;. The third element in a RAINS delegation object is the Q bit string encoded as a CBOR byte array. RAINS delegation objects for ECDSA-256 public keys are therefore represented as the array [5, 2, Q]; and for ECDSA-384 public keys as [5, 3, Q].</p>
-<p id="rfc.section.5.14.1.p.2">ECDSA signatures are a combination of two non-negative integers, called &#8220;r&#8221; and &#8220;s&#8221; in <a href="#FIPS-186-3">[FIPS-186-3]</a>. A Signature using ECDSA is represented using a four-element CBOR array, with the fourth element being &#8220;r | s&#8221; such that r is represented as a byte array as described in Section C.2 of <a href="#FIPS-186-3">[FIPS-186-3]</a>, and s represented as a byte array as described in Section C.2 of <a href="#FIPS-186-3">[FIPS-186-3]</a>.  For ECDSA-256 signatures, each integer MUST be represented as a 32-byte array.  For ECDSA-384 signatures, each integer MUST be represented as a 48-byte array.  RAINS signatures using ECDSA-256 are therefore the array [2, valid-from, valid-until, r|s]; and for ECDSA-384 the array [3, valid-from, valid-until, r|s].</p>
-<p id="rfc.section.5.14.1.p.3">ECDSA-256 signatures and public keys use the P-256 curve as defined in <a href="#FIPS-186-3">[FIPS-186-3]</a>.  ECDSA-384 signatures and public keys use the P-384 curve as defined in <a href="#FIPS-186-3">[FIPS-186-3]</a>.</p>
-<p id="rfc.section.5.14.1.p.4">All RAINS servers MUST implement ECDSA-256 and ECDSA-384.</p>
+<h1 id="rfc.section.5.14.1"><a href="#rfc.section.5.14.1">5.14.1.</a> <a href="#eddsa-format" id="eddsa-format">EdDSA signature and public key format</a></h1>
+<p id="rfc.section.5.14.1.p.1">EdDSA public keys consist of a single value, a 32-byte bit string generated as in Section 5.1.5 of <a href="#RFC8032">[RFC8032]</a> for Ed25519, and a 57-byte bit string generated as in Section 5.2.5 of <a href="#RFC8032">[RFC8032]</a> for Ed448. The third element in a RAINS delegation object is this bit string encoded as a CBOR byte array. RAINS delegation objects for Ed25519 keys are therefore represented by the array [5, 1, k]; and for Ed448 keys as [5, 2, k].</p>
+<p id="rfc.section.5.14.1.p.2">Ed25519 and Ed448 signatures are are a combination of two non-negative integers, called &#8220;R&#8221; and &#8220;S&#8221; in sections 5.1.6 and 5.2.6, respectively, of <a href="#RFC8032">[RFC8032]</a>. An Ed25519 signature is represented as a 64-byte array containing the the concatenation of R and S, and an Ed448 signature is represented as a 114-byte array containing the concatenation of R and S. RAINS signatures using Ed25519 are therefore the array [1, valid-from, valid-until, R|S]; using Ed448 the array [2, valid-from, valid-until, R|S].</p>
+<p id="rfc.section.5.14.1.p.3">Ed25519 keys are generated as in Section 5.1.5 of <a href="#RFC8032">[RFC8032]</a>, and Ed448 keys as in Section 5.2.5 of <a href="#RFC8032">[RFC8032]</a>.  Ed25519 signatures are generated from a normalized serialized CBOR object as in Section 5.1.6 of <a href="#RFC8032">[RFC8032]</a>, and Ed448 signatures as in section 5.2.6 of <a href="#RFC8032">[RFC8032]</a>.</p>
+<p id="rfc.section.5.14.1.p.4">RAINS Server and Client implementations MUST support Ed25519 signatures for delegation.</p>
+<h1 id="rfc.section.5.14.2"><a href="#rfc.section.5.14.2">5.14.2.</a> <a href="#ecdsa-format" id="ecdsa-format">ECDSA signature and public key format</a></h1>
+<p id="rfc.section.5.14.2.p.1">ECDSA public keys consist of a single value, called &#8220;Q&#8221; in <a href="#FIPS-186-3">[FIPS-186-3]</a>. Q is a simple bit string that represents the uncompressed form of a curve point, concatenated together as &#8220;x | y&#8221;. The third element in a RAINS delegation object is the Q bit string encoded as a CBOR byte array. RAINS delegation objects for ECDSA-256 public keys are therefore represented as the array [5, 3, Q]; and for ECDSA-384 public keys as [5, 4, Q].</p>
+<p id="rfc.section.5.14.2.p.2">ECDSA signatures are a combination of two non-negative integers, called &#8220;r&#8221; and &#8220;s&#8221; in <a href="#FIPS-186-3">[FIPS-186-3]</a>. A Signature using ECDSA is represented using a four-element CBOR array, with the fourth element being &#8220;r | s&#8221; such that r is represented as a byte array as described in Section C.2 of <a href="#FIPS-186-3">[FIPS-186-3]</a>, and s represented as a byte array as described in Section C.2 of <a href="#FIPS-186-3">[FIPS-186-3]</a>.  For ECDSA-256 signatures, each integer MUST be represented as a 32-byte array.  For ECDSA-384 signatures, each integer MUST be represented as a 48-byte array.  RAINS signatures using ECDSA-256 are therefore the array [3, valid-from, valid-until, r|s]; and for ECDSA-384 the array [4, valid-from, valid-until, r|s].</p>
+<p id="rfc.section.5.14.2.p.3">ECDSA-256 signatures and public keys use the P-256 curve as defined in <a href="#FIPS-186-3">[FIPS-186-3]</a>.  ECDSA-384 signatures and public keys use the P-384 curve as defined in <a href="#FIPS-186-3">[FIPS-186-3]</a>.</p>
+<p id="rfc.section.5.14.2.p.4">ECDSA-256 and ECDSA-384 support are primarily meant for compatibility with and migration from existing DNSSEC deployments; see <a href="#dns-transition">Section 8.5</a>.</p>
 <h1 id="rfc.section.5.15"><a href="#rfc.section.5.15">5.15.</a> <a href="#cbor-capabilities" id="cbor-capabilities">Capabilities</a></h1>
 <p id="rfc.section.5.15.p.1">When a RAINS server or client sends the first message in a stream to a peer, it MAY expose optional capabilities to its peer using the capabilities (1) key. This key contains either:</p>
 <p/>
@@ -1388,9 +1416,9 @@ li, p {
 <h1 id="rfc.section.8.3"><a href="#rfc.section.8.3">8.3.</a> <a href="#unsigned-contained-assertions" id="unsigned-contained-assertions">Unsigned Contained Assertions</a></h1>
 <p id="rfc.section.8.3.p.1">Although RAINS supports Shards and Zones containing unsigned assertions, protecting the integrity of those Assertions by the signature on the Shard or Zone, it is RECOMMENDED that authorities sign each Assertion, even those contained within a Shard or Zone, in order to minimize the size of positive answers to queries.</p>
 <h1 id="rfc.section.8.4"><a href="#rfc.section.8.4">8.4.</a> <a href="#query-service-discovery" id="query-service-discovery">Query Service Discovery</a></h1>
-<p id="rfc.section.8.4.p.1">A client that will not do its own verification must be able to discover the oracle server(s) it should trust for resolution. Integration with e.g. DHCP or selection of a local multicast discovery method are left to a future revision of this document.</p>
-<p id="rfc.section.8.4.p.2">In any case, clients MUST provide a configuration interface to allow a user to specify (by address or name) and/or constrain (by certificate property) a preferred/trusted oracle. This would allow client on an untrusted network to use an untrusted locally-available oracle to discover a preferred oracle (doing key verification on its own for bootstrapping), before connecting to that oracle for normal name resolution.</p>
-<h1 id="rfc.section.8.5"><a href="#rfc.section.8.5">8.5.</a> <a href="#transition-using-translation-between-rains-and-dns-information-models" id="transition-using-translation-between-rains-and-dns-information-models">Transition using translation between RAINS and DNS information models</a></h1>
+<p id="rfc.section.8.4.p.1">A client that will not do its own verification must be able to discover the query server(s) it should trust for resolution. Integration with DHCP is left to a future revision of this document.</p>
+<p id="rfc.section.8.4.p.2">In any case, clients MUST provide a configuration interface to allow a user to specify (by address or name) and/or constrain (by certificate property) a preferred/trusted query server. This would allow client on an untrusted network to use an untrusted locally-available query server to discover a preferred query server (doing key verification on its own for bootstrapping), before connecting to that query server for normal name resolution.</p>
+<h1 id="rfc.section.8.5"><a href="#rfc.section.8.5">8.5.</a> <a href="#dns-transition" id="dns-transition">Transition using translation between RAINS and DNS information models</a></h1>
 <p id="rfc.section.8.5.p.1">Full adoption of RAINS would require changes to every client device (replacing DNS stub resolvers with RAINS clients) and name server on the Internet. In addition, most client software would need to change, as well, to get the full benefits of explicit context in name resolution. This is a wholly unrealistic goal.</p>
 <p id="rfc.section.8.5.p.2">RAINS servers can, however, coexist with Domain Name System servers and clients during an indefinite transition period. RAINS assertions can be algorithmically translated into DNS answers, and RAINS queries can be algorithmically translated into DNS queries, by RAINS to DNS gateways, given the mostly compatible information models used by the two.</p>
 <p id="rfc.section.8.5.p.3">While DNSSEC and RAINS keys for equivalent ciphersuites are compatible with each other, there is no equivalent to query option 7 for gateways, since the RAINS signatures are generated over the RAINS bytestream for an assertion, not the DNS bytestream. Therefore, RAINS to DNS gateways must provide verification services for DNS clients. DNS over TLS <a href="#RFC7858">[RFC7858]</a> SHOULD be used between the DNS client and gateway to ensure confidentiality and integrity for queries and answers.</p>
@@ -1506,6 +1534,12 @@ li, p {
         <b id="RFC7049">[RFC7049]</b>
       </td>
       <td class="top"><a>Bormann, C.</a> and <a>P. Hoffman</a>, "<a href="http://tools.ietf.org/html/rfc7049">Concise Binary Object Representation (CBOR)</a>", RFC 7049, DOI 10.17487/RFC7049, October 2013.</td>
+    </tr>
+    <tr>
+      <td class="reference">
+        <b id="RFC8032">[RFC8032]</b>
+      </td>
+      <td class="top"><a>Josefsson, S.</a> and <a>I. Liusvaara</a>, "<a href="http://tools.ietf.org/html/rfc8032">Edwards-Curve Digital Signature Algorithm (EdDSA)</a>", RFC 8032, DOI 10.17487/RFC8032, January 2017.</td>
     </tr>
   </tbody>
 </table>
@@ -1636,14 +1670,14 @@ li, p {
       <td class="right">24</td>
       <td class="left">ecdsa-256</td>
       <td class="left">sha-256</td>
-      <td class="left">See <a href="#ecdsa-format">Section 5.14.1</a></td>
+      <td class="left">See <a href="#ecdsa-format">Section 5.14.2</a></td>
       <td class="left">hash-chain</td>
     </tr>
     <tr>
       <td class="right">25</td>
       <td class="left">ecdsa-384</td>
       <td class="left">sha-384</td>
-      <td class="left">See <a href="#ecdsa-format">Section 5.14.1</a></td>
+      <td class="left">See <a href="#ecdsa-format">Section 5.14.2</a></td>
       <td class="left">hash-chain</td>
     </tr>
   </tbody>
