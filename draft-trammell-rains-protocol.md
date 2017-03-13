@@ -1,13 +1,11 @@
 ---
 title: RAINS (Another Internet Naming Service) Protocol Specification
 abbrev: RAINS
-docname: draft-trammell-rains-protocol-02
+docname: draft-trammell-rains-protocol-03
 date: 
 category: exp
 
 ipr: trust200902
-area: Internet Architecture Board
-workgroup: Names and Identifiers Program
 keyword: Internet-Draft
 
 stand_alone: yes
@@ -405,7 +403,7 @@ A query is a request for a set of assertions supporting a conclusion about a
 given subject-object mapping. It consists of the following information
 elements:
 
-- Contexts: an expression of the context(s) in which assertions answering the
+- Context: The context(s) in which assertions answering the
   query will be accepted; see {{context-in-queries}} below.
 - Qualified-Subject: the name about which the query is made. The subject name
   in a query must be fully-qualified. 
@@ -425,22 +423,15 @@ be bound to the query using query options.
 
 ### Context in Queries
 
-Contexts are used in queries as they are in assertions 
-(see {{context-in-assertions}}). 
-Assertion contexts in an answer to a query have to match some
-context in the query in order to respond to a query. However, there are a few
-additional considerations. An assertion can only exist with a specific
-context, while queries may accept answers in multiple contexts. The Contexts
-part of a query is a sequence of context specifiers taken to be in order of
-decreasing priority. A special null context (represented by the empty string)
-indicates that assertions in any context will be accepted. Any context in the
-Contexts part of a query may additionally be negated, in order to note that
-assertions in those contexts are not acceptable. Negated context name
-appearing in the Contexts part of a query before the null context expresses
-"any context except these".
+Context is used in queries as it is in assertions (see
+{{context-in-assertions}}). Assertion contexts in an answer to a query have to
+match the context in the query in order to respond to a query. The Context
+section of a query contains the context of desired assertions; a special "any"
+context (represented by the empty string) indicates that assertions in any
+context will be accepted.
 
 Query contexts can also be used to provide additional information to RAINS
-servers about the query. For example, contexts can provide a method for
+servers about the query. For example, context can provide a method for
 explicit selection of a CDN server not based on either the client's or the
 resolver's address (see {{RFC7871}}). Here, the CDN creates a context for
 each of its content zones, and an external service selects appropriate
@@ -594,10 +585,9 @@ and notification maps is given in the symbol table below:
 | 3    | subject-name   | Subject name in an assertion                  |
 | 4    | subject-zone   | Zone name in an assertion                     |
 | 5    | subject-addr   | Subject address in address assertion or zone  |
-| 6    | context        | Context of an assertion                       |
+| 6    | context        | Context of an assertion or query              |
 | 7    | objects        | Objects of an assertion                       |
 | 8    | query-name     | Fully qualified name for a query              |
-| 9    | query-contexts | Contexts acceptable in query answers          |
 | 10   | query-types    | Acceptable object types for query             |
 | 11   | shard-range    | Lexical range of Assertions in Shard          |
 | 12   | query-expires  | Absolute timestamp for query expiration       |
@@ -777,42 +767,16 @@ containing the name of the context for which the Zone is valid.
 ## Query Message Section body {#cbor-query}
 
 A Query body is a map. Queries MUST contain the the token (2), query-name (8),
-query-contexts (9), and query-types (10) keys. Queries MAY contain the query-
+context (6), and query-types (10) keys. Queries MAY contain the query-
 expires (12) and query-opts (13) keys.
 
 The value of the token (2) key, is a byte array of maximum length
 32. Future messages or notifications containing answers to this query MUST
 contain this token, if present. See {{cbor-tokens}}.
 
-The value of the query-name (8) key is a UTF-8 encoded string containing the
-fully qualified name that is the subject of the query.
-
-The value of the query-contexts (9) key is an allowable context expression, as an
-array of context names as UTF-8 encoded strings. The allowable context
-expression is evaluated in-order, as follows:
-
-- Context names appearing earlier in the expression are given priority over
-  context names appearing later in the expression.
-- A context name may be negated by prepending the context negation marker 
-  'cx--0-.' to the context name; a negated context name means the named context
-  is not acceptable in answers to this query.
-- The special context name '.' refers to the global context.
-- The special context name 'cx--any-' means 'any context is acceptable'.
-
-Some examples:
-
-- ['cx--.inf.ethz.ch.', 'cx--any-'] means that answers in the 
-  'cx--.inf.ethz.ch.' context are preferred, but any context is acceptable; 
-- ['.', 'cx--.inf.ethz.ch.'] means that only answers in the
-  'cx--.inf.ethz.ch.' or global contexts are acceptable, with the global
-  context preferred;
-- ['.', cx--0-.cx--.inf.ethz.ch.', 'cx--any-'] means that answers in any 
-  context except 'cx--.inf.ethz.ch.' are acceptable, with the global context
-  preferred.
-
-An empty context array in a query is taken to be equivalent to an array
-containing only ['.', 'cx--any-']; i.e. any context acceptable, global context
-preferred.
+The value of the context (6) key is a UTF-8 encoded string containing the name
+of the context to which a query pertains. A zero-length string indicates that
+assertions will be accepted in any context.
 
 The value of the query-types (10) key is an array of integers encoding the
 type(s) of objects (as in {{cbor-object}}) acceptable in answers to the query.
@@ -1461,7 +1425,7 @@ On receipt of a query, a server:
   query to those servers, noting the reply for the received query depends on
   the replies for the forwarded query. If not, it:
 - determines the responsible authority servers for the zone containing the
-  query name in the query for contexts requested, and forwards the query to
+  query name in the query for the context requested, and forwards the query to
   those authority servers, noting the reply for the received query depends on
   the reply for the forwarded query.
 
@@ -1687,7 +1651,7 @@ that query server for normal name resolution.
 Full adoption of RAINS would require changes to every client device (replacing
 DNS stub resolvers with RAINS clients) and name server on the Internet. In
 addition, most client software would need to change, as well, to get the full
-benefits of explicit context in name resolution. This is a wholly unrealistic goal.
+benefits of explicit context in name resolution. This is an unrealistic goal.
 
 RAINS servers can, however, coexist with Domain Name System servers and
 clients during an indefinite transition period. RAINS assertions can be
