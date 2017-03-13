@@ -1758,9 +1758,9 @@ details.
 
 # Acknowledgments
 
-Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Ted Hardie, Joe
-Hildebrand, Tobias Klausmann, Steve Matsumoto, Adrian Perrig, Raphael
-Reischuk, Stephen Shirley, Andrew Sullivan, and Suzanne Woolf for the
+Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Christian Fehlmann, Ted
+Hardie, Joe Hildebrand, Tobias Klausmann, Steve Matsumoto, Adrian Perrig,
+Raphael Reischuk, Stephen Shirley, Andrew Sullivan, and Suzanne Woolf for the
 discussions leading to the design of this protocol.
 
 --- back
