@@ -1,7 +1,7 @@
 ---
 title: RAINS (Another Internet Naming Service) Protocol Specification
 abbrev: RAINS
-docname: draft-trammell-rains-protocol-03
+docname: draft-trammell-rains-protocol-02
 date: 
 category: exp
 
