@@ -125,10 +125,10 @@ Internet-Draft                    RAINS                       March 2017
    11. Security Considerations . . . . . . . . . . . . . . . . . . .  46
    12. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  46
    13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  46
-     13.1.  Normative References . . . . . . . . . . . . . . . . . .  46
+     13.1.  Normative References . . . . . . . . . . . . . . . . . .  47
      13.2.  Informative References . . . . . . . . . . . . . . . . .  48
    Appendix A.  Directions for future experimentation  . . . . . . .  49
-     A.1.  Revocation based on hash chains . . . . . . . . . . . . .  49
+     A.1.  Revocation based on hash chains . . . . . . . . . . . . .  50
    Appendix B.  Open Issues  . . . . . . . . . . . . . . . . . . . .  51
    Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  51
 
@@ -2558,18 +2558,18 @@ Internet-Draft                    RAINS                       March 2017
 
 12.  Acknowledgments
 
-   Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Ted Hardie,
-   Joe Hildebrand, Tobias Klausmann, Steve Matsumoto, Adrian Perrig,
-   Raphael Reischuk, Stephen Shirley, Andrew Sullivan, and Suzanne Woolf
-   for the discussions leading to the design of this protocol.
+   Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Christian
+   Fehlmann, Ted Hardie, Joe Hildebrand, Tobias Klausmann, Steve
+   Matsumoto, Adrian Perrig, Raphael Reischuk, Stephen Shirley, Andrew
+   Sullivan, and Suzanne Woolf for the discussions leading to the design
+   of this protocol.
 
 13.  References
 
-13.1.  Normative References
 
-   [FIPS-186-3]
-              NIST, ., "Digital Signature Standard FIPS 186-3", June
-              2009.
+
+
+
 
 
 
@@ -2577,6 +2577,12 @@ Trammell               Expires September 14, 2017              [Page 46]
 
 Internet-Draft                    RAINS                       March 2017
 
+
+13.1.  Normative References
+
+   [FIPS-186-3]
+              NIST, ., "Digital Signature Standard FIPS 186-3", June
+              2009.
 
    [I-D.trammell-inip-pins]
               Trammell, B., "Properties of an Ideal Naming Service",
@@ -2620,12 +2626,6 @@ Internet-Draft                    RAINS                       March 2017
               DOI 10.17487/RFC5246, August 2008,
               <http://www.rfc-editor.org/info/rfc5246>.
 
-   [RFC5280]  Cooper, D., Santesson, S., Farrell, S., Boeyen, S.,
-              Housley, R., and W. Polk, "Internet X.509 Public Key
-              Infrastructure Certificate and Certificate Revocation List
-              (CRL) Profile", RFC 5280, DOI 10.17487/RFC5280, May 2008,
-              <http://www.rfc-editor.org/info/rfc5280>.
-
 
 
 
@@ -2633,6 +2633,12 @@ Trammell               Expires September 14, 2017              [Page 47]
 
 Internet-Draft                    RAINS                       March 2017
 
+
+   [RFC5280]  Cooper, D., Santesson, S., Farrell, S., Boeyen, S.,
+              Housley, R., and W. Polk, "Internet X.509 Public Key
+              Infrastructure Certificate and Certificate Revocation List
+              (CRL) Profile", RFC 5280, DOI 10.17487/RFC5280, May 2008,
+              <http://www.rfc-editor.org/info/rfc5280>.
 
    [RFC7049]  Bormann, C. and P. Hoffman, "Concise Binary Object
               Representation (CBOR)", RFC 7049, DOI 10.17487/RFC7049,
@@ -2677,18 +2683,17 @@ Internet-Draft                    RAINS                       March 2017
               DOI 10.17487/RFC6605, April 2012,
               <http://www.rfc-editor.org/info/rfc6605>.
 
-   [RFC6698]  Hoffman, P. and J. Schlyter, "The DNS-Based Authentication
-              of Named Entities (DANE) Transport Layer Security (TLS)
-              Protocol: TLSA", RFC 6698, DOI 10.17487/RFC6698, August
-              2012, <http://www.rfc-editor.org/info/rfc6698>.
-
-
 
 
 Trammell               Expires September 14, 2017              [Page 48]
 
 Internet-Draft                    RAINS                       March 2017
 
+
+   [RFC6698]  Hoffman, P. and J. Schlyter, "The DNS-Based Authentication
+              of Named Entities (DANE) Transport Layer Security (TLS)
+              Protocol: TLSA", RFC 6698, DOI 10.17487/RFC6698, August
+              2012, <http://www.rfc-editor.org/info/rfc6698>.
 
    [RFC7231]  Fielding, R., Ed. and J. Reschke, Ed., "Hypertext Transfer
               Protocol (HTTP/1.1): Semantics and Content", RFC 7231,
@@ -2733,11 +2738,6 @@ Appendix A.  Directions for future experimentation
    allow additional experimentation with them before they are completely
    specified.
 
-A.1.  Revocation based on hash chains
-
-   RAINS assertions are scoped in temporal validity by the lifetimes on
-   their signatures.  This is operationally equivalent to TTL in the
-   current DNS.  An assertion which becomes invalid can simply not be
 
 
 
@@ -2746,6 +2746,11 @@ Trammell               Expires September 14, 2017              [Page 49]
 Internet-Draft                    RAINS                       March 2017
 
 
+A.1.  Revocation based on hash chains
+
+   RAINS assertions are scoped in temporal validity by the lifetimes on
+   their signatures.  This is operationally equivalent to TTL in the
+   current DNS.  An assertion which becomes invalid can simply not be
    renewed by its authority.  However, very dynamic infrastructures may
    require impractical numbers of signatures, and could benefit from
    longer validity times.  Allowing an assertion to be revoked would
@@ -2782,15 +2787,10 @@ Internet-Draft                    RAINS                       March 2017
    Two codepoints have been reserved to support experimentation with
    this mechanism, as shown in Table 10.
 
-    +------+------------+-----------+--------------------+------------+
-    | Code | Signatures | Hash/HMAC | Format             | Revocation |
-    +------+------------+-----------+--------------------+------------+
-    |   24 | ecdsa-256  | sha-256   | See Section 5.14.2 | hash-chain |
-    |      |            |           |                    |            |
-    |   25 | ecdsa-384  | sha-384   | See Section 5.14.2 | hash-chain |
-    +------+------------+-----------+--------------------+------------+
 
-                  Table 10: Defined signature algorithms
+
+
+
 
 
 
@@ -2801,6 +2801,16 @@ Trammell               Expires September 14, 2017              [Page 50]
 
 Internet-Draft                    RAINS                       March 2017
 
+
+    +------+------------+-----------+--------------------+------------+
+    | Code | Signatures | Hash/HMAC | Format             | Revocation |
+    +------+------------+-----------+--------------------+------------+
+    |   24 | ecdsa-256  | sha-256   | See Section 5.14.2 | hash-chain |
+    |      |            |           |                    |            |
+    |   25 | ecdsa-384  | sha-384   | See Section 5.14.2 | hash-chain |
+    +------+------------+-----------+--------------------+------------+
+
+                  Table 10: Defined signature algorithms
 
    The main open question for experimentation is how to ensure that a
    revocation is properly propagated through a RAINS infrastructure;
@@ -2836,16 +2846,6 @@ Author's Address
    Switzerland
 
    Email: ietf@trammell.ch
-
-
-
-
-
-
-
-
-
-
 
 
 
