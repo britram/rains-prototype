@@ -337,12 +337,12 @@ address {
 <link href="#rfc.authors" rel="Chapter"/>
 
 
-  <meta name="generator" content="xml2rfc version 2.5.1 - http://tools.ietf.org/tools/xml2rfc" />
+  <meta name="generator" content="xml2rfc version 2.5.2 - http://tools.ietf.org/tools/xml2rfc" />
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Trammell, B." />
-  <meta name="dct.identifier" content="urn:ietf:id:draft-trammell-rains-protocol-02" />
-  <meta name="dct.issued" scheme="ISO8601" content="2017-1-30" />
+  <meta name="dct.identifier" content="urn:ietf:id:draft-trammell-rains-protocol-03" />
+  <meta name="dct.issued" scheme="ISO8601" content="2017-3-13" />
   <meta name="dct.abstract" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in " />
   <meta name="description" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in " />
 
@@ -354,7 +354,7 @@ address {
     <tbody>
     
     	<tr>
-  <td class="left">Names and Identifiers Program</td>
+  <td class="left">Network Working Group</td>
   <td class="right">B. Trammell</td>
 </tr>
 <tr>
@@ -363,10 +363,10 @@ address {
 </tr>
 <tr>
   <td class="left">Intended status: Experimental</td>
-  <td class="right">January 30, 2017</td>
+  <td class="right">March 13, 2017</td>
 </tr>
 <tr>
-  <td class="left">Expires: August 3, 2017</td>
+  <td class="left">Expires: September 14, 2017</td>
   <td class="right"></td>
 </tr>
 
@@ -375,7 +375,7 @@ address {
   </table>
 
   <p class="title">RAINS (Another Internet Naming Service) Protocol Specification<br />
-  <span class="filename">draft-trammell-rains-protocol-02</span></p>
+  <span class="filename">draft-trammell-rains-protocol-03</span></p>
   
   <h1 id="rfc.abstract">
   <a href="#rfc.abstract">Abstract</a>
@@ -387,7 +387,7 @@ address {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on August 3, 2017.</p>
+<p>This Internet-Draft will expire on September 14, 2017.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -606,7 +606,7 @@ address {
 <p/>
 
 <ul>
-  <li>Contexts: an expression of the context(s) in which assertions answering the query will be accepted; see <a href="#context-in-queries">Section 4.2.1</a> below.</li>
+  <li>Context: The context(s) in which assertions answering the query will be accepted; see <a href="#context-in-queries">Section 4.2.1</a> below.</li>
   <li>Qualified-Subject: the name about which the query is made. The subject name in a query must be fully-qualified.</li>
   <li>Types: a set of assertion types the querier is interested in.</li>
   <li>Valid-Until: an optional client-generated timestamp for the query after which it expires and should not be answered.</li>
@@ -615,8 +615,8 @@ address {
 </ul>
 <p id="rfc.section.4.2.p.3">A query expresses interest about all the given types of assertion in all the specified contexts; more complex expressions of which types in which contexts must be asked using multiple queries. Preferences for tradeoffs (freshness, bandwidth efficiency, latency, privacy preservation) in servicing a query may be bound to the query using query options.</p>
 <h1 id="rfc.section.4.2.1"><a href="#rfc.section.4.2.1">4.2.1.</a> <a href="#context-in-queries" id="context-in-queries">Context in Queries</a></h1>
-<p id="rfc.section.4.2.1.p.1">Contexts are used in queries as they are in assertions (see <a href="#context-in-assertions">Section 4.1.1</a>).  Assertion contexts in an answer to a query have to match some context in the query in order to respond to a query. However, there are a few additional considerations. An assertion can only exist with a specific context, while queries may accept answers in multiple contexts. The Contexts part of a query is a sequence of context specifiers taken to be in order of decreasing priority. A special null context (represented by the empty string) indicates that assertions in any context will be accepted. Any context in the Contexts part of a query may additionally be negated, in order to note that assertions in those contexts are not acceptable. Negated context name appearing in the Contexts part of a query before the null context expresses &#8220;any context except these&#8221;.</p>
-<p id="rfc.section.4.2.1.p.2">Query contexts can also be used to provide additional information to RAINS servers about the query. For example, contexts can provide a method for explicit selection of a CDN server not based on either the client&#8217;s or the resolver&#8217;s address (see <a href="#RFC7871">[RFC7871]</a>). Here, the CDN creates a context for each of its content zones, and an external service selects appropriate contexts for the client based not just on client source address but passive and active measurement of performance. Queries for names at which content resides can then be made within these contexts, with the priority order of the contexts reflecting the goodness of the zone for the client. Here, a context might be zrh.cx&#8211;.cdn-zones.some-cdn.com for names of servers hosting content in a CDN&#8217;s Zurich data center, and a client could represent its desire to find content nearby by making queries in the zrh.cx&#8211;, fra.cx&#8211; (Frankfurt), and ams.cx&#8211; (Amsterdam) contexts within cdn-zones .some-cdn.com. In all cases, the assertions themselves will be signed by the authority for cdn-zones.some-cdn.com, accurately representing that it is the CDN, not the owner of the related name in the global context, that is making the assertion.</p>
+<p id="rfc.section.4.2.1.p.1">Context is used in queries as it is in assertions (see <a href="#context-in-assertions">Section 4.1.1</a>). Assertion contexts in an answer to a query have to match the context in the query in order to respond to a query. The Context section of a query contains the context of desired assertions; a special &#8220;any&#8221; context (represented by the empty string) indicates that assertions in any context will be accepted.</p>
+<p id="rfc.section.4.2.1.p.2">Query contexts can also be used to provide additional information to RAINS servers about the query. For example, context can provide a method for explicit selection of a CDN server not based on either the client&#8217;s or the resolver&#8217;s address (see <a href="#RFC7871">[RFC7871]</a>). Here, the CDN creates a context for each of its content zones, and an external service selects appropriate contexts for the client based not just on client source address but passive and active measurement of performance. Queries for names at which content resides can then be made within these contexts, with the priority order of the contexts reflecting the goodness of the zone for the client. Here, a context might be zrh.cx&#8211;.cdn-zones.some-cdn.com for names of servers hosting content in a CDN&#8217;s Zurich data center, and a client could represent its desire to find content nearby by making queries in the zrh.cx&#8211;, fra.cx&#8211; (Frankfurt), and ams.cx&#8211; (Amsterdam) contexts within cdn-zones .some-cdn.com. In all cases, the assertions themselves will be signed by the authority for cdn-zones.some-cdn.com, accurately representing that it is the CDN, not the owner of the related name in the global context, that is making the assertion.</p>
 <p id="rfc.section.4.2.1.p.3">As with assertion contexts, developing conventions for query contexts for different situations will require implementation and deployment experience, and is a subject for future work.</p>
 <h1 id="rfc.section.4.2.2"><a href="#rfc.section.4.2.2">4.2.2.</a> <a href="#answers-to-queries" id="answers-to-queries">Answers to Queries</a></h1>
 <p id="rfc.section.4.2.2.p.1">An answer consists of a set of assertions, shards, and/or zones which respond to a query. If the query contained a token, it is bound to that query via the token.</p>
@@ -721,7 +721,7 @@ address {
     <tr>
       <td class="right">6</td>
       <td class="left">context</td>
-      <td class="left">Context of an assertion</td>
+      <td class="left">Context of an assertion or query</td>
     </tr>
     <tr>
       <td class="right">7</td>
@@ -732,11 +732,6 @@ address {
       <td class="right">8</td>
       <td class="left">query-name</td>
       <td class="left">Fully qualified name for a query</td>
-    </tr>
-    <tr>
-      <td class="right">9</td>
-      <td class="left">query-contexts</td>
-      <td class="left">Contexts acceptable in query answers</td>
     </tr>
     <tr>
       <td class="right">10</td>
@@ -866,30 +861,12 @@ address {
 <p id="rfc.section.5.6.p.4">The value of the subject-zone (4) key is a UTF-8 encoded string containing the name of the Zone.</p>
 <p id="rfc.section.5.6.p.5">The value of the context (6) key is a UTF-8 encoded string containing the name of the context for which the Zone is valid.</p>
 <h1 id="rfc.section.5.7"><a href="#rfc.section.5.7">5.7.</a> <a href="#cbor-query" id="cbor-query">Query Message Section body</a></h1>
-<p id="rfc.section.5.7.p.1">A Query body is a map. Queries MUST contain the the token (2), query-name (8), query-contexts (9), and query-types (10) keys. Queries MAY contain the query- expires (12) and query-opts (13) keys.</p>
+<p id="rfc.section.5.7.p.1">A Query body is a map. Queries MUST contain the the token (2), query-name (8), context (6), and query-types (10) keys. Queries MAY contain the query- expires (12) and query-opts (13) keys.</p>
 <p id="rfc.section.5.7.p.2">The value of the token (2) key, is a byte array of maximum length 32. Future messages or notifications containing answers to this query MUST contain this token, if present. See <a href="#cbor-tokens">Section 5.13</a>.</p>
-<p id="rfc.section.5.7.p.3">The value of the query-name (8) key is a UTF-8 encoded string containing the fully qualified name that is the subject of the query.</p>
-<p id="rfc.section.5.7.p.4">The value of the query-contexts (9) key is an allowable context expression, as an array of context names as UTF-8 encoded strings. The allowable context expression is evaluated in-order, as follows:</p>
-<p/>
-
-<ul>
-  <li>Context names appearing earlier in the expression are given priority over context names appearing later in the expression.</li>
-  <li>A context name may be negated by prepending the context negation marker &#8216;cx&#8211;0-.&#8217; to the context name; a negated context name means the named context is not acceptable in answers to this query.</li>
-  <li>The special context name &#8216;.&#8217; refers to the global context.</li>
-  <li>The special context name &#8216;cx&#8211;any-&#8216; means &#8216;any context is acceptable&#8217;.</li>
-</ul>
-<p id="rfc.section.5.7.p.6">Some examples:</p>
-<p/>
-
-<ul>
-  <li>[&#8216;cx&#8211;.inf.ethz.ch.&#8217;, &#8216;cx&#8211;any-&#8216;] means that answers in the &#8216;cx&#8211;.inf.ethz.ch.&#8217; context are preferred, but any context is acceptable;</li>
-  <li>[&#8217;.&#8217;, &#8216;cx&#8211;.inf.ethz.ch.&#8217;] means that only answers in the &#8216;cx&#8211;.inf.ethz.ch.&#8217; or global contexts are acceptable, with the global context preferred;</li>
-  <li>[&#8217;.&#8217;, cx&#8211;0-.cx&#8211;.inf.ethz.ch.&#8217;, &#8216;cx&#8211;any-&#8216;] means that answers in any context except &#8216;cx&#8211;.inf.ethz.ch.&#8217; are acceptable, with the global context preferred.</li>
-</ul>
-<p id="rfc.section.5.7.p.8">An empty context array in a query is taken to be equivalent to an array containing only [&#8217;.&#8217;, &#8216;cx&#8211;any-&#8216;]; i.e. any context acceptable, global context preferred.</p>
-<p id="rfc.section.5.7.p.9">The value of the query-types (10) key is an array of integers encoding the type(s) of objects (as in <a href="#cbor-object">Section 5.12</a>) acceptable in answers to the query.  All values in the query-type array are treated at equal priority: [2,3] means the querier is equally interested in both IPv4 and IPv6 addresses for the query-name. An empty query-types array indicates that objects of any type are acceptable in answers to the query.</p>
-<p id="rfc.section.5.7.p.10">The value of the query-expires (12) key, if present, is a CBOR integer counting seconds since the UNIX epoch UTC, identified with tag value 1 and encoded as in section 2.4.1 of <a href="#RFC7049">[RFC7049]</a>. After the query-expires time, the query will have been considered not answered by the original issuer.</p>
-<p id="rfc.section.5.7.p.11">The value of the query-opts (13) key, if present, is an array of integers in priority order of the querier&#8217;s preferences in tradeoffs in answering the query, as in <a href="#tabqopts">Table 3</a>.</p>
+<p id="rfc.section.5.7.p.3">The value of the context (6) key is a UTF-8 encoded string containing the name of the context to which a query pertains. A zero-length string indicates that assertions will be accepted in any context.</p>
+<p id="rfc.section.5.7.p.4">The value of the query-types (10) key is an array of integers encoding the type(s) of objects (as in <a href="#cbor-object">Section 5.12</a>) acceptable in answers to the query.  All values in the query-type array are treated at equal priority: [2,3] means the querier is equally interested in both IPv4 and IPv6 addresses for the query-name. An empty query-types array indicates that objects of any type are acceptable in answers to the query.</p>
+<p id="rfc.section.5.7.p.5">The value of the query-expires (12) key, if present, is a CBOR integer counting seconds since the UNIX epoch UTC, identified with tag value 1 and encoded as in section 2.4.1 of <a href="#RFC7049">[RFC7049]</a>. After the query-expires time, the query will have been considered not answered by the original issuer.</p>
+<p id="rfc.section.5.7.p.6">The value of the query-opts (13) key, if present, is an array of integers in priority order of the querier&#8217;s preferences in tradeoffs in answering the query, as in <a href="#tabqopts">Table 3</a>.</p>
 <div id="rfc.table.3"/>
 <div id="tabqopts"/>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -935,10 +912,10 @@ address {
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.5.7.p.12">Options 1-5 specify performance/privacy tradeoffs. Each server is free to determine how to minimize each performance metric requested; however, servers MUST NOT generate queries to other servers if &#8220;no information leakage&#8221; is specified, and servers MUST NOT return expired assertions unless &#8220;expired assertions acceptable&#8221; is specified.</p>
-<p id="rfc.section.5.7.p.13">Option 6 specifies that a given token (see <a href="#cbor-tokens">Section 5.13</a>) should be used on all queries resulting from a given query, allowing traceability through an entire RAINS infrastructure. It is meant for debugging purposes.</p>
-<p id="rfc.section.5.7.p.14">By default, a client service will perform verification of negative queries and return a 404 No Assertion Exists for queries with a consistent proof of non- existence, within a message signed by the query service&#8217;s infrakey. Option 7 disables this behavior, and causes the query service to return the shard proving nonexistence for verification by the client. It is intended to be used with untrusted query services.</p>
-<p id="rfc.section.5.7.p.15">Option 8 specifies that a querier&#8217;s interest in a query is strictly ephemeral, and that future assertions related to this query SHOULD NOT be proactively pushed to the querier.</p>
+<p id="rfc.section.5.7.p.7">Options 1-5 specify performance/privacy tradeoffs. Each server is free to determine how to minimize each performance metric requested; however, servers MUST NOT generate queries to other servers if &#8220;no information leakage&#8221; is specified, and servers MUST NOT return expired assertions unless &#8220;expired assertions acceptable&#8221; is specified.</p>
+<p id="rfc.section.5.7.p.8">Option 6 specifies that a given token (see <a href="#cbor-tokens">Section 5.13</a>) should be used on all queries resulting from a given query, allowing traceability through an entire RAINS infrastructure. It is meant for debugging purposes.</p>
+<p id="rfc.section.5.7.p.9">By default, a client service will perform verification of negative queries and return a 404 No Assertion Exists for queries with a consistent proof of non- existence, within a message signed by the query service&#8217;s infrakey. Option 7 disables this behavior, and causes the query service to return the shard proving nonexistence for verification by the client. It is intended to be used with untrusted query services.</p>
+<p id="rfc.section.5.7.p.10">Option 8 specifies that a querier&#8217;s interest in a query is strictly ephemeral, and that future assertions related to this query SHOULD NOT be proactively pushed to the querier.</p>
 <h1 id="rfc.section.5.8"><a href="#rfc.section.5.8">5.8.</a> <a href="#cbor-revassert" id="cbor-revassert">Address Assertion Message Section body</a></h1>
 <p id="rfc.section.5.8.p.1">Assertions about addresses are similar to assertions about names, but keyed by address and restricted in terms of the objects they can contain. An Address Assertion body is a map. The keys present in this map depend on whether the Assertion is contained in a Message Section or in an Address Zone.</p>
 <p id="rfc.section.5.8.p.2">Address Assertions contained in Message Sections are &#8220;bare Address Assertions&#8221;, and MUST contain the signatures (0), subject-addr (5), context (6), and objects (7) keys.</p>
@@ -1343,7 +1320,7 @@ address {
   <li>determines whether it has a stored assertion, shard, and/or zone message section which answers the query. If so, it prepares to return the most specific such section with the signature of the longest remaining validity to the peer that issued the query. If not, it:</li>
   <li>checks to see whether the query specifies option 4 (cached answers only). If so, and if option 5 (expired assertions acceptable) is also specified, it then checks to see if it has any cached sections that answer the query on which signatures are expired; otherwise, processing stops. If the query does not specify option 4, delegation proceeds as follows: the server:</li>
   <li>determines whether it has other non-authoritative servers it can forward the query to, according to its configuration and policy, and in compliance with any query options (see <a href="#cbor-query">Section 5.7</a>). If so, it prepares to forward the query to those servers, noting the reply for the received query depends on the replies for the forwarded query. If not, it:</li>
-  <li>determines the responsible authority servers for the zone containing the query name in the query for contexts requested, and forwards the query to those authority servers, noting the reply for the received query depends on the reply for the forwarded query.</li>
+  <li>determines the responsible authority servers for the zone containing the query name in the query for the context requested, and forwards the query to those authority servers, noting the reply for the received query depends on the reply for the forwarded query.</li>
 </ul>
 <p id="rfc.section.6.1.p.10">If query delegation fails to return an answer within a configured timeout for a delegated query, the server prepares to send a 504 No assertion available response to the peer from which it received the query.</p>
 <p id="rfc.section.6.1.p.11">When a server creates a new query to forward to another server in response to a query it received, it SHOULD NOT use the same token on the delegated query as on the received query, unless option 6 Enable Tracing is present in the received, in which case it MUST use the same token. The Enable Tracing option is designed to allow debugging of query processing across multiple servers, It SHOULD only be enabled by clients designed explicitly for debugging RAINS itself, and MUST NOT be enabled by default by client resolvers.</p>
@@ -1419,7 +1396,7 @@ address {
 <p id="rfc.section.8.4.p.1">A client that will not do its own verification must be able to discover the query server(s) it should trust for resolution. Integration with DHCP is left to a future revision of this document.</p>
 <p id="rfc.section.8.4.p.2">In any case, clients MUST provide a configuration interface to allow a user to specify (by address or name) and/or constrain (by certificate property) a preferred/trusted query server. This would allow client on an untrusted network to use an untrusted locally-available query server to discover a preferred query server (doing key verification on its own for bootstrapping), before connecting to that query server for normal name resolution.</p>
 <h1 id="rfc.section.8.5"><a href="#rfc.section.8.5">8.5.</a> <a href="#dns-transition" id="dns-transition">Transition using translation between RAINS and DNS information models</a></h1>
-<p id="rfc.section.8.5.p.1">Full adoption of RAINS would require changes to every client device (replacing DNS stub resolvers with RAINS clients) and name server on the Internet. In addition, most client software would need to change, as well, to get the full benefits of explicit context in name resolution. This is a wholly unrealistic goal.</p>
+<p id="rfc.section.8.5.p.1">Full adoption of RAINS would require changes to every client device (replacing DNS stub resolvers with RAINS clients) and name server on the Internet. In addition, most client software would need to change, as well, to get the full benefits of explicit context in name resolution. This is an unrealistic goal.</p>
 <p id="rfc.section.8.5.p.2">RAINS servers can, however, coexist with Domain Name System servers and clients during an indefinite transition period. RAINS assertions can be algorithmically translated into DNS answers, and RAINS queries can be algorithmically translated into DNS queries, by RAINS to DNS gateways, given the mostly compatible information models used by the two.</p>
 <p id="rfc.section.8.5.p.3">While DNSSEC and RAINS keys for equivalent ciphersuites are compatible with each other, there is no equivalent to query option 7 for gateways, since the RAINS signatures are generated over the RAINS bytestream for an assertion, not the DNS bytestream. Therefore, RAINS to DNS gateways must provide verification services for DNS clients. DNS over TLS <a href="#RFC7858">[RFC7858]</a> SHOULD be used between the DNS client and gateway to ensure confidentiality and integrity for queries and answers.</p>
 <p id="rfc.section.8.5.p.4">Object type mappings are as follows:</p>
