@@ -1,13 +1,11 @@
 ---
 title: RAINS (Another Internet Naming Service) Protocol Specification
 abbrev: RAINS
-docname: draft-trammell-rains-protocol-01
+docname: draft-trammell-rains-protocol-02
 date: 
 category: exp
 
 ipr: trust200902
-area: Internet Architecture Board
-workgroup: Names and Identifiers Program
 keyword: Internet-Draft
 
 stand_alone: yes
@@ -42,6 +40,7 @@ normative:
           ins: NIST
       title: Digital Signature Standard FIPS 186-3
       date: June 2009
+    RFC8032:
 
 informative:
     RFC1035:
@@ -246,20 +245,25 @@ The Types supported for each assertion are:
   CNAME). The Object contains a set of names.
 - Certificate: a certificate which must appear at a specified location in the
   certificate chain presented on a connection attempt with the named entity
-  (roughly equivalent to DNS TLSA). The details of this type will be described 
-  in a separate document.
+  (roughly equivalent to DNS TLSA).
 - Zone-Nameset: an expression of the set of names allowed within a zone; e.g.
   Unicode scripts or codepages in which names in the zone may be issued. This
   allows a zone to set policy on names in support of the distinguishability
   property in {{I-D.trammell-inip-pins}} that can be checked by RAINS 
   servers at runtime. An assertion about a Subject within a Zone whose
   name is not allowed by a valid signed Zone-Nameset expression is taken to be
-  invalid, even if it has a valid signature. The details of this type will be
-  described in a separate document.
+  invalid, even if it has a valid signature.
 - Zone-Registrar: Information about the organization that caused a Subject name 
   to exist, for registrant-level names.
 - Zone-Registrant: Information about the organization responsible for a 
   Subject name, for registrant-level names.
+- Infrastructure Key: Information about public keys used for object security
+  within the RAINS infrastructure itself. The Object contains a public key by
+  which a named RAINS server can be identified.
+- External Key: Information about public keys used for additional signatures
+  on assertions. The external key is usually discovered outside RAINS, and can
+  be verified by comparison with the key stored in a RAINS assertion. The
+  Object contains an external public key.
 
 For a given {subject, type} tuple, multiple assertions can be valid at a given
 point in time; the union of the object values of all of these assertions is
@@ -387,13 +391,19 @@ A zone has the following information elements:
   shard; see {{signatures-in-assertions}}.
 - Kind: delegation-only, final, or mixed; see above.
 
+### Zone-Reflexive Assertions
+
+A zone may make an assertion about itself by using an empty subject name. This
+facility can be used for any assertion type, but is especially useful for
+self-signing root zones.
+
 ## Query
 
 A query is a request for a set of assertions supporting a conclusion about a
 given subject-object mapping. It consists of the following information
 elements:
 
-- Contexts: an expression of the context(s) in which assertions answering the
+- Context: The context(s) in which assertions answering the
   query will be accepted; see {{context-in-queries}} below.
 - Qualified-Subject: the name about which the query is made. The subject name
   in a query must be fully-qualified. 
@@ -402,6 +412,8 @@ elements:
   which it expires and should not be answered.
 - Query Token: a client-generated token for the query, which can be used
   in the answer to refer to the query.
+- Options: a set of options by which a client may specify tradeoffs 
+  (e.g. privacy for performance).
 
 A query expresses interest about all the given types of assertion in all the
 specified contexts; more complex expressions of which types in which contexts
@@ -411,22 +423,15 @@ be bound to the query using query options.
 
 ### Context in Queries
 
-Contexts are used in queries as they are in assertions 
-(see {{context-in-assertions}}). 
-Assertion contexts in an answer to a query have to match some
-context in the query in order to respond to a query. However, there are a few
-additional considerations. An assertion can only exist with a specific
-context, while queries may accept answers in multiple contexts. The Contexts
-part of a query is a sequence of context specifiers taken to be in order of
-decreasing priority. A special null context (represented by the empty string)
-indicates that assertions in any context will be accepted. Any context in the
-Contexts part of a query may additionally be negated, in order to note that
-assertions in those contexts are not acceptable. Negated context name
-appearing in the Contexts part of a query before the null context expresses
-"any context except these".
+Context is used in queries as it is in assertions (see
+{{context-in-assertions}}). Assertion contexts in an answer to a query have to
+match the context in the query in order to respond to a query. The Context
+section of a query contains the context of desired assertions; a special "any"
+context (represented by the empty string) indicates that assertions in any
+context will be accepted.
 
 Query contexts can also be used to provide additional information to RAINS
-servers about the query. For example, contexts can provide a method for
+servers about the query. For example, context can provide a method for
 explicit selection of a CDN server not based on either the client's or the
 resolver's address (see {{RFC7871}}). Here, the CDN creates a context for
 each of its content zones, and an external service selects appropriate
@@ -580,10 +585,9 @@ and notification maps is given in the symbol table below:
 | 3    | subject-name   | Subject name in an assertion                  |
 | 4    | subject-zone   | Zone name in an assertion                     |
 | 5    | subject-addr   | Subject address in address assertion or zone  |
-| 6    | context        | Context of an assertion                       |
+| 6    | context        | Context of an assertion or query              |
 | 7    | objects        | Objects of an assertion                       |
 | 8    | query-name     | Fully qualified name for a query              |
-| 9    | query-contexts | Contexts acceptable in query answers          |
 | 10   | query-types    | Acceptable object types for query             |
 | 11   | shard-range    | Lexical range of Assertions in Shard          |
 | 12   | query-expires  | Absolute timestamp for query expiration       |
@@ -763,42 +767,16 @@ containing the name of the context for which the Zone is valid.
 ## Query Message Section body {#cbor-query}
 
 A Query body is a map. Queries MUST contain the the token (2), query-name (8),
-query-contexts (9), and query-types (10) keys. Queries MAY contain the query-
+context (6), and query-types (10) keys. Queries MAY contain the query-
 expires (12) and query-opts (13) keys.
 
 The value of the token (2) key, is a byte array of maximum length
 32. Future messages or notifications containing answers to this query MUST
 contain this token, if present. See {{cbor-tokens}}.
 
-The value of the query-name (8) key is a UTF-8 encoded string containing the
-fully qualified name that is the subject of the query.
-
-The value of the query-contexts (9) key is an allowable context expression, as an
-array of context names as UTF-8 encoded strings. The allowable context
-expression is evaluated in-order, as follows:
-
-- Context names appearing earlier in the expression are given priority over
-  context names appearing later in the expression.
-- A context name may be negated by prepending the context negation marker 
-  'cx--0-.' to the context name; a negated context name means the named context
-  is not acceptable in answers to this query.
-- The special context name '.' refers to the global context.
-- The special context name 'cx--any-' means 'any context is acceptable'.
-
-Some examples:
-
-- ['cx--.inf.ethz.ch.', 'cx--any-'] means that answers in the 
-  'cx--.inf.ethz.ch.' context are preferred, but any context is acceptable; 
-- ['.', 'cx--.inf.ethz.ch.'] means that only answers in the
-  'cx--.inf.ethz.ch.' or global contexts are acceptable, with the global
-  context preferred;
-- ['.', cx--0-.cx--.inf.ethz.ch.', 'cx--any-'] means that answers in any 
-  context except 'cx--.inf.ethz.ch.' are acceptable, with the global context
-  preferred.
-
-An empty context array in a query is taken to be equivalent to an array
-containing only ['.', 'cx--any-']; i.e. any context acceptable, global context
-preferred.
+The value of the context (6) key is a UTF-8 encoded string containing the name
+of the context to which a query pertains. A zero-length string indicates that
+assertions will be accepted in any context.
 
 The value of the query-types (10) key is an array of integers encoding the
 type(s) of objects (as in {{cbor-object}}) acceptable in answers to the query.
@@ -1019,6 +997,7 @@ the object, encoded as an integer in the following table:
 | 9     | registrar    | registrar information                   |
 | 10    | registrant   | registrant information                  |
 | 11    | infrakey     | public key for RAINS infrastructure     |
+| 12    | extrakey     | external public key for subject         |
 
 A name (1) object contains a name associated with a name as an alias. It is
 represented as a three-element array. The second element is a fully-qualified
@@ -1039,7 +1018,7 @@ authority server for a named zone. It is represented as a two-element array.
 The second element is a fully-qualified name of an RAINS authority server as a
 UTF-8 encoded string.
 
-A delegation (5) object contains the public key used to generate signatures
+A delegation (5) object contains a public key used to generate signatures
 on assertions in a named zone, and by which a delegation of a name within a
 zone to a subordinate zone may be verified. It is represented as an N-element
 array. The second element is a signature algorithm identifier as in 
@@ -1075,10 +1054,21 @@ organization-level name. It is represented as a UTF-8 string with a maximum
 length of 4096 bytes containing this information, with a format chosen by the
 registrar according to the registry's policy.
 
-An infrakey (11) object contains the public key used to generate signatures on
+An infrakey (11) object contains a public key used to generate signatures on
 messages by a named RAINS server, by which a RAINS message signature may be
 verified by a receiver. It is identical in structure to a delegation object,
-as defined in {{cbor-signature}}.
+as defined in {{cbor-signature}}. Infrakey signatures are especially useful
+for clients which delegate verification to their query servers to authenticate
+the messages sent by the query server.
+
+An extrakey (12) object contains a public key used to generate signatures on
+assertions in a named zone outside of the normal delegation chain. It is
+identical in structure to a delegation object, as defined in {{cbor-
+signature}}. An extrakey may be matched with a public key obtained through
+other means for additional authentication of an assertion. Extrakeys are
+different from delegation keys in that they may not be used in the delegation
+chain: an extrakey signature is valid only on assertions of object types other
+than delegation.
 
 ### Certificate information format {#cbor-certinfo}
 
@@ -1258,8 +1248,35 @@ The following algorithms are supported:
 
 | Code | Signatures | Hash/HMAC | Format               |
 |-----:|------------|-----------|----------------------|
-| 2    | ecdsa-256  | sha-256   | See {{ecdsa-format}} |
-| 3    | ecdsa-384  | sha-384   | See {{ecdsa-format}} |
+| 1    | ed25519    | sha-512   | See {{eddsa-format}} |
+| 2    | ed448      | shake256  | See {{eddsa-format}} |
+| 3    | ecdsa-256  | sha-256   | See {{ecdsa-format}} |
+| 4    | ecdsa-384  | sha-384   | See {{ecdsa-format}} |
+
+### EdDSA signature and public key format {#eddsa-format}
+
+EdDSA public keys consist of a single value, a 32-byte bit string generated as
+in Section 5.1.5 of {{RFC8032}} for Ed25519, and a 57-byte bit string
+generated as in Section 5.2.5 of {{RFC8032}} for Ed448. The third element in a
+RAINS delegation object is this bit string encoded as a CBOR byte array. RAINS
+delegation objects for Ed25519 keys are therefore represented by the array [5,
+1, k]; and for Ed448 keys as [5, 2, k].
+
+Ed25519 and Ed448 signatures are are a combination of two non-negative
+integers, called "R" and "S" in sections 5.1.6 and 5.2.6, respectively, of
+{{RFC8032}}. An Ed25519 signature is represented as a 64-byte array containing
+the the concatenation of R and S, and an Ed448 signature is represented as a
+114-byte array containing the concatenation of R and S. RAINS signatures using
+Ed25519 are therefore the array [1, valid-from, valid-until, R|S]; using Ed448
+the array [2, valid-from, valid-until, R|S].
+
+Ed25519 keys are generated as in Section 5.1.5 of {{RFC8032}}, and Ed448 keys
+as in Section 5.2.5 of {{RFC8032}}.  Ed25519 signatures are generated from a
+normalized serialized CBOR object as in Section 5.1.6 of {{RFC8032}}, and
+Ed448 signatures as in section 5.2.6 of {{RFC8032}}.
+
+RAINS Server and Client implementations MUST support Ed25519 signatures for
+delegation.
 
 ### ECDSA signature and public key format {#ecdsa-format}
 
@@ -1268,7 +1285,7 @@ is a simple bit string that represents the uncompressed form of a curve point,
 concatenated together as "x | y". The third element in a RAINS delegation
 object is the Q bit string encoded as a CBOR byte array. RAINS delegation
 objects for ECDSA-256 public keys are therefore represented as the array 
-[5, 2, Q]; and for ECDSA-384 public keys as [5, 3, Q].
+[5, 3, Q]; and for ECDSA-384 public keys as [5, 4, Q].
 
 ECDSA signatures are a combination of two non-negative integers, called "r"
 and "s" in {{FIPS-186-3}}. A Signature using ECDSA is represented using a
@@ -1277,14 +1294,14 @@ represented as a byte array as described in Section C.2 of {{FIPS-186-3}}, and
 s represented as a byte array as described in Section C.2 of {{FIPS-186-3}}.
 For ECDSA-256 signatures, each integer MUST be represented as a 32-byte array.
 For ECDSA-384 signatures, each integer MUST be represented as a 48-byte array.
-RAINS signatures using ECDSA-256 are therefore the array [2, valid-from,
-valid-until, r|s]; and for ECDSA-384 the array [3, valid-from, valid-until,
+RAINS signatures using ECDSA-256 are therefore the array [3, valid-from,
+valid-until, r|s]; and for ECDSA-384 the array [4, valid-from, valid-until,
 r|s].
 
 ECDSA-256 signatures and public keys use the P-256 curve as defined in {{FIPS-186-3}}.
 ECDSA-384 signatures and public keys use the P-384 curve as defined in {{FIPS-186-3}}.
 
-All RAINS servers MUST implement ECDSA-256 and ECDSA-384.
+ECDSA-256 and ECDSA-384 support are primarily meant for compatibility with and migration from existing DNSSEC deployments; see {{dns-transition}}.
 
 ## Capabilities {#cbor-capabilities}
 
@@ -1408,7 +1425,7 @@ On receipt of a query, a server:
   query to those servers, noting the reply for the received query depends on
   the replies for the forwarded query. If not, it:
 - determines the responsible authority servers for the zone containing the
-  query name in the query for contexts requested, and forwards the query to
+  query name in the query for the context requested, and forwards the query to
   those authority servers, noting the reply for the received query depends on
   the reply for the forwarded query.
 
@@ -1619,23 +1636,22 @@ answers to queries.
 ## Query Service Discovery
 
 A client that will not do its own verification must be able to discover the
-oracle server(s) it should trust for resolution. Integration with e.g. DHCP or
-selection of a local multicast discovery method are left to a future revision
-of this document.
+query server(s) it should trust for resolution. Integration with DHCP is left
+to a future revision of this document.
 
 In any case, clients MUST provide a configuration interface to allow a user to
 specify (by address or name) and/or constrain (by certificate property) a
-preferred/trusted oracle. This would allow client on an untrusted network to
-use an untrusted locally-available oracle to discover a preferred oracle
+preferred/trusted query server. This would allow client on an untrusted network to
+use an untrusted locally-available query server to discover a preferred query server
 (doing key verification on its own for bootstrapping), before connecting to
-that oracle for normal name resolution.
+that query server for normal name resolution.
 
-## Transition using translation between RAINS and DNS information models
+## Transition using translation between RAINS and DNS information models {#dns-transition}
 
 Full adoption of RAINS would require changes to every client device (replacing
 DNS stub resolvers with RAINS clients) and name server on the Internet. In
 addition, most client software would need to change, as well, to get the full
-benefits of explicit context in name resolution. This is a wholly unrealistic goal.
+benefits of explicit context in name resolution. This is an unrealistic goal.
 
 RAINS servers can, however, coexist with Domain Name System servers and
 clients during an indefinite transition period. RAINS assertions can be
@@ -1742,9 +1758,9 @@ details.
 
 # Acknowledgments
 
-Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Ted Hardie, Joe
-Hildebrand, Tobias Klausmann, Steve Matsumoto, Adrian Perrig, Raphael
-Reischuk, Stephen Shirley, Andrew Sullivan, and Suzanne Woolf for the
+Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Christian Fehlmann, Ted
+Hardie, Joe Hildebrand, Tobias Klausmann, Steve Matsumoto, Adrian Perrig,
+Raphael Reischuk, Stephen Shirley, Andrew Sullivan, and Suzanne Woolf for the
 discussions leading to the design of this protocol.
 
 --- back
@@ -1792,8 +1808,8 @@ Two codepoints have been reserved to support experimentation with this mechanism
 
 | Code | Signatures | Hash/HMAC | Format               | Revocation |
 |-----:|------------|-----------|----------------------|------------|
-| 23   | ecdsa-256  | sha-256   | See {{ecdsa-format}} | hash-chain |
-| 24   | ecdsa-384  | sha-384   | See {{ecdsa-format}} | hash-chain |
+| 24   | ecdsa-256  | sha-256   | See {{ecdsa-format}} | hash-chain |
+| 25   | ecdsa-384  | sha-384   | See {{ecdsa-format}} | hash-chain |
 
 The main open question for experimentation is how to ensure that a revocation
 is properly propagated through a RAINS infrastructure; this may require
@@ -1806,9 +1822,6 @@ cache. If so, it discards the old information, and caches the new section.
 # Open Issues
 
 - A method for clients to discover local oracles needs to be specified.
-- Reverse DNS must be added. Instead of in-addr.arpa., the RAINS facility
-  should treat reverse lookups as first-order, with subject-addr instead of
-  subject-name in assertions and queries.
 - Consider making negative answers less expensive by allowing a hash of a
   shard with a negative answer proof to be sent back, and checked with a "no
   hashed negative answers" query option. This would increase complexity
