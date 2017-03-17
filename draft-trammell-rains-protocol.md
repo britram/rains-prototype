@@ -344,7 +344,7 @@ protect other signatures on the assertion.
 ### Shards and Zones
 
 Assertions may also be grouped and signed as a group. A shard is a set of
-assertions subject to the same authority within the same context, protected by
+assertions within the same zone and context, protected by
 one or more signatures over all assertions within the shard. A shard may have
 an additional property that given a subject and an authenticated shard, it can
 be shown that either an assertion with a given name and type exists within the
@@ -610,12 +610,12 @@ message.
 A Message map MAY contain a capabilities (1) key, whose value is described in
 {#cbor-capabilities}.
 
-A Message map MUST contain a token (2) key, whose value is a byte array of
-maximum length 32. See {{cbor-tokens}}.
+A Message map SHOULD contain a token (2) key, whose value is a byte array of
+maximum length 32. See {{cbor-tokens}} for details.
 
 A Message map MUST contain a content (23) key, whose value is an array of
 Message Sections; a Message Section is either an Assertion, Shard, Zone, or
-Query.
+Query, or Notification.
 
 ## Message Section header
 
@@ -649,8 +649,12 @@ signatures (0), subject-name (3), subject-zone (4), context (6), and objects
 
 Assertions within a Shard or Zone are "contained Assertions", and can inherit
 values from their containers. A contained Assertion MUST contain the subject-
-name (3) and objects (7) keys. It MAY contain subject-zone (4) and context (6)
-keys, but in this case the values of these keys MUST be identical to the
+name (3) and objects (7) keys. The subject-zone (4) and context (6) keys MUST
+NOT be present. They are assumed to have the same value as the corresponding
+values in the containing Shard or Zone for signature generation and signature
+verification purposes; see {{cbor-signature}}.
+
+It MAY contain , but in this case the values of these keys MUST be identical to the
 values in the containing Shard or Zone.
 
 A contained Assertion SHOULD contain the signatures (0) key, since an unsigned
@@ -696,9 +700,10 @@ inherit any values from their contained Zone, they MUST contain the content
 
 Shards within a Zone are "contained Shards", and can inherit values from their
 containing Zone. A contained Shard MUST contain the content (23) key, and MAY
-contain the shard-range(11) key. It MAY contain subject- zone (4) and context
-(6) keys, but in this case the values of these keys MUST be identical to the
-values in the containing Zone.
+contain the shard-range(11) key. The subject-zone (4) and context (6) keys MUST
+NOT be present. They are assumed to have the same value as the corresponding
+values in the containing Zone for signature generation and signature
+verification purposes; see {{cbor-signature}}.
 
 A contained Shard SHOULD contain the signatures (0) key if it also contains a
 shard-range (11) key, since an unsigned contained Shard cannot be used by a
@@ -944,6 +949,8 @@ for is considered to respond to the query, with more-specific prefixes being
 preferred over less-specific.
 
 ## Notification Message Section body {#cbor-notification}
+
+[EDITOR'S NOTE: ensure it is clear everywhere that notifications are message sections too.]
 
 Notification Message Sections contain information about the operation of the
 RAINS protocol itself. A Notification Message Section body is a map which MUST
