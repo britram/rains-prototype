@@ -15,7 +15,7 @@ author:
  -
     ins: B. Trammell
     name: Brian Trammell
-    organization: ETH Zurich NetSec
+    organization: ETH Zurich
     street: Universitaetstrasse 6
     city: Zurich
     code: 8092
@@ -964,7 +964,7 @@ contain the token (2) and note-type (21) keys and MAY contain the note-data
 |-----:|----------------------------------------------------------------|
 | 100  | Connection heartbeat                                           |
 | 399  | Capability hash not understood                                 |
-| 400  | Malformed message received                                     |
+| 400  | Bad message received                                     |
 | 403  | Inconsistent message received                                  |
 | 404  | No assertion exists (client protocol only)                     |
 | 413  | Message too large                                              |
@@ -1385,7 +1385,11 @@ any content to any other server. A client may send messages containing queries
 to servers, and a server may sent messages containing anything other than
 queries to clients.
 
-Upon receipt of a message, a server or client parses it, and:
+Upon receipt of a message, a server or client attempts to parse it.
+
+If the server or client cannot parse the message at all, it returns a 400 Bad Message notification to the peer. This notification may have a null token if the token cannot be retrieved from the message.
+
+If the server or client can parse the message, it:
 
 - notes the token on the message. This token MUST be present on any
   messages sent in reply to this message.
@@ -1394,8 +1398,8 @@ Upon receipt of a message, a server or client parses it, and:
   capabilities are represented by a hash that the server does not have in its
   cache, it prepares a notification of type 399 "Capability hash not
   understood" to send to its peer.
-- splits the contents into its constituent message sections, processing them
-  independently.
+- splits the contents into its constituent message sections, and verifies that each is acceptable. Specifically, queries are not accepted by clients (see {{protocol-client}}), and 404 No Assertion Exists notifications are not accepted by servers. If a message contains an unacceptable section, the server or client returns a 400 Bad Message notification to its peer, and ceases processing of the message.
+
 
 On receipt of an assertion, shard, or zone message section, a server:
 
@@ -1466,7 +1470,7 @@ On receipt of a notification, a server's behavior depends on the notification ty
 - For type 413 "Message too large" the server notes that large messages may 
   not be sent to a peer and tries again (see {{protocol-limits}}), or logs
   the error along with the note-data content.
-- For type 400 "Malformed message", type 403 "Inconsistent message", type 500
+- For type 400 "Bad message", type 403 "Inconsistent message", type 500
   "Server error", or type 501 "Server not capable", the server logs the error
   along with the note-data content, as these notifications generally represent
   implementation or configuration error conditions which will require human
@@ -1484,7 +1488,7 @@ On receipt of a notification, a client's behavior depends on the notification ty
 - For type 413 "Message too large" the client notes that large messages may 
   not be sent to a peer and tries again (see {{protocol-limits}}), or logs
   the error along with the note-data content.
-- For type 400 "Malformed message", type 403 "Inconsistent message", type 500
+- For type 400 "Bad message", type 403 "Inconsistent message", type 500
   "Server error", or type 501 "Server not capable", the client logs the error
   along with the note-data content, as these notifications generally represent
   implementation or configuration error conditions which will require human
@@ -1584,11 +1588,11 @@ query service is a subset of the full RAINS protocol, with the following
 differences:
 
 - Clients only process assertion, shard, zone, and notification sections;
-  sending a query to a client results in a 400 Malformed Message notification.
+  sending a query to a client results in a 400 Bad Message notification.
 - Clients never listen for connections; a client must initiate and maintain a
   transport session to the query server(s) it uses for name resolution.
 - Servers only process query and notification sections when connected to
-  clients; a client sending assertions to a server results in a 400 Malformed
+  clients; a client sending assertions to a server results in a 400 Bad
   Message notification.
 
 Since signature verification is resource-intensive, clients delegate signature
