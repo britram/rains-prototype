@@ -273,7 +273,7 @@ address {
   .github-fork-ribbon-wrapper {
     position: fixed;
   }
-/*]]>*/</style>
+  /*]]>*/</style>
 
 
   <link href="#rfc.toc" rel="Contents"/>
@@ -337,12 +337,12 @@ address {
 <link href="#rfc.authors" rel="Chapter"/>
 
 
-  <meta name="generator" content="xml2rfc version 2.5.1 - http://tools.ietf.org/tools/xml2rfc" />
+  <meta name="generator" content="xml2rfc version 2.5.2 - http://tools.ietf.org/tools/xml2rfc" />
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Trammell, B." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-trammell-rains-protocol-02" />
-  <meta name="dct.issued" scheme="ISO8601" content="2017-3-17" />
+  <meta name="dct.issued" scheme="ISO8601" content="2017-3-20" />
   <meta name="dct.abstract" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in " />
   <meta name="description" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service described in " />
 
@@ -359,14 +359,14 @@ address {
 </tr>
 <tr>
   <td class="left">Internet-Draft</td>
-  <td class="right">ETH Zurich NetSec</td>
+  <td class="right">ETH Zurich</td>
 </tr>
 <tr>
   <td class="left">Intended status: Experimental</td>
-  <td class="right">March 17, 2017</td>
+  <td class="right">March 20, 2017</td>
 </tr>
 <tr>
-  <td class="left">Expires: September 18, 2017</td>
+  <td class="left">Expires: September 21, 2017</td>
   <td class="right"></td>
 </tr>
 
@@ -387,7 +387,7 @@ address {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on September 18, 2017.</p>
+<p>This Internet-Draft will expire on September 21, 2017.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -966,7 +966,7 @@ address {
     </tr>
     <tr>
       <td class="right">400</td>
-      <td class="left">Malformed message received</td>
+      <td class="left">Bad message received</td>
     </tr>
     <tr>
       <td class="right">403</td>
@@ -1291,15 +1291,17 @@ address {
 <p id="rfc.section.6.p.3">This section describes the operation of the protocol as used among RAINS servers. A simplified version of the protocol for client access is described in <a href="#protocol-client">Section 7</a>.</p>
 <h1 id="rfc.section.6.1"><a href="#rfc.section.6.1">6.1.</a> <a href="#protocol-processing" id="protocol-processing">Message processing</a></h1>
 <p id="rfc.section.6.1.p.1">Once a transport is established, any server may validly send a message with any content to any other server. A client may send messages containing queries to servers, and a server may sent messages containing anything other than queries to clients.</p>
-<p id="rfc.section.6.1.p.2">Upon receipt of a message, a server or client parses it, and:</p>
+<p id="rfc.section.6.1.p.2">Upon receipt of a message, a server or client attempts to parse it.</p>
+<p id="rfc.section.6.1.p.3">If the server or client cannot parse the message at all, it returns a 400 Bad Message notification to the peer. This notification may have a null token if the token cannot be retrieved from the message.</p>
+<p id="rfc.section.6.1.p.4">If the server or client can parse the message, it:</p>
 <p/>
 
 <ul>
   <li>notes the token on the message. This token MUST be present on any messages sent in reply to this message.</li>
   <li>processes any capabilities present, replacing the set of capabilities known for the peer with the set present in the message. If the present capabilities are represented by a hash that the server does not have in its cache, it prepares a notification of type 399 &#8220;Capability hash not understood&#8221; to send to its peer.</li>
-  <li>splits the contents into its constituent message sections, processing them independently.</li>
+  <li>splits the contents into its constituent message sections, and verifies that each is acceptable. Specifically, queries are not accepted by clients (see <a href="#protocol-client">Section 7</a>), and 404 No Assertion Exists notifications are not accepted by servers. If a message contains an unacceptable section, the server or client returns a 400 Bad Message notification to its peer, and ceases processing of the message.</li>
 </ul>
-<p id="rfc.section.6.1.p.4">On receipt of an assertion, shard, or zone message section, a server:</p>
+<p id="rfc.section.6.1.p.6">On receipt of an assertion, shard, or zone message section, a server:</p>
 <p/>
 
 <ul>
@@ -1307,14 +1309,14 @@ address {
   <li>determines whether it answers an outstanding query; if so, it prepares to forward the section to the server that issued the query.</li>
   <li>determines whether it is likely to answer a future query, according to its configuration, policy, and query history; if so, it caches the section.</li>
 </ul>
-<p id="rfc.section.6.1.p.6">On receipt of an assertion, shard, or zone message section, a client:</p>
+<p id="rfc.section.6.1.p.8">On receipt of an assertion, shard, or zone message section, a client:</p>
 <p/>
 
 <ul>
   <li>determines whether it answers an outstanding query; if so, it considers the query answered. It then:</li>
   <li>determines whether it is likely to answer a future query, according to its configuration, policy, and query history; if so, it caches the section.</li>
 </ul>
-<p id="rfc.section.6.1.p.8">On receipt of a query, a server:</p>
+<p id="rfc.section.6.1.p.10">On receipt of a query, a server:</p>
 <p/>
 
 <ul>
@@ -1324,10 +1326,10 @@ address {
   <li>determines whether it has other non-authoritative servers it can forward the query to, according to its configuration and policy, and in compliance with any query options (see <a href="#cbor-query">Section 5.7</a>). If so, it prepares to forward the query to those servers, noting the reply for the received query depends on the replies for the forwarded query. If not, it:</li>
   <li>determines the responsible authority servers for the zone containing the query name in the query for the context requested, and forwards the query to those authority servers, noting the reply for the received query depends on the reply for the forwarded query.</li>
 </ul>
-<p id="rfc.section.6.1.p.10">If query delegation fails to return an answer within a configured timeout for a delegated query, the server prepares to send a 504 No assertion available response to the peer from which it received the query.</p>
-<p id="rfc.section.6.1.p.11">When a server creates a new query to forward to another server in response to a query it received, it SHOULD NOT use the same token on the delegated query as on the received query, unless option 6 Enable Tracing is present in the received, in which case it MUST use the same token. The Enable Tracing option is designed to allow debugging of query processing across multiple servers, It SHOULD only be enabled by clients designed explicitly for debugging RAINS itself, and MUST NOT be enabled by default by client resolvers.</p>
-<p id="rfc.section.6.1.p.12">When a server creates a new query to forward to another server in response to a query it received, and the received query contains a query-expires time, the delegated query MUST contain the same query-expires time. If the received query contains no query-expires time, the delegated query MAY contain a query- expires time of the server&#8217;s choosing, according to its configuration.</p>
-<p id="rfc.section.6.1.p.13">On receipt of a notification, a server&#8217;s behavior depends on the notification type:</p>
+<p id="rfc.section.6.1.p.12">If query delegation fails to return an answer within a configured timeout for a delegated query, the server prepares to send a 504 No assertion available response to the peer from which it received the query.</p>
+<p id="rfc.section.6.1.p.13">When a server creates a new query to forward to another server in response to a query it received, it SHOULD NOT use the same token on the delegated query as on the received query, unless option 6 Enable Tracing is present in the received, in which case it MUST use the same token. The Enable Tracing option is designed to allow debugging of query processing across multiple servers, It SHOULD only be enabled by clients designed explicitly for debugging RAINS itself, and MUST NOT be enabled by default by client resolvers.</p>
+<p id="rfc.section.6.1.p.14">When a server creates a new query to forward to another server in response to a query it received, and the received query contains a query-expires time, the delegated query MUST contain the same query-expires time. If the received query contains no query-expires time, the delegated query MAY contain a query- expires time of the server&#8217;s choosing, according to its configuration.</p>
+<p id="rfc.section.6.1.p.15">On receipt of a notification, a server&#8217;s behavior depends on the notification type:</p>
 <p/>
 
 <ul>
@@ -1335,9 +1337,9 @@ address {
   <li>For type 399 &#8220;Capability hash not understood&#8221;, the server prepares to send a full capabilities list on the next message it sends to the peer.</li>
   <li>For type 504 &#8220;No assertion available&#8221;, the server checks the token on the message, and prepares to forward the assertion to the associated query.</li>
   <li>For type 413 &#8220;Message too large&#8221; the server notes that large messages may not be sent to a peer and tries again (see <a href="#protocol-limits">Section 6.3</a>), or logs the error along with the note-data content.</li>
-  <li>For type 400 &#8220;Malformed message&#8221;, type 403 &#8220;Inconsistent message&#8221;, type 500 &#8220;Server error&#8221;, or type 501 &#8220;Server not capable&#8221;, the server logs the error along with the note-data content, as these notifications generally represent implementation or configuration error conditions which will require human intervention to mitigate.</li>
+  <li>For type 400 &#8220;Bad message&#8221;, type 403 &#8220;Inconsistent message&#8221;, type 500 &#8220;Server error&#8221;, or type 501 &#8220;Server not capable&#8221;, the server logs the error along with the note-data content, as these notifications generally represent implementation or configuration error conditions which will require human intervention to mitigate.</li>
 </ul>
-<p id="rfc.section.6.1.p.15">On receipt of a notification, a client&#8217;s behavior depends on the notification type:</p>
+<p id="rfc.section.6.1.p.17">On receipt of a notification, a client&#8217;s behavior depends on the notification type:</p>
 <p/>
 
 <ul>
@@ -1345,10 +1347,10 @@ address {
   <li>For type 399 &#8220;Capability hash not understood&#8221;, the client prepares to send a full capabilities list on the next message it sends to the peer.</li>
   <li>For type 404 &#8220;No assertion exists&#8221;, the client takes the query to be unanswerable. It may reissue the query with query option 7 to do the verification of nonexistence again, if the server from which it received the notification is untrusted.</li>
   <li>For type 413 &#8220;Message too large&#8221; the client notes that large messages may not be sent to a peer and tries again (see <a href="#protocol-limits">Section 6.3</a>), or logs the error along with the note-data content.</li>
-  <li>For type 400 &#8220;Malformed message&#8221;, type 403 &#8220;Inconsistent message&#8221;, type 500 &#8220;Server error&#8221;, or type 501 &#8220;Server not capable&#8221;, the client logs the error along with the note-data content, as these notifications generally represent implementation or configuration error conditions which will require human intervention to mitigate.</li>
+  <li>For type 400 &#8220;Bad message&#8221;, type 403 &#8220;Inconsistent message&#8221;, type 500 &#8220;Server error&#8221;, or type 501 &#8220;Server not capable&#8221;, the client logs the error along with the note-data content, as these notifications generally represent implementation or configuration error conditions which will require human intervention to mitigate.</li>
 </ul>
-<p id="rfc.section.6.1.p.17">The first message a server or client sends to a peer after a new connection is established SHOULD contain a capabilities section, if the server or client supports any optional capabilities. See <a href="#cbor-capabilities">Section 5.15</a>.</p>
-<p id="rfc.section.6.1.p.18">If the server is configured to keep long-running connections open, due to the presence of network behaviors that may drop state for idle connections, it SHOULD send a message containing a type 100 Connection Heartbeat notification after a configured idle time without any messages containing other content being sent.</p>
+<p id="rfc.section.6.1.p.19">The first message a server or client sends to a peer after a new connection is established SHOULD contain a capabilities section, if the server or client supports any optional capabilities. See <a href="#cbor-capabilities">Section 5.15</a>.</p>
+<p id="rfc.section.6.1.p.20">If the server is configured to keep long-running connections open, due to the presence of network behaviors that may drop state for idle connections, it SHOULD send a message containing a type 100 Connection Heartbeat notification after a configured idle time without any messages containing other content being sent.</p>
 <h1 id="rfc.section.6.2"><a href="#rfc.section.6.2">6.2.</a> <a href="#message-transmission" id="message-transmission">Message Transmission</a></h1>
 <p id="rfc.section.6.2.p.1">As noted in <a href="#protocol-processing">Section 6.1</a> many messages are sent in reply to messages received from peers. Servers may also originate messages on their own, based on their configuration and policy:</p>
 <p/>
@@ -1379,9 +1381,9 @@ address {
 <p/>
 
 <ul>
-  <li>Clients only process assertion, shard, zone, and notification sections; sending a query to a client results in a 400 Malformed Message notification.</li>
+  <li>Clients only process assertion, shard, zone, and notification sections; sending a query to a client results in a 400 Bad Message notification.</li>
   <li>Clients never listen for connections; a client must initiate and maintain a transport session to the query server(s) it uses for name resolution.</li>
-  <li>Servers only process query and notification sections when connected to clients; a client sending assertions to a server results in a 400 Malformed Message notification.</li>
+  <li>Servers only process query and notification sections when connected to clients; a client sending assertions to a server results in a 400 Bad Message notification.</li>
 </ul>
 <p id="rfc.section.7.p.3">Since signature verification is resource-intensive, clients delegate signature verification to query servers by default. The query server signs the message containing results for a query using its own key (published as an infrakey object associated with the query server&#8217;s name), and a validity time corresponding to the signature it verified with the longest lifetime, stripping other signatures from the reply. This behavior can be disabled by a client by specifying query option 7, allowing the client to do its own verification.</p>
 <h1 id="rfc.section.8"><a href="#rfc.section.8">8.</a> <a href="#deployment-considerations" id="deployment-considerations">Deployment Considerations</a></h1>
@@ -1682,7 +1684,7 @@ address {
 		<span class="family-name">Trammell</span>
 	  </span>
 	</span>
-	<span class="org vcardline">ETH Zurich NetSec</span>
+	<span class="org vcardline">ETH Zurich</span>
 	<span class="adr">
 	  <span class="vcardline">Universitaetstrasse 6</span>
 
