@@ -100,7 +100,7 @@ Table of Contents
      5.15. Capabilities  . . . . . . . . . . . . . . . . . . . . . .  35
    6.  RAINS Protocol Definition . . . . . . . . . . . . . . . . . .  36
      6.1.  Message processing  . . . . . . . . . . . . . . . . . . .  37
-     6.2.  Message Transmission  . . . . . . . . . . . . . . . . . .  40
+     6.2.  Message Transmission  . . . . . . . . . . . . . . . . . .  41
      6.3.  Message Limits  . . . . . . . . . . . . . . . . . . . . .  41
      6.4.  Runtime Consistency Checking  . . . . . . . . . . . . . .  41
      6.5.  Integrity and Confidentiality Protection  . . . . . . . .  42
@@ -1585,13 +1585,15 @@ Internet-Draft                    RAINS                       March 2017
 
    An extrakey (12) object contains a public key used to generate
    signatures on assertions in a named zone outside of the normal
-   delegation chain.  It is identical in structure to a delegation
-   object, as defined in {{cbor- signature}}. An extrakey may be matched
-   with a public key obtained through other means for additional
-   authentication of an assertion.  Extrakeys are different from
-   delegation keys in that they may not be used in the delegation chain:
-   an extrakey signature is valid only on assertions of object types
-   other than delegation.
+   delegation chain.  It is represented as an N-element array, where the
+   second element is a signature algorithm identifier, and the third
+   element is keyspace identifier, as in Section 5.14.  Additional
+   elements are as defined in Section 5.14 for the given algorithm
+   identifier.  An extrakey may be matched with a public key obtained
+   through other means for additional authentication of an assertion.
+   Extrakeys are different from delegation keys in that they may not be
+   used in the delegation chain: an extrakey signature is valid only on
+   assertions of object types other than delegation.
 
 5.12.1.  Certificate information format
 
@@ -1609,8 +1611,6 @@ Internet-Draft                    RAINS                       March 2017
    used to generate the certificate data.  The fifth item is the data
    itself, whose format is defined by the protocol family and hash
    algorithm.
-
-
 
 
 
@@ -1783,9 +1783,9 @@ Internet-Draft                    RAINS                       March 2017
    the encodings of the signature values in Assertions, Shards, Zones,
    and Messages, as well as of public key values in delegation objects.
 
-   RAINS signatures have three common elements: the algorithm
-   identifier, a valid-since timestamp, and a valid-until timestamp.
-   Signatures are represented as an array of these three values followed
+   RAINS signatures have four common elements: the algorithm identifier,
+   a keyspace identifier, a valid-since timestamp, and a valid-until
+   timestamp.  Signatures are represented as an array of these four
 
 
 
@@ -1794,8 +1794,39 @@ Trammell               Expires September 21, 2017              [Page 32]
 Internet-Draft                    RAINS                       March 2017
 
 
-   by additional elements containing the signature data itself,
-   according to the algorithm identifier.
+   values followed by additional elements containing the signature data
+   itself, according to the algorithm identifier.
+
+   The following algorithms are supported:
+
+         +--------+------------+-----------+--------------------+
+         | Alg ID | Signatures | Hash/HMAC | Format             |
+         +--------+------------+-----------+--------------------+
+         |      1 | ed25519    | sha-512   | See Section 5.14.1 |
+         |        |            |           |                    |
+         |      2 | ed448      | shake256  | See Section 5.14.1 |
+         |        |            |           |                    |
+         |      3 | ecdsa-256  | sha-256   | See Section 5.14.2 |
+         |        |            |           |                    |
+         |      4 | ecdsa-384  | sha-384   | See Section 5.14.2 |
+         +--------+------------+-----------+--------------------+
+
+                   Table 9: Defined signature algorithms
+
+   As noted in Section 5.14.1, support for Algorithm 1, ed25519, is
+   REQUIRED; other algorithms are OPTIONAL.
+
+   The keyspace identifier associates the signature with a method for
+   verifying signatures.  This facility is used to support signatures on
+   assertions from external sources (the extrakey object type).  At
+   present, one keyspace identifier is defined, and support for it is
+   REQUIRED.
+
+    +-------------+-------+------------------------------------------+
+    | Keyspace ID | Name  | Signature Verification Algorithm         |
+    +-------------+-------+------------------------------------------+
+    |           0 | rains | RAINS delegation chain; see Section 5.14 |
+    +-------------+-------+------------------------------------------+
 
    Valid-since and valid-until timestamps are represented as CBOR
    integers counting seconds since the UNIX epoch UTC, identified with
@@ -1811,6 +1842,13 @@ Internet-Draft                    RAINS                       March 2017
 
    o  Serialize the object with a stub for the signature to be
       generated:
+
+
+
+Trammell               Expires September 21, 2017              [Page 33]
+
+Internet-Draft                    RAINS                       March 2017
+
 
       *  Strip all other signatures during serialization by omitting all
          signatures (0) keys and their values.  When signing a shard or
@@ -1841,33 +1879,8 @@ Internet-Draft                    RAINS                       March 2017
    o  Add the full signature to the signatures array at the appropriate
       point in the object.
 
-
-
-
-
-Trammell               Expires September 21, 2017              [Page 33]
-
-Internet-Draft                    RAINS                       March 2017
-
-
    To verify a signature, generate the byte stream as for signing, then
    verify the signature according to the algorithm selected.
-
-   The following algorithms are supported:
-
-          +------+------------+-----------+--------------------+
-          | Code | Signatures | Hash/HMAC | Format             |
-          +------+------------+-----------+--------------------+
-          |    1 | ed25519    | sha-512   | See Section 5.14.1 |
-          |      |            |           |                    |
-          |    2 | ed448      | shake256  | See Section 5.14.1 |
-          |      |            |           |                    |
-          |    3 | ecdsa-256  | sha-256   | See Section 5.14.2 |
-          |      |            |           |                    |
-          |    4 | ecdsa-384  | sha-384   | See Section 5.14.2 |
-          +------+------------+-----------+--------------------+
-
-                   Table 9: Defined signature algorithms
 
 5.14.1.  EdDSA signature and public key format
 
@@ -1885,8 +1898,16 @@ Internet-Draft                    RAINS                       March 2017
    64-byte array containing the the concatenation of R and S, and an
    Ed448 signature is represented as a 114-byte array containing the
    concatenation of R and S.  RAINS signatures using Ed25519 are
-   therefore the array [1, valid-from, valid-until, R|S]; using Ed448
-   the array [2, valid-from, valid-until, R|S].
+
+
+
+Trammell               Expires September 21, 2017              [Page 34]
+
+Internet-Draft                    RAINS                       March 2017
+
+
+   therefore the array [1, 0, valid-from, valid-until, R|S]; using Ed448
+   the array [2, 0, valid-from, valid-until, R|S].
 
    Ed25519 keys are generated as in Section 5.1.5 of [RFC8032], and
    Ed448 keys as in Section 5.2.5 of [RFC8032].  Ed25519 signatures are
@@ -1896,15 +1917,6 @@ Internet-Draft                    RAINS                       March 2017
 
    RAINS Server and Client implementations MUST support Ed25519
    signatures for delegation.
-
-
-
-
-
-Trammell               Expires September 21, 2017              [Page 34]
-
-Internet-Draft                    RAINS                       March 2017
-
 
 5.14.2.  ECDSA signature and public key format
 
@@ -1924,9 +1936,9 @@ Internet-Draft                    RAINS                       March 2017
    described in Section C.2 of [FIPS-186-3].  For ECDSA-256 signatures,
    each integer MUST be represented as a 32-byte array.  For ECDSA-384
    signatures, each integer MUST be represented as a 48-byte array.
-   RAINS signatures using ECDSA-256 are therefore the array [3, valid-
-   from, valid-until, r|s]; and for ECDSA-384 the array [4, valid-from,
-   valid-until, r|s].
+   RAINS signatures using ECDSA-256 are therefore the array [3, 0,
+   valid-from, valid-until, r|s]; and for ECDSA-384 the array [4, 0,
+   valid-from, valid-until, r|s].
 
    ECDSA-256 signatures and public keys use the P-256 curve as defined
    in [FIPS-186-3].  ECDSA-384 signatures and public keys use the P-384
@@ -1941,6 +1953,15 @@ Internet-Draft                    RAINS                       March 2017
    a peer, it MAY expose optional capabilities to its peer using the
    capabilities (1) key.  This key contains either:
 
+
+
+
+
+Trammell               Expires September 21, 2017              [Page 35]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    o  an array of uniform resource names specifying capabilities
       supported by the sending server, taken from the table below, with
       each name encoded as a UTF-8 string.
@@ -1954,13 +1975,6 @@ Internet-Draft                    RAINS                       March 2017
    RAINS server can cache a set of recently-seen or common hashes, and
    only request the full URN set (using notification code 399) on a
    cache miss.
-
-
-
-Trammell               Expires September 21, 2017              [Page 35]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    The following URNs are presently defined; other URNs will specify
    future optional features, support for alternate transport protocols
@@ -1996,6 +2010,14 @@ Internet-Draft                    RAINS                       March 2017
    parser can determine when a CBOR object is complete at the point at
    which it has read its final byte - RAINS requires no external
    framing.  It can therefore run over any streaming, multistreaming, or
+
+
+
+Trammell               Expires September 21, 2017              [Page 36]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    message-oriented transport protocol.  In order to protect query
    confidentiality, and support rapid deployment over a ubiquitously
    implemented transport, RAINS is defined in this document to run over
@@ -2010,14 +2032,6 @@ Internet-Draft                    RAINS                       March 2017
    on port 1022 [RFC4727] for connections from other RAINS servers and
    clients.  RAINS servers should strive to keep connections open to
    peer servers, unless it is clear that no future messages will be
-
-
-
-Trammell               Expires September 21, 2017              [Page 36]
-
-Internet-Draft                    RAINS                       March 2017
-
-
    exchanged with those peers, or in the face of resource limitations at
    either peer.  If a RAINS server needs to send a message to another
    RAINS server to which it does not have an open connection, it
@@ -2052,6 +2066,14 @@ Internet-Draft                    RAINS                       March 2017
       notification of type 399 "Capability hash not understood" to send
       to its peer.
 
+
+
+
+Trammell               Expires September 21, 2017              [Page 37]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    o  splits the contents into its constituent message sections, and
       verifies that each is acceptable.  Specifically, queries are not
       accepted by clients (see Section 7), and 404 No Assertion Exists
@@ -2066,13 +2088,6 @@ Internet-Draft                    RAINS                       March 2017
       consistent, it prepares to send a notification of type 403
       Inconsistent Message to the peer, and discards the section.
       Otherwise, it:
-
-
-
-Trammell               Expires September 21, 2017              [Page 37]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    o  determines whether it answers an outstanding query; if so, it
       prepares to forward the section to the server that issued the
@@ -2106,6 +2121,15 @@ Internet-Draft                    RAINS                       March 2017
       only).  If so, and if option 5 (expired assertions acceptable) is
       also specified, it then checks to see if it has any cached
       sections that answer the query on which signatures are expired;
+
+
+
+
+Trammell               Expires September 21, 2017              [Page 38]
+
+Internet-Draft                    RAINS                       March 2017
+
+
       otherwise, processing stops.  If the query does not specify option
       4, delegation proceeds as follows: the server:
 
@@ -2121,14 +2145,6 @@ Internet-Draft                    RAINS                       March 2017
       and forwards the query to those authority servers, noting the
       reply for the received query depends on the reply for the
       forwarded query.
-
-
-
-
-Trammell               Expires September 21, 2017              [Page 38]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    If query delegation fails to return an answer within a configured
    timeout for a delegated query, the server prepares to send a 504 No
@@ -2163,6 +2179,13 @@ Internet-Draft                    RAINS                       March 2017
       to send a full capabilities list on the next message it sends to
       the peer.
 
+
+
+Trammell               Expires September 21, 2017              [Page 39]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    o  For type 504 "No assertion available", the server checks the token
       on the message, and prepares to forward the assertion to the
       associated query.
@@ -2177,14 +2200,6 @@ Internet-Draft                    RAINS                       March 2017
       notifications generally represent implementation or configuration
       error conditions which will require human intervention to
       mitigate.
-
-
-
-
-Trammell               Expires September 21, 2017              [Page 39]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    On receipt of a notification, a client's behavior depends on the
    notification type:
@@ -2219,6 +2234,14 @@ Internet-Draft                    RAINS                       March 2017
 
    If the server is configured to keep long-running connections open,
    due to the presence of network behaviors that may drop state for idle
+
+
+
+Trammell               Expires September 21, 2017              [Page 40]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    connections, it SHOULD send a message containing a type 100
    Connection Heartbeat notification after a configured idle time
    without any messages containing other content being sent.
@@ -2232,15 +2255,6 @@ Internet-Draft                    RAINS                       March 2017
    o  Proactive queries to retrieve assertions, shards, and zones for
       which all signatures have expired or will soon expire, for cache
       management purposes.
-
-
-
-
-
-Trammell               Expires September 21, 2017              [Page 40]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    o  Proactive push of assertions, shards, and zones to other servers,
       based on query history or other information indicating those
@@ -2276,6 +2290,14 @@ Internet-Draft                    RAINS                       March 2017
    o  A lexically complete shard may omit an assertion within its shard-
       range which is valid at the same time as the shard.
 
+
+
+
+Trammell               Expires September 21, 2017              [Page 41]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    o  A zone may omit an assertion within its zone which is valid at the
       same time as the zone.
 
@@ -2288,15 +2310,6 @@ Internet-Draft                    RAINS                       March 2017
    with other information it has, and if not, discard all assertions,
    shards, and zones in its cache, log the error, and send a 403
    Inconsistent Message to the source of the message.
-
-
-
-
-
-Trammell               Expires September 21, 2017              [Page 41]
-
-Internet-Draft                    RAINS                       March 2017
-
 
 6.5.  Integrity and Confidentiality Protection
 
@@ -2333,6 +2346,14 @@ Internet-Draft                    RAINS                       March 2017
    responses from an query service is a subset of the full RAINS
    protocol, with the following differences:
 
+
+
+
+Trammell               Expires September 21, 2017              [Page 42]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    o  Clients only process assertion, shard, zone, and notification
       sections; sending a query to a client results in a 400 Bad Message
       notification.
@@ -2344,15 +2365,6 @@ Internet-Draft                    RAINS                       March 2017
    o  Servers only process query and notification sections when
       connected to clients; a client sending assertions to a server
       results in a 400 Bad Message notification.
-
-
-
-
-
-Trammell               Expires September 21, 2017              [Page 42]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    Since signature verification is resource-intensive, clients delegate
    signature verification to query servers by default.  The query server
@@ -2390,18 +2402,6 @@ Internet-Draft                    RAINS                       March 2017
    each server (published via certinfo objects) must be available as
    well in order to establish TLS sessions.
 
-   However, storing zone secret keys (associated via delegation objects)
-   on RAINS servers would represent a more serious operational risk.  To
-   keep this from being necessary, authority servers have an additional
-   signer interface, from which they will accept and cache any
-   assertion, shard, or zone for which they are authority servers until
-   at least the end of validity of the last signature, provided the
-   signature is verifiable.
-
-
-
-
-
 
 
 
@@ -2409,6 +2409,14 @@ Trammell               Expires September 21, 2017              [Page 43]
 
 Internet-Draft                    RAINS                       March 2017
 
+
+   However, storing zone secret keys (associated via delegation objects)
+   on RAINS servers would represent a more serious operational risk.  To
+   keep this from being necessary, authority servers have an additional
+   signer interface, from which they will accept and cache any
+   assertion, shard, or zone for which they are authority servers until
+   at least the end of validity of the last signature, provided the
+   signature is verifiable.
 
 8.3.  Unsigned Contained Assertions
 
@@ -2450,6 +2458,14 @@ Internet-Draft                    RAINS                       March 2017
 
    While DNSSEC and RAINS keys for equivalent ciphersuites are
    compatible with each other, there is no equivalent to query option 7
+
+
+
+Trammell               Expires September 21, 2017              [Page 44]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    for gateways, since the RAINS signatures are generated over the RAINS
    bytestream for an assertion, not the DNS bytestream.  Therefore,
    RAINS to DNS gateways must provide verification services for DNS
@@ -2458,13 +2474,6 @@ Internet-Draft                    RAINS                       March 2017
    queries and answers.
 
    Object type mappings are as follows:
-
-
-
-Trammell               Expires September 21, 2017              [Page 44]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    o  Objects of type name can (largely) be represented as CNAME RRs.
 
@@ -2506,21 +2515,16 @@ Internet-Draft                    RAINS                       March 2017
    When translating a RAINS assertion to a DNS answer, the gateway can
    use the time to expiry for the verified signature as the TTL.
 
-   There is no method for exposing context information in a DNS query or
-   answer.  Therefore, queries and answers at a RAINS gateway are only
-   supported for the global context ".".
-
-
-
-
-
-
 
 
 Trammell               Expires September 21, 2017              [Page 45]
 
 Internet-Draft                    RAINS                       March 2017
 
+
+   There is no method for exposing context information in a DNS query or
+   answer.  Therefore, queries and answers at a RAINS gateway are only
+   supported for the global context ".".
 
 9.  Experimental Design and Evaluation
 
@@ -2566,10 +2570,6 @@ Internet-Draft                    RAINS                       March 2017
    The urn:x-rains namespace used by the RAINS capability mechanism in
    Section 5.15 may be a candidate for replacement with an IANA-
    registered namespace in a future revision of this document.
-
-
-
-
 
 
 
