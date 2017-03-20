@@ -1070,12 +1070,14 @@ the messages sent by the query server.
 
 An extrakey (12) object contains a public key used to generate signatures on
 assertions in a named zone outside of the normal delegation chain. It is
-identical in structure to a delegation object, as defined in {{cbor-
-signature}}. An extrakey may be matched with a public key obtained through
-other means for additional authentication of an assertion. Extrakeys are
-different from delegation keys in that they may not be used in the delegation
-chain: an extrakey signature is valid only on assertions of object types other
-than delegation.
+represented as an N-element array, where the second element is a signature
+algorithm identifier, and the third element is keyspace identifier, as in
+{{cbor-signature}}. Additional elements are as defined in {{cbor-signature}} for
+the given algorithm identifier. An extrakey may be matched with a public key
+obtained through other means for additional authentication of an assertion.
+Extrakeys are different from delegation keys in that they may not be used in the
+delegation chain: an extrakey signature is valid only on assertions of object
+types other than delegation.
 
 ### Certificate information format {#cbor-certinfo}
 
@@ -1200,11 +1202,35 @@ generating the HMAC and the format of the encodings of the signature
 values in Assertions, Shards, Zones, and Messages, as well as of public key
 values in delegation objects.
 
-RAINS signatures have three common elements: the algorithm identifier, a
+RAINS signatures have four common elements: the algorithm identifier, a keyspace identifier, a
 valid-since timestamp, and a valid-until timestamp.
-Signatures are represented as an array of these three values followed by
+Signatures are represented as an array of these four values followed by
 additional elements containing the signature data itself, according to the
 algorithm identifier.
+
+The following algorithms are supported:
+
+{: #tabsig title="Defined signature algorithms"}
+
+| Alg ID | Signatures | Hash/HMAC | Format               |
+|-------:|------------|-----------|----------------------|
+| 1      | ed25519    | sha-512   | See {{eddsa-format}} |
+| 2      | ed448      | shake256  | See {{eddsa-format}} |
+| 3      | ecdsa-256  | sha-256   | See {{ecdsa-format}} |
+| 4      | ecdsa-384  | sha-384   | See {{ecdsa-format}} |
+
+As noted in {{eddsa-format}}, support for Algorithm 1, ed25519, is REQUIRED; other
+algorithms are OPTIONAL.
+
+The keyspace identifier associates the signature with a method for verifying
+signatures. This facility is used to support signatures on assertions from
+external sources (the extrakey object type). At present, one keyspace identifier
+is defined, and support for it is REQUIRED.
+
+| Keyspace ID | Name  | Signature Verification Algorithm               |
+|------------:|-------|------------------------------------------------|
+| 0           | rains | RAINS delegation chain; see {{cbor-signature}} |
+
 
 Valid-since and valid-until timestamps are represented as CBOR integers
 counting seconds since the UNIX epoch UTC, identified with tag value 1 and
@@ -1249,17 +1275,6 @@ serialize an object for signing:
 To verify a signature, generate the byte stream as for signing, then verify
 the signature according to the algorithm selected.
 
-The following algorithms are supported:
-
-{: #tabsig title="Defined signature algorithms"}
-
-| Code | Signatures | Hash/HMAC | Format               |
-|-----:|------------|-----------|----------------------|
-| 1    | ed25519    | sha-512   | See {{eddsa-format}} |
-| 2    | ed448      | shake256  | See {{eddsa-format}} |
-| 3    | ecdsa-256  | sha-256   | See {{ecdsa-format}} |
-| 4    | ecdsa-384  | sha-384   | See {{ecdsa-format}} |
-
 ### EdDSA signature and public key format {#eddsa-format}
 
 EdDSA public keys consist of a single value, a 32-byte bit string generated as
@@ -1274,8 +1289,8 @@ integers, called "R" and "S" in sections 5.1.6 and 5.2.6, respectively, of
 {{RFC8032}}. An Ed25519 signature is represented as a 64-byte array containing
 the the concatenation of R and S, and an Ed448 signature is represented as a
 114-byte array containing the concatenation of R and S. RAINS signatures using
-Ed25519 are therefore the array [1, valid-from, valid-until, R|S]; using Ed448
-the array [2, valid-from, valid-until, R|S].
+Ed25519 are therefore the array [1, 0, valid-from, valid-until, R|S]; using Ed448
+the array [2, 0, valid-from, valid-until, R|S].
 
 Ed25519 keys are generated as in Section 5.1.5 of {{RFC8032}}, and Ed448 keys
 as in Section 5.2.5 of {{RFC8032}}.  Ed25519 signatures are generated from a
@@ -1301,8 +1316,8 @@ represented as a byte array as described in Section C.2 of {{FIPS-186-3}}, and
 s represented as a byte array as described in Section C.2 of {{FIPS-186-3}}.
 For ECDSA-256 signatures, each integer MUST be represented as a 32-byte array.
 For ECDSA-384 signatures, each integer MUST be represented as a 48-byte array.
-RAINS signatures using ECDSA-256 are therefore the array [3, valid-from,
-valid-until, r|s]; and for ECDSA-384 the array [4, valid-from, valid-until,
+RAINS signatures using ECDSA-256 are therefore the array [3, 0, valid-from,
+valid-until, r|s]; and for ECDSA-384 the array [4, 0, valid-from, valid-until,
 r|s].
 
 ECDSA-256 signatures and public keys use the P-256 curve as defined in {{FIPS-186-3}}.
