@@ -129,8 +129,9 @@ Internet-Draft                    RAINS                       March 2017
      13.2.  Informative References . . . . . . . . . . . . . . . . .  49
    Appendix A.  Directions for future experimentation  . . . . . . .  50
      A.1.  Revocation based on hash chains . . . . . . . . . . . . .  51
-   Appendix B.  Open Issues  . . . . . . . . . . . . . . . . . . . .  52
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  52
+   Appendix B.  Pending Edits  . . . . . . . . . . . . . . . . . . .  52
+   Appendix C.  Open Issues  . . . . . . . . . . . . . . . . . . . .  52
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  53
 
 1.  Introduction
 
@@ -160,8 +161,7 @@ Internet-Draft                    RAINS                       March 2017
       live, each assertion's temporal validity is defined by the
       temporal validity of the signature(s) on it.
 
-   o  All assertions have validity within a specific context.  A context
-      determines the rules for chaining signatures to verify validity of
+
 
 
 
@@ -170,6 +170,8 @@ Trammell               Expires September 25, 2017               [Page 3]
 Internet-Draft                    RAINS                       March 2017
 
 
+   o  All assertions have validity within a specific context.  A context
+      determines the rules for chaining signatures to verify validity of
       an assertion.  The global context is a special case of context,
       which uses chains from the global naming root key.  The use of
       context explicitly separates global usage of the DNS from local
@@ -216,8 +218,6 @@ Internet-Draft                    RAINS                       March 2017
       types describing the name, signed by an authority for the zone
       containing the subject name.  See Section 4.1.
 
-   o  Subject: The name to which an assertion pertains.
-
 
 
 
@@ -225,6 +225,8 @@ Trammell               Expires September 25, 2017               [Page 4]
 
 Internet-Draft                    RAINS                       March 2017
 
+
+   o  Subject: The name to which an assertion pertains.
 
    o  Object: A type/value pair of information about a name within an
       assertion.
@@ -269,8 +271,6 @@ Internet-Draft                    RAINS                       March 2017
    o  RAINS Client: A client that uses the Query Service of one or more
       RAINS Servers to retrieve assertions on behalf of applications
       that wish to connect to named services in the Internet.
-
-
 
 
 
@@ -2881,7 +2881,13 @@ Internet-Draft                    RAINS                       March 2017
    information presently in its cache.  If so, it discards the old
    information, and caches the new section.
 
-Appendix B.  Open Issues
+Appendix B.  Pending Edits
+
+   o  Remove the ability to have incomplete shards - they're not very
+      useful, and having shards always be lexicographically complete
+      simplifies server implementation.
+
+Appendix C.  Open Issues
 
    o  A method for clients to discover local oracles needs to be
       specified.
@@ -2897,6 +2903,17 @@ Appendix B.  Open Issues
       an error.  Specifically, notification codes 400, 403, and 413
       could use additional data.
 
+
+
+
+
+
+
+Trammell               Expires September 25, 2017              [Page 52]
+
+Internet-Draft                    RAINS                       March 2017
+
+
 Author's Address
 
    Brian Trammell
@@ -2909,4 +2926,43 @@ Author's Address
 
 
 
-Trammell               Expires September 25, 2017              [Page 52]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Trammell               Expires September 25, 2017              [Page 53]

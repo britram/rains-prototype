@@ -333,7 +333,8 @@ address {
 <link href="#rfc.references.2" rel="Chapter" title="13.2 Informative References"/>
 <link href="#rfc.appendix.A" rel="Chapter" title="A Directions for future experimentation"/>
 <link href="#rfc.appendix.A.1" rel="Chapter" title="A.1 Revocation based on hash chains"/>
-<link href="#rfc.appendix.B" rel="Chapter" title="B Open Issues"/>
+<link href="#rfc.appendix.B" rel="Chapter" title="B Pending Edits"/>
+<link href="#rfc.appendix.C" rel="Chapter" title="C Open Issues"/>
 <link href="#rfc.authors" rel="Chapter"/>
 
 
@@ -455,7 +456,8 @@ address {
 <li>13.2.   <a href="#rfc.references.2">Informative References</a></li>
 </ul><li>Appendix A.   <a href="#rfc.appendix.A">Directions for future experimentation</a></li>
 <ul><li>A.1.   <a href="#rfc.appendix.A.1">Revocation based on hash chains</a></li>
-</ul><li>Appendix B.   <a href="#rfc.appendix.B">Open Issues</a></li>
+</ul><li>Appendix B.   <a href="#rfc.appendix.B">Pending Edits</a></li>
+<li>Appendix C.   <a href="#rfc.appendix.C">Open Issues</a></li>
 <li><a href="#rfc.authors">Author's Address</a></li>
 
 
@@ -1704,7 +1706,13 @@ address {
 </table>
 <p id="rfc.section.A.1.p.6">The main open question for experimentation is how to ensure that a revocation is properly propagated through a RAINS infrastructure; this may require protocol changes to work reliably.</p>
 <p id="rfc.section.A.1.p.7">To support this experiment, a server must additionally evaluate an assertion it receives to determine whether it replaces any information presently in its cache. If so, it discards the old information, and caches the new section.</p>
-<h1 id="rfc.appendix.B"><a href="#rfc.appendix.B">Appendix B.</a> <a href="#open-issues" id="open-issues">Open Issues</a></h1>
+<h1 id="rfc.appendix.B"><a href="#rfc.appendix.B">Appendix B.</a> <a href="#pending-edits" id="pending-edits">Pending Edits</a></h1>
+<p/>
+
+<ul>
+  <li>Remove the ability to have incomplete shards - they&#8217;re not very useful, and having shards always be lexicographically complete simplifies server implementation.</li>
+</ul>
+<h1 id="rfc.appendix.C"><a href="#rfc.appendix.C">Appendix C.</a> <a href="#open-issues" id="open-issues">Open Issues</a></h1>
 <p/>
 
 <ul>
