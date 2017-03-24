@@ -604,8 +604,8 @@ message.
 A Message map MAY contain a capabilities (1) key, whose value is described in
 {#cbor-capabilities}.
 
-A Message map SHOULD contain a token (2) key, whose value is a byte array of
-maximum length 32. See {{cbor-tokens}} for details.
+A Message map SHOULD contain a token (2) key, whose value is a 16-byte array.
+See {{cbor-tokens}} for details.
 
 A Message map MUST contain a content (23) key, whose value is an array of
 Message Sections; a Message Section is either an Assertion, Shard, Zone, or
@@ -769,9 +769,9 @@ A Query body is a map. Queries MUST contain the the token (2), query-name (8),
 context (6), and query-types (10) keys. Queries MAY contain the query-
 expires (12) and query-opts (13) keys.
 
-The value of the token (2) key, is a byte array of maximum length
-32. Future messages or notifications containing answers to this query MUST
-contain this token, if present. See {{cbor-tokens}}.
+The value of the token (2) key, is a 16-byte array. Future messages or
+notifications containing answers to this query MUST contain this token, if
+present. See {{cbor-tokens}}.
 
 The value of the context (6) key is a UTF-8 encoded string containing the name
 of the context to which a query pertains. A zero-length string indicates that
@@ -914,9 +914,9 @@ An Address Query body is a map. Queries MUST contain the the token (2), subject-
 context (6), and query-types (10) keys. Queries MAY contain query-opts
 (13) and query-expires (12) keys.
 
-The value of the token (2) key, is a byte array of maximum length
-32. Future messages or notifications containing answers to this query MUST
-contain this token, if present. See {{cbor-tokens}}.
+The value of the token (2) key, is a 16-byte array. Future messages or
+notifications containing answers to this query MUST contain this token, if
+present. See {{cbor-tokens}}.
 
 The value of the subject-addr (5) key is a three-element CBOR array. The first
 element of the array is the address family encoded as an object type, 2 for
@@ -970,7 +970,7 @@ Note that the status codes are chosen to be mnemonically similar to status
 codes for HTTP {{RFC7231}}. Details of the meaning of each status code are
 given in {{protocol-def}}.
 
-The value of the token (2) key is a byte array of maximum length 32, which
+The value of the token (2) key is a 16-byte array, which
 MUST contain the token of the message or query to which the notification is a
 response. See {{cbor-tokens}}.
 
@@ -1171,10 +1171,10 @@ matches any name made up of one or more lowercase Cyrillic letters and digits. T
 
 ## Tokens in queries and messages {#cbor-tokens}
 
-Messages, queries, and notifications all contain an opaque token (2) key,
-whose content is a byte array of maximum length 32, and is used to link
-Messages to the Queries they respond to, and Notifications to the Messages
-they respond to. Tokens MUST be treated as opaque values by RAINS servers.
+Messages, queries, and notifications all contain an opaque token (2) key, whose
+content is a 16-byte array, and is used to link Messages to the Queries they
+respond to, and Notifications to the Messages they respond to. Tokens MUST be
+treated as opaque values by RAINS servers.
 
 A Message sent in response to a Query MUST contain the token in that Query.
 Otherwise, the Message SHOULD contain a token selected by the server
