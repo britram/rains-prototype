@@ -10,3 +10,4 @@ venv/
 issues.json
 lib
 draft-trammell-rains-protocol.md
+.targets.mk

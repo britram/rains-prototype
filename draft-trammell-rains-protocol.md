@@ -55,6 +55,7 @@ informative:
     RFC7696:
     RFC7858:
     RFC7871:
+    I-D.thomson-postel-was-wrong:
     XEP0115:
       title: XEP-0115 Entity Capababilities
       author:
@@ -100,6 +101,7 @@ background of the properties of an ideal naming service described in
 {{I-D.trammell-inip-pins}}.
 
 --- middle
+
 
 # Introduction
 
@@ -1402,7 +1404,9 @@ queries to clients.
 
 Upon receipt of a message, a server or client attempts to parse it.
 
-If the server or client cannot parse the message at all, it returns a 400 Bad Message notification to the peer. This notification may have a null token if the token cannot be retrieved from the message.
+If the server or client cannot parse the message at all, it returns a 400 Bad
+Message notification to the peer. This notification may have a null token if the
+token cannot be retrieved from the message.
 
 If the server or client can parse the message, it:
 
@@ -1413,7 +1417,12 @@ If the server or client can parse the message, it:
   capabilities are represented by a hash that the server does not have in its
   cache, it prepares a notification of type 399 "Capability hash not
   understood" to send to its peer.
-- splits the contents into its constituent message sections, and verifies that each is acceptable. Specifically, queries are not accepted by clients (see {{protocol-client}}), and 404 No Assertion Exists notifications are not accepted by servers. If a message contains an unacceptable section, the server or client returns a 400 Bad Message notification to its peer, and ceases processing of the message.
+- splits the contents into its constituent message sections, and verifies that
+  each is acceptable. Specifically, queries are not accepted by clients (see
+  {{protocol-client}}), and 404 No Assertion Exists notifications are not
+  accepted by servers. If a message contains an unacceptable section, the server
+  or client returns a 400 Bad Message notification to its peer, and ceases
+  processing of the message.
 
 
 On receipt of an assertion, shard, or zone message section, a server:
@@ -1438,13 +1447,16 @@ On receipt of a query, a server:
   If so, it drops the query silently. If not, it:
 - determines whether it has a stored assertion, shard, and/or zone message
   section which answers the query. If so, it prepares to return the most
-  specific such section with the signature of the longest remaining validity to the
-  peer that issued the query. If not, it:
+  specific such section (i.e., if it has both a shard and an assertion that
+  would answer the query, it returns the assertion) with the signature of the
+  longest remaining validity to the peer that issued the query. If not, it:
 - checks to see whether the query specifies option 4 (cached answers only). If
-  so, and if option 5 (expired assertions acceptable) is also specified, it
-  then checks to see if it has any cached sections that answer the query on
-  which signatures are expired; otherwise, processing stops. If the query does
-  not specify option 4, delegation proceeds as follows: the server:
+  so, and if option 5 (expired assertions acceptable) is also specified, it then
+  checks to see if it has any cached sections that answer the query on which
+  signatures are expired; otherwise, processing stops, and the server returns a
+  504 No Assertion Available notification, as if the query had instantly
+  expired.. If the query does not specify option 4, delegation proceeds, and the
+  server:
 - determines whether it has other non-authoritative servers it can forward the
   query to, according to its configuration and policy, and in compliance with
   any query options (see {{cbor-query}}). If so, it prepares to forward the
@@ -1519,6 +1531,12 @@ SHOULD send a message containing a type 100 Connection Heartbeat notification
 after a configured idle time without any messages containing other content
 being sent.
 
+In general, servers should follow the principles laid out in Sections 4.1 and
+4.2 of {{I-D.thomson-postel-was-wrong}}. A malformed message section, or a
+message section with any invalid (but not expired) signature, should be dropped
+and log. A malformed message section or invalid signature should not, however,
+result in other sections in the same message being dropped, except as explicitly noted above.
+
 ## Message Transmission
 
 As noted in {{protocol-processing}} many messages are sent in reply to messages
@@ -1542,7 +1560,7 @@ the message only accepts messages smaller than the largest message it's
 successfully sent that peer, or cap messages to that peer to 65536 bytes in
 length.
 
-Since a bare assertion with a single ECDSA signature requires on the order of
+Since a bare assertion with a single Ed25519 signature requires on the order of
 180 bytes, it is clear that many full zones won't fit into a single minimum
 maximum-size message. Authorities are therefore encouraged to publish zones
 grouped into shards that will fit into 65536-byte messages, to allow servers
@@ -1828,14 +1846,16 @@ restrictions on what can replace what apply:
 - A Zone can only be replaced by another Zone with an identical name within 
   the same Context.
 
-Two codepoints have been reserved to support experimentation with this mechanism, as shown in {{tabsigrev}}. 
+Four codepoints have been reserved to support experimentation with this mechanism, as shown in {{tabsigrev}}. 
 
 {: #tabsigrev title="Defined signature algorithms"}
 
 | Code | Signatures | Hash/HMAC | Format               | Revocation |
 |-----:|------------|-----------|----------------------|------------|
-| 24   | ecdsa-256  | sha-256   | See {{ecdsa-format}} | hash-chain |
-| 25   | ecdsa-384  | sha-384   | See {{ecdsa-format}} | hash-chain |
+| 24   | ed25519    | sha-512   | See {{eddsa-format}} | hash-chain |
+| 25   | ed448      | shake256  | See {{eddsa-format}} | hash-chain |
+| 26   | ecdsa-256  | sha-256   | See {{ecdsa-format}} | hash-chain |
+| 27   | ecdsa-384  | sha-384   | See {{ecdsa-format}} | hash-chain |
 
 The main open question for experimentation is how to ensure that a revocation
 is properly propagated through a RAINS infrastructure; this may require
@@ -1844,6 +1864,12 @@ protocol changes to work reliably.
 To support this experiment, a server must additionally evaluate an assertion
 it receives to determine whether it replaces any information presently in its
 cache. If so, it discards the old information, and caches the new section.
+
+# Pending Edits
+
+- Remove the ability to have incomplete shards - they're not very useful, and
+  having shards always be lexicographically complete simplifies server
+  implementation.
 
 # Open Issues
 
