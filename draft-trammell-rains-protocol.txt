@@ -4,8 +4,8 @@
 
 Network Working Group                                        B. Trammell
 Internet-Draft                                                ETH Zurich
-Intended status: Experimental                             March 20, 2017
-Expires: September 21, 2017
+Intended status: Experimental                             March 24, 2017
+Expires: September 25, 2017
 
 
      RAINS (Another Internet Naming Service) Protocol Specification
@@ -35,7 +35,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on September 21, 2017.
+   This Internet-Draft will expire on September 25, 2017.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Trammell               Expires September 21, 2017               [Page 1]
+Trammell               Expires September 25, 2017               [Page 1]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -102,20 +102,20 @@ Table of Contents
      6.1.  Message processing  . . . . . . . . . . . . . . . . . . .  37
      6.2.  Message Transmission  . . . . . . . . . . . . . . . . . .  41
      6.3.  Message Limits  . . . . . . . . . . . . . . . . . . . . .  41
-     6.4.  Runtime Consistency Checking  . . . . . . . . . . . . . .  41
+     6.4.  Runtime Consistency Checking  . . . . . . . . . . . . . .  42
      6.5.  Integrity and Confidentiality Protection  . . . . . . . .  42
-   7.  RAINS Client Protocol . . . . . . . . . . . . . . . . . . . .  42
+   7.  RAINS Client Protocol . . . . . . . . . . . . . . . . . . . .  43
    8.  Deployment Considerations . . . . . . . . . . . . . . . . . .  43
 
 
 
-Trammell               Expires September 21, 2017               [Page 2]
+Trammell               Expires September 25, 2017               [Page 2]
 
 Internet-Draft                    RAINS                       March 2017
 
 
      8.1.  Assertion Lifetime Management . . . . . . . . . . . . . .  43
-     8.2.  Secret Key Management . . . . . . . . . . . . . . . . . .  43
+     8.2.  Secret Key Management . . . . . . . . . . . . . . . . . .  44
      8.3.  Unsigned Contained Assertions . . . . . . . . . . . . . .  44
      8.4.  Query Service Discovery . . . . . . . . . . . . . . . . .  44
      8.5.  Transition using translation between RAINS and DNS
@@ -126,10 +126,10 @@ Internet-Draft                    RAINS                       March 2017
    12. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  47
    13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  47
      13.1.  Normative References . . . . . . . . . . . . . . . . . .  47
-     13.2.  Informative References . . . . . . . . . . . . . . . . .  48
+     13.2.  Informative References . . . . . . . . . . . . . . . . .  49
    Appendix A.  Directions for future experimentation  . . . . . . .  50
      A.1.  Revocation based on hash chains . . . . . . . . . . . . .  50
-   Appendix B.  Open Issues  . . . . . . . . . . . . . . . . . . . .  51
+   Appendix B.  Open Issues  . . . . . . . . . . . . . . . . . . . .  52
    Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  52
 
 1.  Introduction
@@ -165,7 +165,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017               [Page 3]
+Trammell               Expires September 25, 2017               [Page 3]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -221,7 +221,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017               [Page 4]
+Trammell               Expires September 25, 2017               [Page 4]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -277,7 +277,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017               [Page 5]
+Trammell               Expires September 25, 2017               [Page 5]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -333,7 +333,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017               [Page 6]
+Trammell               Expires September 25, 2017               [Page 6]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -389,7 +389,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017               [Page 7]
+Trammell               Expires September 25, 2017               [Page 7]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -445,7 +445,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017               [Page 8]
+Trammell               Expires September 25, 2017               [Page 8]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -501,7 +501,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017               [Page 9]
+Trammell               Expires September 25, 2017               [Page 9]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -557,7 +557,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 10]
+Trammell               Expires September 25, 2017              [Page 10]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -613,7 +613,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 11]
+Trammell               Expires September 25, 2017              [Page 11]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -669,7 +669,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 12]
+Trammell               Expires September 25, 2017              [Page 12]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -725,7 +725,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 13]
+Trammell               Expires September 25, 2017              [Page 13]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -781,7 +781,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 14]
+Trammell               Expires September 25, 2017              [Page 14]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -837,7 +837,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 15]
+Trammell               Expires September 25, 2017              [Page 15]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -893,7 +893,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 16]
+Trammell               Expires September 25, 2017              [Page 16]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -949,7 +949,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 17]
+Trammell               Expires September 25, 2017              [Page 17]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1005,7 +1005,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 18]
+Trammell               Expires September 25, 2017              [Page 18]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1061,7 +1061,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 19]
+Trammell               Expires September 25, 2017              [Page 19]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1117,7 +1117,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 20]
+Trammell               Expires September 25, 2017              [Page 20]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1173,7 +1173,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 21]
+Trammell               Expires September 25, 2017              [Page 21]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1229,7 +1229,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 22]
+Trammell               Expires September 25, 2017              [Page 22]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1285,7 +1285,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 23]
+Trammell               Expires September 25, 2017              [Page 23]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1341,7 +1341,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 24]
+Trammell               Expires September 25, 2017              [Page 24]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1397,7 +1397,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 25]
+Trammell               Expires September 25, 2017              [Page 25]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1453,7 +1453,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 26]
+Trammell               Expires September 25, 2017              [Page 26]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1509,7 +1509,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 27]
+Trammell               Expires September 25, 2017              [Page 27]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1565,7 +1565,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 28]
+Trammell               Expires September 25, 2017              [Page 28]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1621,7 +1621,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 29]
+Trammell               Expires September 25, 2017              [Page 29]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1677,7 +1677,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 30]
+Trammell               Expires September 25, 2017              [Page 30]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1733,7 +1733,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 31]
+Trammell               Expires September 25, 2017              [Page 31]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1789,7 +1789,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 32]
+Trammell               Expires September 25, 2017              [Page 32]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1845,7 +1845,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 33]
+Trammell               Expires September 25, 2017              [Page 33]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1901,7 +1901,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 34]
+Trammell               Expires September 25, 2017              [Page 34]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1957,7 +1957,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 35]
+Trammell               Expires September 25, 2017              [Page 35]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -2013,7 +2013,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 36]
+Trammell               Expires September 25, 2017              [Page 36]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -2069,7 +2069,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 37]
+Trammell               Expires September 25, 2017              [Page 37]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -2125,7 +2125,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 38]
+Trammell               Expires September 25, 2017              [Page 38]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -2181,7 +2181,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 39]
+Trammell               Expires September 25, 2017              [Page 39]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -2237,7 +2237,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 21, 2017              [Page 40]
+Trammell               Expires September 25, 2017              [Page 40]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -2245,6 +2245,13 @@ Internet-Draft                    RAINS                       March 2017
    connections, it SHOULD send a message containing a type 100
    Connection Heartbeat notification after a configured idle time
    without any messages containing other content being sent.
+
+   In general, servers should follow the principles laid out in Sections
+   4.1 and 4.2 of [I-D.thomson-postel-was-wrong].  A malformed message
+   section, or a message section with any invalid (but not expired)
+   signature, should be dropped and log.  A malformed message section or
+   invalid signature should not, however, result in other sections in
+   the same message being dropped, except as explicitly noted above.
 
 6.2.  Message Transmission
 
@@ -2272,13 +2279,24 @@ Internet-Draft                    RAINS                       March 2017
    successfully sent that peer, or cap messages to that peer to 65536
    bytes in length.
 
-   Since a bare assertion with a single ECDSA signature requires on the
-   order of 180 bytes, it is clear that many full zones won't fit into a
-   single minimum maximum-size message.  Authorities are therefore
-   encouraged to publish zones grouped into shards that will fit into
-   65536-byte messages, to allow servers to reply using these shards
-   when full-zone transfers are not possible due to message size
+   Since a bare assertion with a single Ed25519 signature requires on
+   the order of 180 bytes, it is clear that many full zones won't fit
+   into a single minimum maximum-size message.  Authorities are
+   therefore encouraged to publish zones grouped into shards that will
+   fit into 65536-byte messages, to allow servers to reply using these
+   shards when full-zone transfers are not possible due to message size
    limitations.
+
+
+
+
+
+
+
+Trammell               Expires September 25, 2017              [Page 41]
+
+Internet-Draft                    RAINS                       March 2017
+
 
 6.4.  Runtime Consistency Checking
 
@@ -2289,14 +2307,6 @@ Internet-Draft                    RAINS                       March 2017
 
    o  A lexically complete shard may omit an assertion within its shard-
       range which is valid at the same time as the shard.
-
-
-
-
-Trammell               Expires September 21, 2017              [Page 41]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    o  A zone may omit an assertion within its zone which is valid at the
       same time as the zone.
@@ -2336,6 +2346,14 @@ Internet-Draft                    RAINS                       March 2017
    communications between servers and between servers and clients, with
    certificate information for RAINS infrastructure stored in RAINS
    itself.  Together with hop-by-hop confidentiality protection, query
+
+
+
+Trammell               Expires September 25, 2017              [Page 42]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    options, proactive caching, default use of non-persistent tokens, and
    redirection among servers can be used to mix queries and reduce the
    linkability of query information to specific clients.
@@ -2345,14 +2363,6 @@ Internet-Draft                    RAINS                       March 2017
    The protocol used by clients to issue queries to and receive
    responses from an query service is a subset of the full RAINS
    protocol, with the following differences:
-
-
-
-
-Trammell               Expires September 21, 2017              [Page 42]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    o  Clients only process assertion, shard, zone, and notification
       sections; sending a query to a client results in a 400 Bad Message
@@ -2392,6 +2402,14 @@ Internet-Draft                    RAINS                       March 2017
    expressed in UTC, RAINS servers MUST use a clock synchronization
    protocol such as NTP [RFC5905].
 
+
+
+
+Trammell               Expires September 25, 2017              [Page 43]
+
+Internet-Draft                    RAINS                       March 2017
+
+
 8.2.  Secret Key Management
 
    The secret keys associated with public keys for each RAINS server
@@ -2401,14 +2419,6 @@ Internet-Draft                    RAINS                       March 2017
    In addition, the secret keys associated with TLS certificates for
    each server (published via certinfo objects) must be available as
    well in order to establish TLS sessions.
-
-
-
-
-Trammell               Expires September 21, 2017              [Page 43]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    However, storing zone secret keys (associated via delegation objects)
    on RAINS servers would represent a more serious operational risk.  To
@@ -2449,6 +2459,13 @@ Internet-Draft                    RAINS                       March 2017
    change, as well, to get the full benefits of explicit context in name
    resolution.  This is an unrealistic goal.
 
+
+
+Trammell               Expires September 25, 2017              [Page 44]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    RAINS servers can, however, coexist with Domain Name System servers
    and clients during an indefinite transition period.  RAINS assertions
    can be algorithmically translated into DNS answers, and RAINS queries
@@ -2458,14 +2475,6 @@ Internet-Draft                    RAINS                       March 2017
 
    While DNSSEC and RAINS keys for equivalent ciphersuites are
    compatible with each other, there is no equivalent to query option 7
-
-
-
-Trammell               Expires September 21, 2017              [Page 44]
-
-Internet-Draft                    RAINS                       March 2017
-
-
    for gateways, since the RAINS signatures are generated over the RAINS
    bytestream for an assertion, not the DNS bytestream.  Therefore,
    RAINS to DNS gateways must provide verification services for DNS
@@ -2505,6 +2514,14 @@ Internet-Draft                    RAINS                       March 2017
 
    o  Objects of type nameset cannot be represented in DNS; the current
       equivalent are the IDNA parameters maintained by IANA (for the DNS
+
+
+
+Trammell               Expires September 25, 2017              [Page 45]
+
+Internet-Draft                    RAINS                       March 2017
+
+
       root zone only) at https://www.iana.org/assignments/idna-tables-
       6.3.0/idna-tables-6.3.0.xhtml.
 
@@ -2514,13 +2531,6 @@ Internet-Draft                    RAINS                       March 2017
 
    When translating a RAINS assertion to a DNS answer, the gateway can
    use the time to expiry for the verified signature as the TTL.
-
-
-
-Trammell               Expires September 21, 2017              [Page 45]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    There is no method for exposing context information in a DNS query or
    answer.  Therefore, queries and answers at a RAINS gateway are only
@@ -2558,6 +2568,16 @@ Internet-Draft                    RAINS                       March 2017
    messages in the CBOR tag registry at
    https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml.
 
+
+
+
+
+
+Trammell               Expires September 25, 2017              [Page 46]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    RAINS servers currently listen for connections from other servers on
    Port 1022.  Future revisions of this document may specify a different
    port, registered with IANA via Expert Review [RFC5226].
@@ -2570,13 +2590,6 @@ Internet-Draft                    RAINS                       March 2017
    The urn:x-rains namespace used by the RAINS capability mechanism in
    Section 5.15 may be a candidate for replacement with an IANA-
    registered namespace in a future revision of this document.
-
-
-
-Trammell               Expires September 21, 2017              [Page 46]
-
-Internet-Draft                    RAINS                       March 2017
-
 
 11.  Security Considerations
 
@@ -2612,6 +2625,15 @@ Internet-Draft                    RAINS                       March 2017
               RFC 793, DOI 10.17487/RFC0793, September 1981,
               <http://www.rfc-editor.org/info/rfc793>.
 
+
+
+
+
+Trammell               Expires September 25, 2017              [Page 47]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    [RFC1918]  Rekhter, Y., Moskowitz, B., Karrenberg, D., de Groot, G.,
               and E. Lear, "Address Allocation for Private Internets",
               BCP 5, RFC 1918, DOI 10.17487/RFC1918, February 1996,
@@ -2626,13 +2648,6 @@ Internet-Draft                    RAINS                       March 2017
               specifying the location of services (DNS SRV)", RFC 2782,
               DOI 10.17487/RFC2782, February 2000,
               <http://www.rfc-editor.org/info/rfc2782>.
-
-
-
-Trammell               Expires September 21, 2017              [Page 47]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    [RFC3629]  Yergeau, F., "UTF-8, a transformation format of ISO
               10646", STD 63, RFC 3629, DOI 10.17487/RFC3629, November
@@ -2667,7 +2682,20 @@ Internet-Draft                    RAINS                       March 2017
               DOI 10.17487/RFC8032, January 2017,
               <http://www.rfc-editor.org/info/rfc8032>.
 
+
+
+
+Trammell               Expires September 25, 2017              [Page 48]
+
+Internet-Draft                    RAINS                       March 2017
+
+
 13.2.  Informative References
+
+   [I-D.thomson-postel-was-wrong]
+              Thomson, M., "The Harmful Consequences of Postel's Maxim",
+              draft-thomson-postel-was-wrong-00 (work in progress),
+              March 2015.
 
    [PARSER-BUGS]
               Bratus, S., Patterson, M., and A. Shubina, "The Bugs We
@@ -2680,15 +2708,6 @@ Internet-Draft                    RAINS                       March 2017
    [RFC4291]  Hinden, R. and S. Deering, "IP Version 6 Addressing
               Architecture", RFC 4291, DOI 10.17487/RFC4291, February
               2006, <http://www.rfc-editor.org/info/rfc4291>.
-
-
-
-
-
-Trammell               Expires September 21, 2017              [Page 48]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    [RFC4632]  Fuller, V. and T. Li, "Classless Inter-domain Routing
               (CIDR): The Internet Address Assignment and Aggregation
@@ -2720,6 +2739,13 @@ Internet-Draft                    RAINS                       March 2017
               DOI 10.17487/RFC7231, June 2014,
               <http://www.rfc-editor.org/info/rfc7231>.
 
+
+
+Trammell               Expires September 25, 2017              [Page 49]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    [RFC7624]  Barnes, R., Schneier, B., Jennings, C., Hardie, T.,
               Trammell, B., Huitema, C., and D. Borkmann,
               "Confidentiality in the Face of Pervasive Surveillance: A
@@ -2736,15 +2762,6 @@ Internet-Draft                    RAINS                       March 2017
               and P. Hoffman, "Specification for DNS over Transport
               Layer Security (TLS)", RFC 7858, DOI 10.17487/RFC7858, May
               2016, <http://www.rfc-editor.org/info/rfc7858>.
-
-
-
-
-
-Trammell               Expires September 21, 2017              [Page 49]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    [RFC7871]  Contavalli, C., van der Gaast, W., Lawrence, D., and W.
               Kumari, "Client Subnet in DNS Queries", RFC 7871,
@@ -2777,6 +2794,14 @@ A.1.  Revocation based on hash chains
    longer validity times.  Allowing an assertion to be revoked would
    make this possible.
 
+
+
+
+Trammell               Expires September 25, 2017              [Page 50]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    Hash-chain based revocation allows a signature (and the Assertion,
    Shard, or Zone it protects) to be replaced before it expires.  To use
    hash-chain based revocation, a signing entity generates a hash chain
@@ -2794,14 +2819,6 @@ A.1.  Revocation based on hash chains
 
    o  An Assertion can only be replaced by another Assertion with the
       same Subject within the same Context and Zone, containing an
-
-
-
-Trammell               Expires September 21, 2017              [Page 50]
-
-Internet-Draft                    RAINS                       March 2017
-
-
       Objects array of the same length containing the same types of
       Objects.  To delete Object values, those values can be replaced
       with Null in the replacing Assertion.
@@ -2813,15 +2830,19 @@ Internet-Draft                    RAINS                       March 2017
    o  A Zone can only be replaced by another Zone with an identical name
       within the same Context.
 
-   Two codepoints have been reserved to support experimentation with
+   Four codepoints have been reserved to support experimentation with
    this mechanism, as shown in Table 10.
 
     +------+------------+-----------+--------------------+------------+
     | Code | Signatures | Hash/HMAC | Format             | Revocation |
     +------+------------+-----------+--------------------+------------+
-    |   24 | ecdsa-256  | sha-256   | See Section 5.14.2 | hash-chain |
+    |   24 | ed25519    | sha-512   | See Section 5.14.1 | hash-chain |
     |      |            |           |                    |            |
-    |   25 | ecdsa-384  | sha-384   | See Section 5.14.2 | hash-chain |
+    |   25 | ed448      | shake256  | See Section 5.14.1 | hash-chain |
+    |      |            |           |                    |            |
+    |   26 | ecdsa-256  | sha-256   | See Section 5.14.2 | hash-chain |
+    |      |            |           |                    |            |
+    |   27 | ecdsa-384  | sha-384   | See Section 5.14.2 | hash-chain |
     +------+------------+-----------+--------------------+------------+
 
                   Table 10: Defined signature algorithms
@@ -2829,6 +2850,13 @@ Internet-Draft                    RAINS                       March 2017
    The main open question for experimentation is how to ensure that a
    revocation is properly propagated through a RAINS infrastructure;
    this may require protocol changes to work reliably.
+
+
+
+Trammell               Expires September 25, 2017              [Page 51]
+
+Internet-Draft                    RAINS                       March 2017
+
 
    To support this experiment, a server must additionally evaluate an
    assertion it receives to determine whether it replaces any
@@ -2850,13 +2878,6 @@ Appendix B.  Open Issues
    o  Consider adding semantics to note-data for automated reaction to
       an error.  Specifically, notification codes 400, 403, and 413
       could use additional data.
-
-
-
-Trammell               Expires September 21, 2017              [Page 51]
-
-Internet-Draft                    RAINS                       March 2017
-
 
 Author's Address
 
@@ -2888,25 +2909,4 @@ Author's Address
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Trammell               Expires September 21, 2017              [Page 52]
+Trammell               Expires September 25, 2017              [Page 52]
