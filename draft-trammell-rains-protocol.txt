@@ -119,16 +119,16 @@ Internet-Draft                    RAINS                       March 2017
      8.3.  Unsigned Contained Assertions . . . . . . . . . . . . . .  44
      8.4.  Query Service Discovery . . . . . . . . . . . . . . . . .  44
      8.5.  Transition using translation between RAINS and DNS
-           information models  . . . . . . . . . . . . . . . . . . .  44
+           information models  . . . . . . . . . . . . . . . . . . .  45
    9.  Experimental Design and Evaluation  . . . . . . . . . . . . .  46
-   10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  46
+   10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  47
    11. Security Considerations . . . . . . . . . . . . . . . . . . .  47
    12. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  47
    13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  47
      13.1.  Normative References . . . . . . . . . . . . . . . . . .  47
      13.2.  Informative References . . . . . . . . . . . . . . . . .  49
    Appendix A.  Directions for future experimentation  . . . . . . .  50
-     A.1.  Revocation based on hash chains . . . . . . . . . . . . .  50
+     A.1.  Revocation based on hash chains . . . . . . . . . . . . .  51
    Appendix B.  Open Issues  . . . . . . . . . . . . . . . . . . . .  52
    Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  52
 
@@ -2121,7 +2121,7 @@ Internet-Draft                    RAINS                       March 2017
       only).  If so, and if option 5 (expired assertions acceptable) is
       also specified, it then checks to see if it has any cached
       sections that answer the query on which signatures are expired;
-
+      otherwise, processing stops, and the server returns a 504 No
 
 
 
@@ -2130,8 +2130,9 @@ Trammell               Expires September 25, 2017              [Page 38]
 Internet-Draft                    RAINS                       March 2017
 
 
-      otherwise, processing stops.  If the query does not specify option
-      4, delegation proceeds as follows: the server:
+      Assertion Available notification, as if the query had instantly
+      expired.. If the query does not specify option 4, delegation
+      proceeds, and the server:
 
    o  determines whether it has other non-authoritative servers it can
       forward the query to, according to its configuration and policy,
@@ -2175,9 +2176,8 @@ Internet-Draft                    RAINS                       March 2017
       in the presence of network behaviors that may drop state for idle
       connections.
 
-   o  For type 399 "Capability hash not understood", the server prepares
-      to send a full capabilities list on the next message it sends to
-      the peer.
+
+
 
 
 
@@ -2185,6 +2185,10 @@ Trammell               Expires September 25, 2017              [Page 39]
 
 Internet-Draft                    RAINS                       March 2017
 
+
+   o  For type 399 "Capability hash not understood", the server prepares
+      to send a full capabilities list on the next message it sends to
+      the peer.
 
    o  For type 504 "No assertion available", the server checks the token
       on the message, and prepares to forward the assertion to the
@@ -2229,11 +2233,7 @@ Internet-Draft                    RAINS                       March 2017
 
    The first message a server or client sends to a peer after a new
    connection is established SHOULD contain a capabilities section, if
-   the server or client supports any optional capabilities.  See
-   Section 5.15.
 
-   If the server is configured to keep long-running connections open,
-   due to the presence of network behaviors that may drop state for idle
 
 
 
@@ -2242,6 +2242,11 @@ Trammell               Expires September 25, 2017              [Page 40]
 Internet-Draft                    RAINS                       March 2017
 
 
+   the server or client supports any optional capabilities.  See
+   Section 5.15.
+
+   If the server is configured to keep long-running connections open,
+   due to the presence of network behaviors that may drop state for idle
    connections, it SHOULD send a message containing a type 100
    Connection Heartbeat notification after a configured idle time
    without any messages containing other content being sent.
@@ -2284,11 +2289,6 @@ Internet-Draft                    RAINS                       March 2017
    into a single minimum maximum-size message.  Authorities are
    therefore encouraged to publish zones grouped into shards that will
    fit into 65536-byte messages, to allow servers to reply using these
-   shards when full-zone transfers are not possible due to message size
-   limitations.
-
-
-
 
 
 
@@ -2297,6 +2297,9 @@ Trammell               Expires September 25, 2017              [Page 41]
 
 Internet-Draft                    RAINS                       March 2017
 
+
+   shards when full-zone transfers are not possible due to message size
+   limitations.
 
 6.4.  Runtime Consistency Checking
 
@@ -2343,9 +2346,6 @@ Internet-Draft                    RAINS                       March 2017
    useful to build a profile of that user for surveillance purposes as
    full access to the clear text of that client's communications
    [RFC7624].  In this revision, RAINS uses TLS to protect
-   communications between servers and between servers and clients, with
-   certificate information for RAINS infrastructure stored in RAINS
-   itself.  Together with hop-by-hop confidentiality protection, query
 
 
 
@@ -2354,6 +2354,9 @@ Trammell               Expires September 25, 2017              [Page 42]
 Internet-Draft                    RAINS                       March 2017
 
 
+   communications between servers and between servers and clients, with
+   certificate information for RAINS infrastructure stored in RAINS
+   itself.  Together with hop-by-hop confidentiality protection, query
    options, proactive caching, default use of non-persistent tokens, and
    redirection among servers can be used to mix queries and reduce the
    linkability of query information to specific clients.
@@ -2398,9 +2401,6 @@ Internet-Draft                    RAINS                       March 2017
    validity period, and make these new signatures available when old
    ones are expiring.
 
-   Since assertion lifetime management is based on a real-time clock
-   expressed in UTC, RAINS servers MUST use a clock synchronization
-   protocol such as NTP [RFC5905].
 
 
 
@@ -2409,6 +2409,10 @@ Trammell               Expires September 25, 2017              [Page 43]
 
 Internet-Draft                    RAINS                       March 2017
 
+
+   Since assertion lifetime management is based on a real-time clock
+   expressed in UTC, RAINS servers MUST use a clock synchronization
+   protocol such as NTP [RFC5905].
 
 8.2.  Secret Key Management
 
@@ -2450,6 +2454,18 @@ Internet-Draft                    RAINS                       March 2017
    key verification on its own for bootstrapping), before connecting to
    that query server for normal name resolution.
 
+
+
+
+
+
+
+
+Trammell               Expires September 25, 2017              [Page 44]
+
+Internet-Draft                    RAINS                       March 2017
+
+
 8.5.  Transition using translation between RAINS and DNS information
       models
 
@@ -2458,13 +2474,6 @@ Internet-Draft                    RAINS                       March 2017
    the Internet.  In addition, most client software would need to
    change, as well, to get the full benefits of explicit context in name
    resolution.  This is an unrealistic goal.
-
-
-
-Trammell               Expires September 25, 2017              [Page 44]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    RAINS servers can, however, coexist with Domain Name System servers
    and clients during an indefinite transition period.  RAINS assertions
@@ -2503,6 +2512,16 @@ Internet-Draft                    RAINS                       March 2017
       gateway, there is no need to represent this information to the
       client.
 
+
+
+
+
+
+Trammell               Expires September 25, 2017              [Page 45]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    o  Objects of type infrakey cannot be represented in DNS, but are
       irrelevant for DNS translation of RAINS messages, since DNS does
       not support server signing of responses.
@@ -2514,14 +2533,6 @@ Internet-Draft                    RAINS                       March 2017
 
    o  Objects of type nameset cannot be represented in DNS; the current
       equivalent are the IDNA parameters maintained by IANA (for the DNS
-
-
-
-Trammell               Expires September 25, 2017              [Page 45]
-
-Internet-Draft                    RAINS                       March 2017
-
-
       root zone only) at https://www.iana.org/assignments/idna-tables-
       6.3.0/idna-tables-6.3.0.xhtml.
 
@@ -2560,6 +2571,13 @@ Internet-Draft                    RAINS                       March 2017
    benefits derived from RAINS' features, as information for future
    development of the DNS protocol.
 
+
+
+Trammell               Expires September 25, 2017              [Page 46]
+
+Internet-Draft                    RAINS                       March 2017
+
+
 10.  IANA Considerations
 
    The present revision of this document has no actions for IANA.
@@ -2567,16 +2585,6 @@ Internet-Draft                    RAINS                       March 2017
    The authors have registered the CBOR tag 15309736 to identify RAINS
    messages in the CBOR tag registry at
    https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml.
-
-
-
-
-
-
-Trammell               Expires September 25, 2017              [Page 46]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    RAINS servers currently listen for connections from other servers on
    Port 1022.  Future revisions of this document may specify a different
@@ -2616,14 +2624,6 @@ Internet-Draft                    RAINS                       March 2017
               NIST, ., "Digital Signature Standard FIPS 186-3", June
               2009.
 
-   [I-D.trammell-inip-pins]
-              Trammell, B., "Properties of an Ideal Naming Service",
-              draft-trammell-inip-pins-03 (work in progress), March
-              2017.
-
-   [RFC0793]  Postel, J., "Transmission Control Protocol", STD 7,
-              RFC 793, DOI 10.17487/RFC0793, September 1981,
-              <http://www.rfc-editor.org/info/rfc793>.
 
 
 
@@ -2633,6 +2633,15 @@ Trammell               Expires September 25, 2017              [Page 47]
 
 Internet-Draft                    RAINS                       March 2017
 
+
+   [I-D.trammell-inip-pins]
+              Trammell, B., "Properties of an Ideal Naming Service",
+              draft-trammell-inip-pins-03 (work in progress), March
+              2017.
+
+   [RFC0793]  Postel, J., "Transmission Control Protocol", STD 7,
+              RFC 793, DOI 10.17487/RFC0793, September 1981,
+              <http://www.rfc-editor.org/info/rfc793>.
 
    [RFC1918]  Rekhter, Y., Moskowitz, B., Karrenberg, D., de Groot, G.,
               and E. Lear, "Address Allocation for Private Internets",
@@ -2673,6 +2682,14 @@ Internet-Draft                    RAINS                       March 2017
               (CRL) Profile", RFC 5280, DOI 10.17487/RFC5280, May 2008,
               <http://www.rfc-editor.org/info/rfc5280>.
 
+
+
+
+Trammell               Expires September 25, 2017              [Page 48]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    [RFC7049]  Bormann, C. and P. Hoffman, "Concise Binary Object
               Representation (CBOR)", RFC 7049, DOI 10.17487/RFC7049,
               October 2013, <http://www.rfc-editor.org/info/rfc7049>.
@@ -2681,14 +2698,6 @@ Internet-Draft                    RAINS                       March 2017
               Signature Algorithm (EdDSA)", RFC 8032,
               DOI 10.17487/RFC8032, January 2017,
               <http://www.rfc-editor.org/info/rfc8032>.
-
-
-
-
-Trammell               Expires September 25, 2017              [Page 48]
-
-Internet-Draft                    RAINS                       March 2017
-
 
 13.2.  Informative References
 
@@ -2729,6 +2738,14 @@ Internet-Draft                    RAINS                       March 2017
               DOI 10.17487/RFC6605, April 2012,
               <http://www.rfc-editor.org/info/rfc6605>.
 
+
+
+
+Trammell               Expires September 25, 2017              [Page 49]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    [RFC6698]  Hoffman, P. and J. Schlyter, "The DNS-Based Authentication
               of Named Entities (DANE) Transport Layer Security (TLS)
               Protocol: TLSA", RFC 6698, DOI 10.17487/RFC6698, August
@@ -2738,13 +2755,6 @@ Internet-Draft                    RAINS                       March 2017
               Protocol (HTTP/1.1): Semantics and Content", RFC 7231,
               DOI 10.17487/RFC7231, June 2014,
               <http://www.rfc-editor.org/info/rfc7231>.
-
-
-
-Trammell               Expires September 25, 2017              [Page 49]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    [RFC7624]  Barnes, R., Schneier, B., Jennings, C., Hardie, T.,
               Trammell, B., Huitema, C., and D. Borkmann,
@@ -2784,6 +2794,14 @@ Appendix A.  Directions for future experimentation
    allow additional experimentation with them before they are completely
    specified.
 
+
+
+
+Trammell               Expires September 25, 2017              [Page 50]
+
+Internet-Draft                    RAINS                       March 2017
+
+
 A.1.  Revocation based on hash chains
 
    RAINS assertions are scoped in temporal validity by the lifetimes on
@@ -2793,14 +2811,6 @@ A.1.  Revocation based on hash chains
    require impractical numbers of signatures, and could benefit from
    longer validity times.  Allowing an assertion to be revoked would
    make this possible.
-
-
-
-
-Trammell               Expires September 25, 2017              [Page 50]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    Hash-chain based revocation allows a signature (and the Assertion,
    Shard, or Zone it protects) to be replaced before it expires.  To use
@@ -2833,6 +2843,21 @@ Internet-Draft                    RAINS                       March 2017
    Four codepoints have been reserved to support experimentation with
    this mechanism, as shown in Table 10.
 
+
+
+
+
+
+
+
+
+
+
+Trammell               Expires September 25, 2017              [Page 51]
+
+Internet-Draft                    RAINS                       March 2017
+
+
     +------+------------+-----------+--------------------+------------+
     | Code | Signatures | Hash/HMAC | Format             | Revocation |
     +------+------------+-----------+--------------------+------------+
@@ -2850,13 +2875,6 @@ Internet-Draft                    RAINS                       March 2017
    The main open question for experimentation is how to ensure that a
    revocation is properly propagated through a RAINS infrastructure;
    this may require protocol changes to work reliably.
-
-
-
-Trammell               Expires September 25, 2017              [Page 51]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    To support this experiment, a server must additionally evaluate an
    assertion it receives to determine whether it replaces any
@@ -2888,24 +2906,6 @@ Author's Address
    Switzerland
 
    Email: ietf@trammell.ch
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
