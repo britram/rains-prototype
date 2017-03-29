@@ -4,8 +4,8 @@
 
 Network Working Group                                        B. Trammell
 Internet-Draft                                                ETH Zurich
-Intended status: Experimental                             March 24, 2017
-Expires: September 25, 2017
+Intended status: Experimental                             March 29, 2017
+Expires: September 30, 2017
 
 
      RAINS (Another Internet Naming Service) Protocol Specification
@@ -35,7 +35,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on September 25, 2017.
+   This Internet-Draft will expire on September 30, 2017.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Trammell               Expires September 25, 2017               [Page 1]
+Trammell               Expires September 30, 2017               [Page 1]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -65,7 +65,7 @@ Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   3
    2.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   4
-   3.  Architecture  . . . . . . . . . . . . . . . . . . . . . . . .   6
+   3.  Architecture  . . . . . . . . . . . . . . . . . . . . . . . .   5
    4.  Information Model . . . . . . . . . . . . . . . . . . . . . .   6
      4.1.  Assertion . . . . . . . . . . . . . . . . . . . . . . . .   6
        4.1.1.  Context in Assertions . . . . . . . . . . . . . . . .   8
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Trammell               Expires September 25, 2017               [Page 2]
+Trammell               Expires September 30, 2017               [Page 2]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -123,15 +123,12 @@ Internet-Draft                    RAINS                       March 2017
    9.  Experimental Design and Evaluation  . . . . . . . . . . . . .  45
    10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  46
    11. Security Considerations . . . . . . . . . . . . . . . . . . .  46
-   12. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  46
-   13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  46
+     11.1.  Server state exhaustion  . . . . . . . . . . . . . . . .  46
+   12. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  47
+   13. References  . . . . . . . . . . . . . . . . . . . . . . . . .  47
      13.1.  Normative References . . . . . . . . . . . . . . . . . .  47
      13.2.  Informative References . . . . . . . . . . . . . . . . .  48
-   Appendix A.  Directions for future experimentation  . . . . . . .  50
-     A.1.  Revocation based on hash chains . . . . . . . . . . . . .  50
-   Appendix B.  Pending Edits  . . . . . . . . . . . . . . . . . . .  51
-   Appendix C.  Open Issues  . . . . . . . . . . . . . . . . . . . .  51
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  52
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  50
 
 1.  Introduction
 
@@ -161,19 +158,18 @@ Internet-Draft                    RAINS                       March 2017
       live, each assertion's temporal validity is defined by the
       temporal validity of the signature(s) on it.
 
-
-
-
-
-Trammell               Expires September 25, 2017               [Page 3]
-
-Internet-Draft                    RAINS                       March 2017
-
-
    o  All assertions have validity within a specific context.  A context
       determines the rules for chaining signatures to verify validity of
       an assertion.  The global context is a special case of context,
       which uses chains from the global naming root key.  The use of
+
+
+
+Trammell               Expires September 30, 2017               [Page 3]
+
+Internet-Draft                    RAINS                       March 2017
+
+
       context explicitly separates global usage of the DNS from local
       usage thereof, and allows other application-specific naming
       constraints to be bound to names; see Section 4.1.1.  Queries are
@@ -218,18 +214,17 @@ Internet-Draft                    RAINS                       March 2017
       types describing the name, signed by an authority for the zone
       containing the subject name.  See Section 4.1.
 
-
-
-
-Trammell               Expires September 25, 2017               [Page 4]
-
-Internet-Draft                    RAINS                       March 2017
-
-
    o  Subject: The name to which an assertion pertains.
 
    o  Object: A type/value pair of information about a name within an
       assertion.
+
+
+
+Trammell               Expires September 30, 2017               [Page 4]
+
+Internet-Draft                    RAINS                       March 2017
+
 
    o  Query: An expression of interest in certain types of objects
       pertaining to a subject name in one or more contexts.  See
@@ -272,22 +267,21 @@ Internet-Draft                    RAINS                       March 2017
       RAINS Servers to retrieve assertions on behalf of applications
       that wish to connect to named services in the Internet.
 
-
-
-
-
-
-Trammell               Expires September 25, 2017               [Page 5]
-
-Internet-Draft                    RAINS                       March 2017
-
-
 3.  Architecture
 
    The RAINS architecture is simple, and resembles the architecture of
    DNS.  A RAINS Server is an entity that provides transient and/or
    permanent storage for assertions about names, and a lookup function
    that finds assertions for a given query about a name, either by
+
+
+
+
+Trammell               Expires September 30, 2017               [Page 5]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    searching local storage or by delegating to another RAINS server.
    RAINS servers can take on any or all of three roles:
 
@@ -328,16 +322,6 @@ Internet-Draft                    RAINS                       March 2017
 
    o  Subject: name about which the assertion is made.
 
-
-
-
-
-
-Trammell               Expires September 25, 2017               [Page 6]
-
-Internet-Draft                    RAINS                       March 2017
-
-
    o  Zone: name of the zone in which the assertion is made.  The fully
       qualified name of the subject is made by appending the zone name
       to the subject name with a domain name separator ('.').
@@ -346,6 +330,13 @@ Internet-Draft                    RAINS                       March 2017
       assertion.  Each Assertion is about a single type of data.
 
    o  Object: the data of the indicated type associated with the Subject
+
+
+
+Trammell               Expires September 30, 2017               [Page 6]
+
+Internet-Draft                    RAINS                       March 2017
+
 
    o  Signatures: one or more signatures generated by the authority for
       the Assertion.  Signatures contain a time interval during which
@@ -387,13 +378,6 @@ Internet-Draft                    RAINS                       March 2017
       not allowed by a valid signed Zone-Nameset expression is taken to
       be invalid, even if it has a valid signature.
 
-
-
-Trammell               Expires September 25, 2017               [Page 7]
-
-Internet-Draft                    RAINS                       March 2017
-
-
    o  Zone-Registrar: Information about the organization that caused a
       Subject name to exist, for registrant-level names.
 
@@ -402,6 +386,14 @@ Internet-Draft                    RAINS                       March 2017
 
    o  Infrastructure Key: Information about public keys used for object
       security within the RAINS infrastructure itself.  The Object
+
+
+
+Trammell               Expires September 30, 2017               [Page 7]
+
+Internet-Draft                    RAINS                       March 2017
+
+
       contains a public key by which a named RAINS server can be
       identified.
 
@@ -442,14 +434,6 @@ Internet-Draft                    RAINS                       March 2017
 
    o  For the common split-DNS case, an enterprise could place names for
       machines on its local networks within a separate context.  E.g., a
-
-
-
-Trammell               Expires September 25, 2017               [Page 8]
-
-Internet-Draft                    RAINS                       March 2017
-
-
       workstation could be named simplon.cab.inf.ethz.ch within the
       context staff-workstations.cx-.inf.ethz.ch.  Assertions about this
       name would be signed by the authority for inf.ethz.ch.  Here, the
@@ -458,6 +442,14 @@ Internet-Draft                    RAINS                       March 2017
       validly signed by the authority for inf.ethz.ch if no delegation
       exists for cab.inf.ethz.ch.  The context simply marks this
       assertion as internal.  This allows a client making requests of
+
+
+
+Trammell               Expires September 30, 2017               [Page 8]
+
+Internet-Draft                    RAINS                       March 2017
+
+
       local names to know they are local, and for local resolvers to
       manage visibility of assertions outside the enterprise: explicit
       context makes accidental leakage of both queries and assertions
@@ -498,17 +490,21 @@ Internet-Draft                    RAINS                       March 2017
    o  Signature: the cryptographic signature itself, whose format is
       determined by the algorithm used.
 
-
-
-
-Trammell               Expires September 25, 2017               [Page 9]
-
-Internet-Draft                    RAINS                       March 2017
-
-
    The signature protects all the information in an assertion as well as
    its own valid-since and valid-until values; it does not protect other
    signatures on the assertion.
+
+
+
+
+
+
+
+
+Trammell               Expires September 30, 2017               [Page 9]
+
+Internet-Draft                    RAINS                       March 2017
+
 
 4.1.3.  Shards and Zones
 
@@ -552,21 +548,19 @@ Internet-Draft                    RAINS                       March 2017
    o  Zones containing no delegation assertions are final zones.  Final
       zones are not relevant as part of an authority discovery.
 
-
-
-
-
-
-Trammell               Expires September 25, 2017              [Page 10]
-
-Internet-Draft                    RAINS                       March 2017
-
-
    o  Zones containing at least one delegation assertion and at least
       one assertion that is not a delegation assertion are mixed zones.
       No optimizations are available for mixed zones.
 
    A zone has the following information elements:
+
+
+
+
+Trammell               Expires September 30, 2017              [Page 10]
+
+Internet-Draft                    RAINS                       March 2017
+
 
    o  Context: name of the context in which the assertions in the zone
       are valid; see Section 4.1.1 above.
@@ -610,20 +604,19 @@ Internet-Draft                    RAINS                       March 2017
    o  Options: a set of options by which a client may specify tradeoffs
       (e.g. privacy for performance).
 
-
-
-
-Trammell               Expires September 25, 2017              [Page 11]
-
-Internet-Draft                    RAINS                       March 2017
-
-
    A query expresses interest about all the given types of assertion in
    all the specified contexts; more complex expressions of which types
    in which contexts must be asked using multiple queries.  Preferences
    for tradeoffs (freshness, bandwidth efficiency, latency, privacy
    preservation) in servicing a query may be bound to the query using
    query options.
+
+
+
+Trammell               Expires September 30, 2017              [Page 11]
+
+Internet-Draft                    RAINS                       March 2017
+
 
 4.2.1.  Context in Queries
 
@@ -666,20 +659,20 @@ Internet-Draft                    RAINS                       March 2017
    The content of an answer depends on whether the answer is positive or
    negative.  A positive answer contains the information requested in
    the smallest atomic container that can be found, usually a single
-
-
-
-Trammell               Expires September 25, 2017              [Page 12]
-
-Internet-Draft                    RAINS                       March 2017
-
-
    assertion.  A negative answer contains the information used to verify
    it; either a shard with the Complete-Flag set, an entire Zone, or a
    Zone-Nameset assertion showing the name is illegal within the zone.
 
    A query is taken to have an inconclusive answer when no answer
    returns to the querier before the query's Valid-Until time.
+
+
+
+
+Trammell               Expires September 30, 2017              [Page 12]
+
+Internet-Draft                    RAINS                       March 2017
+
 
 4.3.  Address to Object Mapping
 
@@ -721,15 +714,6 @@ Internet-Draft                    RAINS                       March 2017
       address.  The Object contains a set of names.  Only available for
       host address subjects.
 
-
-
-
-
-Trammell               Expires September 25, 2017              [Page 13]
-
-Internet-Draft                    RAINS                       March 2017
-
-
    o  Zone-Registrant: Information about the organization responsible
       for a network.  Only available for network address subjects.
 
@@ -738,6 +722,13 @@ Internet-Draft                    RAINS                       March 2017
 
    o  Context: name of the context in which the assertions in the zone
       are valid; see Section 4.3.1.
+
+
+
+Trammell               Expires September 30, 2017              [Page 13]
+
+Internet-Draft                    RAINS                       March 2017
+
 
    o  Zone: subject address of the zone, consisting of an address
       family, address, and prefix length.  The prefix length must be
@@ -779,13 +770,6 @@ Internet-Draft                    RAINS                       March 2017
       RIRs, which then delegates to LIRs and to address-holding
       registries.
 
-
-
-Trammell               Expires September 25, 2017              [Page 14]
-
-Internet-Draft                    RAINS                       March 2017
-
-
    o  Local contexts associated with a given authority in a forward tree
       can also make assertions about addresses.  As with contexts in
       forward assertions, the authority-part and the context-part of a
@@ -793,6 +777,15 @@ Internet-Draft                    RAINS                       March 2017
       authority-part directly identifies the authority whose key was
       used to sign the assertion; assertions within a local context are
       only valid if signed by the identified authority.  Authorities
+
+
+
+
+Trammell               Expires September 30, 2017              [Page 14]
+
+Internet-Draft                    RAINS                       March 2017
+
+
       have complete control over how the contexts under their namespaces
       are arranged, and over the names within those contexts.
 
@@ -837,7 +830,14 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 15]
+
+
+
+
+
+
+
+Trammell               Expires September 30, 2017              [Page 15]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -893,7 +893,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 16]
+Trammell               Expires September 30, 2017              [Page 16]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -949,7 +949,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 17]
+Trammell               Expires September 30, 2017              [Page 17]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1005,7 +1005,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 18]
+Trammell               Expires September 30, 2017              [Page 18]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1061,7 +1061,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 19]
+Trammell               Expires September 30, 2017              [Page 19]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1117,7 +1117,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 20]
+Trammell               Expires September 30, 2017              [Page 20]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1173,7 +1173,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 21]
+Trammell               Expires September 30, 2017              [Page 21]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1229,7 +1229,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 22]
+Trammell               Expires September 30, 2017              [Page 22]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1285,7 +1285,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 23]
+Trammell               Expires September 30, 2017              [Page 23]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1341,7 +1341,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 24]
+Trammell               Expires September 30, 2017              [Page 24]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1397,7 +1397,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 25]
+Trammell               Expires September 30, 2017              [Page 25]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1453,7 +1453,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 26]
+Trammell               Expires September 30, 2017              [Page 26]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1509,7 +1509,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 27]
+Trammell               Expires September 30, 2017              [Page 27]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1565,7 +1565,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 28]
+Trammell               Expires September 30, 2017              [Page 28]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1621,7 +1621,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 29]
+Trammell               Expires September 30, 2017              [Page 29]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1677,7 +1677,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 30]
+Trammell               Expires September 30, 2017              [Page 30]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1733,7 +1733,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 31]
+Trammell               Expires September 30, 2017              [Page 31]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1789,7 +1789,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 32]
+Trammell               Expires September 30, 2017              [Page 32]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1845,7 +1845,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 33]
+Trammell               Expires September 30, 2017              [Page 33]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1901,7 +1901,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 34]
+Trammell               Expires September 30, 2017              [Page 34]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -1957,7 +1957,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 35]
+Trammell               Expires September 30, 2017              [Page 35]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -2013,7 +2013,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 36]
+Trammell               Expires September 30, 2017              [Page 36]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -2069,7 +2069,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 37]
+Trammell               Expires September 30, 2017              [Page 37]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -2099,7 +2099,8 @@ Internet-Draft                    RAINS                       March 2017
       reply for the received query depends on the reply for the
       forwarded query.
 
-   If query delegation fails to return an answer within a configured
+   If query delegation fails to return an answer within the maximum of
+   the valid-until time in the received query and a configured maximum
    timeout for a delegated query, the server prepares to send a 504 No
    assertion available response to the peer from which it received the
    query.
@@ -2115,20 +2116,22 @@ Internet-Draft                    RAINS                       March 2017
 
    When a server creates a new query to forward to another server in
    response to a query it received, and the received query contains a
-   query-expires time, the delegated query MUST contain the same query-
-   expires time.  If the received query contains no query-expires time,
-   the delegated query MAY contain a query- expires time of the server's
-   choosing, according to its configuration.
-
-   On receipt of a notification, a server's behavior depends on the
-   notification type:
+   query-expires time, the delegated query MUST NOT have a query-expires
+   time after that in the received query.  If the received query
+   contains no query-expires time, the delegated query MAY contain a
+   query- expires time of the server's choosing, according to its
+   configuration.
 
 
 
-Trammell               Expires September 25, 2017              [Page 38]
+
+Trammell               Expires September 30, 2017              [Page 38]
 
 Internet-Draft                    RAINS                       March 2017
 
+
+   On receipt of a notification, a server's behavior depends on the
+   notification type:
 
    o  For type 100 "Connection Heartbeat", the server does nothing:
       these null messages are used to keep long-lived connections open
@@ -2175,17 +2178,16 @@ Internet-Draft                    RAINS                       March 2017
 
    o  For type 400 "Bad message", type 403 "Inconsistent message", type
       500 "Server error", or type 501 "Server not capable", the client
-      logs the error along with the note-data content, as these
-      notifications generally represent implementation or configuration
 
 
 
-
-Trammell               Expires September 25, 2017              [Page 39]
+Trammell               Expires September 30, 2017              [Page 39]
 
 Internet-Draft                    RAINS                       March 2017
 
 
+      logs the error along with the note-data content, as these
+      notifications generally represent implementation or configuration
       error conditions which will require human intervention to
       mitigate.
 
@@ -2235,9 +2237,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-
-
-Trammell               Expires September 25, 2017              [Page 40]
+Trammell               Expires September 30, 2017              [Page 40]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -2257,14 +2257,14 @@ Internet-Draft                    RAINS                       March 2017
    misbehaving authority servers.  The following types of inconsistency
    are possible:
 
-   o  A lexically complete shard may omit an assertion within its shard-
+   o  A lexically complete shard omits an assertion within its shard-
       range which is valid at the same time as the shard.
 
-   o  A zone may omit an assertion within its zone which is valid at the
+   o  A zone omits an assertion within its zone which is valid at the
       same time as the zone.
 
-   o  An assertion prohibited by its zone's nameset may be valid at the
-      same time as the zone's nameset assertion.
+   o  An assertion prohibited by its zone's nameset is valid at the same
+      time as the zone's nameset assertion.
 
    RAINS relies on runtime consistency checking to mitigate
    inconsistency: each server receiving an assertion, shard, or zone
@@ -2293,7 +2293,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 41]
+Trammell               Expires September 30, 2017              [Page 41]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -2349,7 +2349,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 42]
+Trammell               Expires September 30, 2017              [Page 42]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -2405,7 +2405,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 43]
+Trammell               Expires September 30, 2017              [Page 43]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -2461,7 +2461,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 44]
+Trammell               Expires September 30, 2017              [Page 44]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -2517,7 +2517,7 @@ Internet-Draft                    RAINS                       March 2017
 
 
 
-Trammell               Expires September 25, 2017              [Page 45]
+Trammell               Expires September 30, 2017              [Page 45]
 
 Internet-Draft                    RAINS                       March 2017
 
@@ -2556,6 +2556,28 @@ Internet-Draft                    RAINS                       March 2017
    Section 4.1.2, Section 6.5, Section 5.14, Section 5.12.1, and
    Section 8.2 for security-relevant details.
 
+   With respect to the resistance of the protocol itself to various
+   attacks, we consider a few potential attacks against RAINS servers
+   and RAINS clients in the subsections below:
+
+11.1.  Server state exhaustion
+
+   [EDITOR'S NOTE: attacker can create domain, use long-validity queries
+   to exhaust state at server. defense: server can consider shorter
+   validity time than that requested, but not longer...]
+
+
+
+
+
+
+
+
+Trammell               Expires September 30, 2017              [Page 46]
+
+Internet-Draft                    RAINS                       March 2017
+
+
 12.  Acknowledgments
 
    Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Christian
@@ -2565,18 +2587,6 @@ Internet-Draft                    RAINS                       March 2017
    of this protocol.
 
 13.  References
-
-
-
-
-
-
-
-
-Trammell               Expires September 25, 2017              [Page 46]
-
-Internet-Draft                    RAINS                       March 2017
-
 
 13.1.  Normative References
 
@@ -2616,6 +2626,14 @@ Internet-Draft                    RAINS                       March 2017
               Addresses", RFC 4193, DOI 10.17487/RFC4193, October 2005,
               <http://www.rfc-editor.org/info/rfc4193>.
 
+
+
+
+Trammell               Expires September 30, 2017              [Page 47]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    [RFC4727]  Fenner, B., "Experimental Values In IPv4, IPv6, ICMPv4,
               ICMPv6, UDP, and TCP Headers", RFC 4727,
               DOI 10.17487/RFC4727, November 2006,
@@ -2625,14 +2643,6 @@ Internet-Draft                    RAINS                       March 2017
               (TLS) Protocol Version 1.2", RFC 5246,
               DOI 10.17487/RFC5246, August 2008,
               <http://www.rfc-editor.org/info/rfc5246>.
-
-
-
-
-Trammell               Expires September 25, 2017              [Page 47]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    [RFC5280]  Cooper, D., Santesson, S., Farrell, S., Boeyen, S.,
               Housley, R., and W. Polk, "Internet X.509 Public Key
@@ -2673,6 +2683,13 @@ Internet-Draft                    RAINS                       March 2017
               Plan", BCP 122, RFC 4632, DOI 10.17487/RFC4632, August
               2006, <http://www.rfc-editor.org/info/rfc4632>.
 
+
+
+Trammell               Expires September 30, 2017              [Page 48]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    [RFC5226]  Narten, T. and H. Alvestrand, "Guidelines for Writing an
               IANA Considerations Section in RFCs", BCP 26, RFC 5226,
               DOI 10.17487/RFC5226, May 2008,
@@ -2682,13 +2699,6 @@ Internet-Draft                    RAINS                       March 2017
               "Network Time Protocol Version 4: Protocol and Algorithms
               Specification", RFC 5905, DOI 10.17487/RFC5905, June 2010,
               <http://www.rfc-editor.org/info/rfc5905>.
-
-
-
-Trammell               Expires September 25, 2017              [Page 48]
-
-Internet-Draft                    RAINS                       March 2017
-
 
    [RFC6605]  Hoffman, P. and W. Wijngaards, "Elliptic Curve Digital
               Signature Algorithm (DSA) for DNSSEC", RFC 6605,
@@ -2727,6 +2737,15 @@ Internet-Draft                    RAINS                       March 2017
               DOI 10.17487/RFC7871, May 2016,
               <http://www.rfc-editor.org/info/rfc7871>.
 
+
+
+
+
+Trammell               Expires September 30, 2017              [Page 49]
+
+Internet-Draft                    RAINS                       March 2017
+
+
    [SCION]    Barrera, D., Reischuk, R., Szalachowski, P., and A.
               Perrig, "SCION Five Years Later - Revisiting Scalability,
               Control, and Isolation Next-Generation Networks
@@ -2735,135 +2754,6 @@ Internet-Draft                    RAINS                       March 2017
    [XEP0115]  Hildebrand, J., Saint-Andre, P., Troncon, R., and J.
               Konieczny, "XEP-0115 Entity Capababilities", February
               2008.
-
-
-
-
-
-
-Trammell               Expires September 25, 2017              [Page 49]
-
-Internet-Draft                    RAINS                       March 2017
-
-
-Appendix A.  Directions for future experimentation
-
-   The following features were suggested during the design of RAINS, but
-   have been left out of the current revision of the specification to
-   allow additional experimentation with them before they are completely
-   specified.
-
-A.1.  Revocation based on hash chains
-
-   RAINS assertions are scoped in temporal validity by the lifetimes on
-   their signatures.  This is operationally equivalent to TTL in the
-   current DNS.  An assertion which becomes invalid can simply not be
-   renewed by its authority.  However, very dynamic infrastructures may
-   require impractical numbers of signatures, and could benefit from
-   longer validity times.  Allowing an assertion to be revoked would
-   make this possible.  This entails adding a field to every signature:
-
-   o  Revocation-Token: an optional revocation token for this signature,
-      which allows a signature to be replaced or removed before the end
-      of its validity.  Revocation tokens are generally based on hash
-      chains, meaning that a signature with a revocation token "down"
-      the chain from a given token supercedes it.  The format and
-      mechanism used by the revocation token is determined by the
-      alogrithm used.
-
-   Hash-chain based revocation allows a signature (and the Assertion,
-   Shard, or Zone it protects) to be replaced before it expires.  To use
-   hash-chain based revocation, a signing entity generates a hash chain
-   from a known seed using the hash function specified by the signature
-   algorithm in use, and places the Nth value derived therefrom in the
-   hash chain revocation token on a signature.  When used, this token
-   appears as a byte array after the signature data in the signature
-   array.
-
-   A revocation can be issued by generating a new section and signing
-   it, revealing the N-1st value from the hash chain in the revocation
-   token.  To allow a recipient of a revoked section to verify the
-   revocation, the following restrictions on what can replace what
-   apply:
-
-   o  An Assertion can only be replaced by another Assertion with the
-      same Subject within the same Context and Zone, containing an
-      Objects array of the same length containing the same types of
-      Objects.  To delete Object values, those values can be replaced
-      with Null in the replacing Assertion.
-
-
-
-
-
-
-Trammell               Expires September 25, 2017              [Page 50]
-
-Internet-Draft                    RAINS                       March 2017
-
-
-   o  A Shard can only be replaced by another Shard with an identical
-      shard-range key, within the same Context and Zone.  Incomplete
-      Shards cannot be replaced.
-
-   o  A Zone can only be replaced by another Zone with an identical name
-      within the same Context.
-
-   Four codepoints have been reserved to support experimentation with
-   this mechanism, as shown in Table 10.
-
-    +------+------------+-----------+--------------------+------------+
-    | Code | Signatures | Hash/HMAC | Format             | Revocation |
-    +------+------------+-----------+--------------------+------------+
-    |   24 | ed25519    | sha-512   | See Section 5.14.1 | hash-chain |
-    |      |            |           |                    |            |
-    |   25 | ed448      | shake256  | See Section 5.14.1 | hash-chain |
-    |      |            |           |                    |            |
-    |   26 | ecdsa-256  | sha-256   | See Section 5.14.2 | hash-chain |
-    |      |            |           |                    |            |
-    |   27 | ecdsa-384  | sha-384   | See Section 5.14.2 | hash-chain |
-    +------+------------+-----------+--------------------+------------+
-
-                  Table 10: Defined signature algorithms
-
-   The main open question for experimentation is how to ensure that a
-   revocation is properly propagated through a RAINS infrastructure;
-   this may require protocol changes to work reliably.
-
-   To support this experiment, a server must additionally evaluate an
-   assertion it receives to determine whether it replaces any
-   information presently in its cache.  If so, it discards the old
-   information, and caches the new section.
-
-Appendix B.  Pending Edits
-
-   o  Remove the ability to have incomplete shards - they're not very
-      useful, and having shards always be lexicographically complete
-      simplifies server implementation.
-
-Appendix C.  Open Issues
-
-   o  A method for clients to discover local oracles needs to be
-      specified.
-
-   o  Consider making negative answers less expensive by allowing a hash
-      of a shard with a negative answer proof to be sent back, and
-      checked with a "no hashed negative answers" query option.  This
-      would increase complexity somewhat, because it would require the
-
-
-
-Trammell               Expires September 25, 2017              [Page 51]
-
-Internet-Draft                    RAINS                       March 2017
-
-
-      (re-)addition of an Answer section, which could contain such a
-      beast.
-
-   o  Consider adding semantics to note-data for automated reaction to
-      an error.  Specifically, notification codes 400, 403, and 413
-      could use additional data.
 
 Author's Address
 
@@ -2907,6 +2797,4 @@ Author's Address
 
 
 
-
-
-Trammell               Expires September 25, 2017              [Page 52]
+Trammell               Expires September 30, 2017              [Page 50]
