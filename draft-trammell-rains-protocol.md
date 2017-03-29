@@ -1464,8 +1464,9 @@ On receipt of a query, a server:
   those authority servers, noting the reply for the received query depends on
   the reply for the forwarded query.
 
-If query delegation fails to return an answer within a configured timeout for
-a delegated query, the server prepares to send a 504 No assertion available
+If query delegation fails to return an answer within the maximum of the
+valid-until time in the received query and a configured maximum timeout for a
+delegated query, the server prepares to send a 504 No assertion available
 response to the peer from which it received the query.
 
 When a server creates a new query to forward to another server in response to
@@ -1476,11 +1477,12 @@ is designed to allow debugging of query processing across multiple servers, It
 SHOULD only be enabled by clients designed explicitly for debugging RAINS
 itself, and MUST NOT be enabled by default by client resolvers.
 
-When a server creates a new query to forward to another server in response to
-a query it received, and the received query contains a query-expires time, the
-delegated query MUST contain the same query-expires time. If the received
-query contains no query-expires time, the delegated query MAY contain a query-
-expires time of the server's choosing, according to its configuration.
+When a server creates a new query to forward to another server in response to a
+query it received, and the received query contains a query-expires time, the
+delegated query MUST NOT have a query-expires time after that in the received
+query. If the received query contains no query-expires time, the delegated query
+MAY contain a query- expires time of the server's choosing, according to its
+configuration.
 
 On receipt of a notification, a server's behavior depends on the notification type:
 
@@ -1570,11 +1572,11 @@ The data model used by the RAINS protocol allows inconsistent information to
 be asserted, all resulting from misconfigured or misbehaving authority
 servers. The following types of inconsistency are possible:
 
-- A lexically complete shard may omit an assertion within its shard-range
+- A lexically complete shard omits an assertion within its shard-range
   which is valid at the same time as the shard.
-- A zone may omit an assertion within its zone which is valid at the same time
+- A zone omits an assertion within its zone which is valid at the same time
   as the zone.
-- An assertion prohibited by its zone's nameset may be valid at the same time
+- An assertion prohibited by its zone's nameset is valid at the same time
   as the zone's nameset assertion.
 
 RAINS relies on runtime consistency checking to mitigate inconsistency: each
@@ -1797,6 +1799,16 @@ protected on a hop-by-hop basis. See especially {{signatures-in-assertions}},
 {{cbor-certinfo}}, and {{secret-key-management}} for security-relevant 
 details.
 
+With respect to the resistance of the protocol itself to various attacks, we
+consider a few potential attacks against RAINS servers and RAINS clients in the
+subsections below:
+
+## Server state exhaustion
+
+[EDITOR'S NOTE: attack: attacker can create domain, use long-validity queries to exhaust
+state at server. defense: server can consider shorter validity time than that
+requested, but not longer. attack: attacker can push garbage assertions proactively. defense: server doesn't accept assertions it's never seen a query for. how to handle an attacker that pushes assertions and queries?]
+
 # Acknowledgments
 
 Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Christian Fehlmann, Ted
@@ -1875,8 +1887,11 @@ cache. If so, it discards the old information, and caches the new section.
 - Remove the ability to have incomplete shards - they're not very useful, and
   having shards always be lexicographically complete simplifies server
   implementation.
+- For simplifications, change queries to be only for a single type in a single
+  context. An all-addresses type metatype might be useful for multistacked
+  hosts.
 
-# Open Issues
+# Open Questions and Issues
 
 - A method for clients to discover local oracles needs to be specified.
 - Consider making negative answers less expensive by allowing a hash of a
@@ -1886,3 +1901,8 @@ cache. If so, it discards the old information, and caches the new section.
   which could contain such a beast.
 - Consider adding semantics to note-data for automated reaction to an error.
   Specifically, notification codes 400, 403, and 413 could use additional data.
+- Do we really need 504 No Assertion Available? We know (at the client) when the
+  query timed out.
+- Revocation is hard; it might be made more tractable (and allow some
+  operational control) by designing a revocation mechanism that can *only*
+  revoke delegations)
