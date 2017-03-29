@@ -2562,12 +2562,12 @@ Internet-Draft                    RAINS                       March 2017
 
 11.1.  Server state exhaustion
 
-   [EDITOR'S NOTE: attacker can create domain, use long-validity queries
-   to exhaust state at server. defense: server can consider shorter
-   validity time than that requested, but not longer...]
-
-
-
+   [EDITOR'S NOTE: attack: attacker can create domain, use long-validity
+   queries to exhaust state at server. defense: server can consider
+   shorter validity time than that requested, but not longer. attack:
+   attacker can push garbage assertions proactively. defense: server
+   doesn't accept assertions it's never seen a query for. how to handle
+   an attacker that pushes assertions and queries?]
 
 
 
