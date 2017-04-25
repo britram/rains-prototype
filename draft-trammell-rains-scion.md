@@ -73,4 +73,23 @@ integer less than or equal to 2^32. The fourth element is a byte array of length
 
 # ARPKI certificates in RAINS Certificate objects
 
+{: #tabcertusage title="Additional certificate information usage values"}
+
+| Code | Certificate usage          |
+|-----:|----------------------------|
+|   23 | Policy binding certificate |
+
 [EDITOR'S NOTE: write me, discuss which types we need here.]
+
+# ARPKI keyspace
+
+[EDITOR'S NOTE: write me, define how to do an SCP ]
+
+| Keyspace ID | Name  | Signature Verification Algorithm                 |
+|------------:|-------|--------------------------------------------------|
+| 1           | arpki | ARPKI SCP signature; see {{arpki-keyspace}}      |
+
+
+# RAINS servers over the SCION Socket Protocol (SSP)
+
+[EDITOR'S NOTE: write me, once SSP is defined to the point we have something to cite.]
