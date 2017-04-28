@@ -69,21 +69,32 @@ integer less than or equal to 2^32. The fourth element is a byte array of length
 
  ## Address to name mappings for SCION addresses
 
-[EDITOR'S NOTE: This is an important open issue to discuss.]
+Since the IPv6 address part of a SCION address is scoped to the global IPv6
+address space, reverse lookups for SCION addresses work exactly as reverse
+lookups for IPv6 addresses. The ISD and AS number are not used in the address
+space delegation tree or in the query lookup procedure. Despite this fact, the
+delegation trees for lookup of addresses in the IPv6 and SCION address families
+is kept separate, as an organization may want a name to be bound only to their
+SCION or to their IPv6 space, respectively.
 
 # ARPKI certificates in RAINS Certificate objects
 
-{: #tabcertusage title="Additional certificate information usage values"}
+[EDITOR'S NOTE: write me, discuss which types we need here. At least two: a PBC for a domain, or a proof of absence of a PBC.)]
+
+{: #tabcertusage title="Additional certificate information usage values for SCION"}
 
 | Code | Certificate usage          |
 |-----:|----------------------------|
+|   22 | Policy absence proof       |
 |   23 | Policy binding certificate |
 
-[EDITOR'S NOTE: write me, discuss which types we need here.]
+
 
 # ARPKI keyspace
 
-[EDITOR'S NOTE: write me, define how to do an SCP ]
+[EDITOR'S NOTE: write me, define how to do an SCP validation]
+
+{: #tabkeyspace title="Additional keyspace for SCION"}
 
 | Keyspace ID | Name  | Signature Verification Algorithm                 |
 |------------:|-------|--------------------------------------------------|
