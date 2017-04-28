@@ -79,7 +79,8 @@ SCION or to their IPv6 space, respectively.
 
 # ARPKI certificates in RAINS Certificate objects
 
-[EDITOR'S NOTE: write me, discuss which types we need here. At least two: a PBC for a domain, or a proof of absence of a PBC.)]
+[EDITOR'S NOTE: write me, discuss which types we need here. At least two: a PBC
+for a domain, or a proof of absence of a PBC.)]
 
 {: #tabcertusage title="Additional certificate information usage values for SCION"}
 
@@ -87,8 +88,6 @@ SCION or to their IPv6 space, respectively.
 |-----:|----------------------------|
 |   22 | Policy absence proof       |
 |   23 | Policy binding certificate |
-
-
 
 # ARPKI keyspace
 
