@@ -48,6 +48,12 @@ specific to the SCION Internet architecture.
 
 --- middle
 
+# Introduction
+
+RAINS, Another Internet Naming Service (RAINS) {{I-D.trammell-rains-protocol}}
+is a clean-slate Internet naming service defined to meet a set of identified
+properties of an ideal Internet naming service {{I-D.trammell-inip-pins}}. RAINS
+was defined in the context of the SCION {{SCION}} architecture. This document updates the RAINS protocol specification with SCION-specific extstions.
 
 # SCION Address Objects
 
@@ -59,23 +65,48 @@ SCION adds an additional object data type to those listed in section 5.12 of
 
 | Code  | Name         | Description                             |
 |------:|--------------|-----------------------------------------|
-| 23    | scion-addr   | SCION address of subject                |
+| 23    | scion6-addr  | SCION IPv6 address of subject           |
+| 22    | scion4-addr  | SCION IPv4 address of subject           |
 
-A scion-addr (23) object contains an SCION address associated with a name.  It
+A scion6-addr (23) object contains a SCION address associated with a name.  It
 is represented as a four element array.  The second element is an ISD number as
-an integer less than or equal to 2^16. The third element is an AS number as an
-integer less than or equal to 2^32. The fourth element is a byte array of length
+an integer less than or equal to 2^16-1. The third element is an AS number as an
+integer less than or equal to 2^32-1. The fourth element is a byte array of length
 16 containing an IPv6 address in network byte order.
+
+A scion4-addr (22) object contains a SCION address associated with a name.  It
+is represented as a four element array.  The second element is an ISD number as
+an integer less than or equal to 2^16-1. The third element is an AS number as an
+integer less than or equal to 2^32-1. The fourth element is a byte array of
+length 4 containing an IPv4 address in network byte order.
 
  ## Address to name mappings for SCION addresses
 
-Since the IPv6 address part of a SCION address is scoped to the global IPv6
-address space, reverse lookups for SCION addresses work exactly as reverse
-lookups for IPv6 addresses. The ISD and AS number are not used in the address
-space delegation tree or in the query lookup procedure. Despite this fact, the
-delegation trees for lookup of addresses in the IPv6 and SCION address families
-is kept separate, as an organization may want a name to be bound only to their
-SCION or to their IPv6 space, respectively.
+Since the IP address part of a SCION address is scoped to the global IP address
+space, reverse lookups for SCION addresses work exactly as reverse lookups for
+IP addresses of the equivalent address family. The ISD and AS number are not
+used in the address space delegation tree or in the query lookup procedure.
+Despite this fact, the delegation trees for lookup of addresses in the IPv6 and
+SCION address families is kept separate, as an organization may want a name to
+be bound only to their SCION or to their IP space, respectively.
+
+When the subject-addr (5) key for an address assertion contains object
+type scion6-addr (23), the value is a three element CBOR array.  The
+first element of the array is the address family encoded as an object type, here
+23. The second element is the prefix length encoded as an integer, 0-128. The
+third element is the IPv6 part of the address, encoded as a byte array of length
+16 in network byte order. A subject address with prefix length 128 is a subject
+host address, and is nameable; otherwise it is a subject network address, and is
+delegatable.
+
+When the subject-addr (5) key for an address assertion contains object
+type scion6-addr (22), the value is a three element CBOR array.  The
+first element of the array is the address family encoded as an object type, here
+22. The second element is the prefix length encoded as an integer, 0-32. The
+third element is the IPv4 part of the address, encoded as a byte array of length
+4 in network byte order. A subject address with prefix length 32 is a subject
+host address, and is nameable; otherwise it is a subject network address, and is
+delegatable.
 
 # ARPKI certificates in RAINS Certificate objects
 
@@ -99,7 +130,6 @@ for a domain, or a proof of absence of a PBC.)]
 |------------:|-------|--------------------------------------------------|
 | 1           | arpki | ARPKI SCP signature; see {{arpki-keyspace}}      |
 
-
-# RAINS servers over the SCION Socket Protocol (SSP)
+# RAINS servers over native SCION multipath transport
 
 [EDITOR'S NOTE: write me, once SSP is defined to the point we have something to cite.]

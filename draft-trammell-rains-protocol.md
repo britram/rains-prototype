@@ -388,9 +388,11 @@ A zone has the following information elements:
 
 ### Zone-Reflexive Assertions
 
-A zone may make an assertion about itself by using an empty subject name. This
-facility can be used for any assertion type, but is especially useful for
-self-signing root zones.
+A zone may make an assertion about itself by using the string "@" as a subject
+name. This facility can be used for any assertion type, but is especially useful
+for self-signing root zones. If an assertion of a given type about a
+zone is available both in the zone itself and in the superordinate zone, the
+assertion in the superordinate zone will take precedence.
 
 ## Query
 
@@ -1322,7 +1324,8 @@ r|s].
 ECDSA-256 signatures and public keys use the P-256 curve as defined in {{FIPS-186-3}}.
 ECDSA-384 signatures and public keys use the P-384 curve as defined in {{FIPS-186-3}}.
 
-ECDSA-256 and ECDSA-384 support are primarily meant for compatibility with and migration from existing DNSSEC deployments; see {{dns-transition}}.
+ECDSA-256 and ECDSA-384 support are primarily meant for compatibility with and
+migration from existing DNSSEC deployments; see {{dns-transition}}.
 
 ## Capabilities {#cbor-capabilities}
 
@@ -1578,6 +1581,8 @@ servers. The following types of inconsistency are possible:
   as the zone.
 - An assertion prohibited by its zone's nameset is valid at the same time
   as the zone's nameset assertion.
+- A zone contains a valid reflexive assertion of a given object type at the same
+  time that its superordinate zone contains a valid assertion of the same type.
 
 RAINS relies on runtime consistency checking to mitigate inconsistency: each
 server receiving an assertion, shard, or zone SHOULD, subject to resource
@@ -1651,6 +1656,12 @@ these new signatures available when old ones are expiring.
 Since assertion lifetime management is based on a real-time clock expressed in
 UTC, RAINS servers MUST use a clock synchronization protocol such as NTP
 {{RFC5905}}.
+
+RAINS servers MAY coalesce assertion lifetimes, e.g. using only the most recent
+valid-until time in their cache management. This implies that an assertion with
+valid signatures in time intervals (T1, T2) and (T3, T4) such that T3 > T2 may
+be cached during the interval (T2, T3) as well. Authorites MUST NOT rely on
+non-caching or non-availability of assertions during such intervals.
 
 ## Secret Key Management
 
