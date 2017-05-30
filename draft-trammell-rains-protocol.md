@@ -1917,3 +1917,4 @@ cache. If so, it discards the old information, and caches the new section.
 - Revocation is hard; it might be made more tractable (and allow some
   operational control) by designing a revocation mechanism that can *only*
   revoke delegations)
+  
