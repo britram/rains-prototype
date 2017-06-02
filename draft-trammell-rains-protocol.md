@@ -604,7 +604,7 @@ verified against the infrastructure key for the RAINS Server originating the
 message.
 
 A Message map MAY contain a capabilities (1) key, whose value is described in
-{#cbor-capabilities}.
+{cbor-capabilities}.
 
 A Message map SHOULD contain a token (2) key, whose value is a 16-byte array.
 See {{cbor-tokens}} for details.
@@ -707,7 +707,7 @@ RAINS server to answer a query for nonexistence; it must be returned in a
 signed Zone. 
 
 The value of the content (23) key is an array of Assertion bodies as defined in
-{#cbor-assertion}.
+{cbor-assertion}.
 
 The value of the signatures (0) key, if present, is an array of one or more
 Signatures as defined in {{cbor-signature}}. If not present, the containing
@@ -757,7 +757,7 @@ Signatures on the Zone are to be verified against the appropriate key for the
 Zone in the given context, as described in {{signatures-in-assertions}}.
 
 The value of the content (23) key is an array of Shard bodies as defined in
-{#cbor-shard} and/or Assertion bodies as defined in {#cbor-assertion}.
+{cbor-shard} and/or Assertion bodies as defined in {cbor-assertion}.
 
 The value of the subject-zone (4) key is a UTF-8 encoded string
 containing the name of the Zone.
@@ -768,8 +768,8 @@ containing the name of the context for which the Zone is valid.
 ## Query Message Section body {#cbor-query}
 
 A Query body is a map. Queries MUST contain the the token (2), query-name (8),
-context (6), and query-types (10) keys. Queries MAY contain the query-
-expires (12) and query-opts (13) keys.
+context (6), query-types (10), and query-expires (12) keys. Queries MAY contain
+the query-opts (13) keys.
 
 The value of the token (2) key, is a 16-byte array. Future messages or
 notifications containing answers to this query MUST contain this token, if
@@ -786,7 +786,7 @@ the querier is equally interested in both IPv4 and IPv6 addresses for the
 query-name. An empty query-types array indicates that objects of any type are
 acceptable in answers to the query.
 
-The value of the query-expires (12) key, if present, is a CBOR integer
+The value of the query-expires (12) key, is a CBOR integer
 counting seconds since the UNIX epoch UTC, identified with tag value 1 and
 encoded as in section 2.4.1 of {{RFC7049}}. After the query-expires time, the
 query will have been considered not answered by the original issuer.
@@ -910,11 +910,11 @@ containing the name of the context for which the Zone is valid.
 
 Queries for assertions about addresses are similar to queries for assertions
 about names, but have semantic restrictions similar to those for Address
-Assertions and Address Zones. An address query may have only one context.
+Assertions and Address Zones.
 
 An Address Query body is a map. Queries MUST contain the the token (2), subject-addr (5),
-context (6), and query-types (10) keys. Queries MAY contain query-opts
-(13) and query-expires (12) keys.
+context (6), query-types (10), and query-expires (12) keys. Address Queries MAY contain 
+query-opts (13) key.
 
 The value of the token (2) key, is a 16-byte array. Future messages or
 notifications containing answers to this query MUST contain this token, if
@@ -931,7 +931,7 @@ of the context for which the Query is valid. Unlike queries for names, Address
 Queries can only pertain to a single context. See {{context-in-address-assertions}} 
 for more.
 
-The value of the query-expires (12) key, if present, is a CBOR integer
+The value of the query-expires (12) key is a CBOR integer
 counting seconds since the UNIX epoch UTC, identified with tag value 1 and
 encoded as in section 2.4.1 of {{RFC7049}}. After the query-expires time, the
 query will have been considered not answered by the original issuer.
