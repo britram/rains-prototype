@@ -333,7 +333,7 @@ A signature over an assertion contains the following information elements:
 
 
 The signature protects all the information in an assertion as well as its own
-valid-since and valid-until values; it does not protect other signatures on the
+algorithm identifier, valid-since, and valid-until values; it does not protect other signatures on the
 assertion.
 
 ### Shards and Zones
@@ -1047,14 +1047,14 @@ integer, with lower numbers having higher priority.
 
 A registrar (9) object gives the name and other identifying information of the
 registrar (the organization which caused the name to be added to the
-namespace) for organization-level names. It is represented as a UTF-8 string
-of maximum length 256 bytes containing identifying information chosen by the
-registrar according to the registry's policy.
+namespace) for organization-level names. It is represented as a two element array. 
+The second element is a UTF-8 string of maximum length 256 bytes containing identifying 
+information chosen by the registrar according to the registry's policy.
 
 A registrant (10) object gives information about the registrant of an
-organization-level name. It is represented as a UTF-8 string with a maximum
-length of 4096 bytes containing this information, with a format chosen by the
-registrar according to the registry's policy.
+organization-level name. It is represented as a two element array. The second 
+element is a UTF-8 string with a maximum length of 4096 bytes containing this 
+information, with a format chosen by the registrar according to the registry's policy.
 
 An infrakey (11) object contains a public key used to generate signatures on
 messages by a named RAINS server, by which a RAINS message signature may be
@@ -1242,32 +1242,11 @@ valid-until timestamp. If a signature has no specified valid-since time (i.e.,
 is valid from the beginning of time until its valid-until timestamp), the
 valid-since time MAY be null (as in Table 2 in Section 2.3 of {{RFC7049}}).
 
-Signatures in RAINS are generated over a normalized serialized CBOR object (a
-Message; or an Assertion, Shard, or Zone section body). To normalize and
-serialize an object for signing:
+A signature in RAINS is generated over a byte stream. The signing process is
+defined as:
 
-- Serialize the object with a stub for the signature to be generated:
-
-  - Strip all other signatures during serialization by omitting all signatures
-    (0) keys and their values. When signing a shard or zone, the signatures on
-    contained assertions, if present, must be omitted too. When signing a
-    message, the signatures on contained assertions, shards, and zones must be
-    omitted.
-
-  - Add subject zone and context to contained shards and assertions if not
-    present, inheriting them from their containing shard or zone.
-
-  - Create a stub signature within an array within a signatures (0) key at the
-    appropriate place in the object, containing the algorithm ID, timestamps
-    and hash chain token, if present, but a null value in the place of the
-    signature content.
-
-  - Normalize the serialized object by emitting all keys in CBOR maps in
-    ascending numerical order. Note that when serializing anything with a 
-    Content array, the order of the content array is preserved.
-
-  - If the serialized object is a Message, it should be tagged with the RAINS
-    tag.
+- Parse the object to be signed into a byte stream according to the format
+specified in {{signing-format}}.
 
 - Generate a signature on the resulting byte stream according to the algorithm
   selected.
@@ -1277,6 +1256,61 @@ serialize an object for signing:
 
 To verify a signature, generate the byte stream as for signing, then verify
 the signature according to the algorithm selected.
+
+### Signing format {#signing-format}
+
+[Editor's Note write in the introducation why we have 2 different formats for signing and as the wire format. Future improvement of wire format
+should not affect signature process. In case of changing requirements for a signature the wireformat does not have to be adapted. ]
+
+A RAINS Message or Message Section is parsed to a byte stream according to its type. The signing 
+format does not contain white spaces. Instead there are different markers between elements to give
+a hint about the next value to a user (e.g. :A: for Assertion). Every element in byte format 
+(e.g. a token, key, etc.) contained in a rains message or message section must be hex encoded prior to parsing. 
+Timestamps are represented as seconds since the UNIX epoch UTC. An object (or several in parentheses) 
+followed by a star `*` means that the preceding object can occur several times. The star (and parantheses) is 
+not part of the format. Similarly for `<>`, the word between pointy brackets describes the value which should 
+be there instead. The expression `(x|y)` means that either `x` or `y` can be there.     
+
+- Assertion: `:A::CN:<context name>:ZN:<zone-name>:SN:<subject name>[Object*]SignatureMetaData`
+  - Object: as described in {{tabobjsig}} depending on the object's type.
+  - SignatureMetaData: `:AI:<signature algorithm id>:VF:<valid from>:VU:<valid until>`
+- Shard: `:S::CN:<context name>:ZN:<zone name>:RB:<range begin>:RE:<range end>[ContainedAssertion*]SignatureMetaData`
+  - ContainedAssertion: `:CA::SN:<subject name>[Object*]`
+- Zone: `:Z::CN:<context name>:ZN:<zone name>[(ContainedShard|ContainedAssertion)*]SignatureMetaData`
+  - ContainedShard: `:CS::RB:<range begin>:RE:<range end>[Contained Assertion*]`
+
+- Address Assertion: `:AA::CN:<context name>:AF:<address family>:PL:<prefix length>:IP:<IP Address>[Object*]SignatureMetaData`
+- Address Zone: `:AZ::CN:<context name>:AF:<address family>:PL:<prefix length>:IP:<IP Address>[ContainedAddressAssertion*]SignatureMetaData`
+  - ContainedAddressAssertion: `:CAA::AF:<address family>:PL:<prefix length>:IP:<IP Address>[Object*]`
+
+- Message: `:M::TO:<token>:CB:<capabilities>[(Assertion|Shard|Zone|Query|Notification|Address Assertion|Address Zone|AddressQuery)*]SignatureMetaData`
+ - Query: `:Q::TO:<token>:CN:<context name>:FN:<fully qualified name>[(:OT:<object type>)*]:EX:<query expires>:[(:QO:<query option>)*]`
+ - Notification: `:N::TO:<token>:NT:<notification type:ND:<notification data>`
+ - Address Query: `:AQ::TO:<token>:CN:<context name>:FN:<fully qualified name>[(:OT:<object type>)*]:EX:<query expires>:[(:QO:<query option>)*]`
+
+{: #tabobjsig title="Object signature format"}
+
+| Object Type  | Signature format (Object)                                                    |
+|--------------|------------------------------------------------------------------------------|
+| name         | `:name::NA:<name>[(:OT:<object type>)*]`                                     | 
+| ip6-addr     | `:ip4::IP:<ip4 address>`                                                     |
+| ip4-addr     | `:ip6::IP:<ip6 address>`                                                     |
+| redirection  | `:redir::AS:<authority server>`                                              |
+| delegation   | `:deleg::SA:<signature algorithm id>:KD:<public key data>`                   |
+| nameset      | `:nameset::NS:<name set expression>`                                         |
+| cert-info    | `:cert::PF:<protocol family id>CertData` see {{tabcertsig}}                  |         
+| service-info | `:srv::HN:<host name>:PN:<port number>:PR:<priority>`                        |
+| registrar    | `:regr::RN:<name and id info>`                                               |
+| registrant   | `:regt::RI:<registrant info>`                                                |
+| infrakey     | `:infra::SA:<signature algorithm id>:KD:<public key data>`                   |
+| extrakey     | `:extra::SA:<signature algorithm id>:KS:<key space id>:KD:<public key data>` |
+
+{: #tabcertsig title="Certificate signature format"}
+
+| Cert Type    | Signature format (CertData)                                |
+|--------------|------------------------------------------------------------|
+| Unspecified  |                                                            | 
+| TLS          | `:CU:<certificate usage>:HA:<hash algo id>:CD:<signature>` |
 
 ### EdDSA signature and public key format {#eddsa-format}
 
@@ -1290,7 +1324,7 @@ delegation objects for Ed25519 keys are therefore represented by the array [5,
 Ed25519 and Ed448 signatures are are a combination of two non-negative
 integers, called "R" and "S" in sections 5.1.6 and 5.2.6, respectively, of
 {{RFC8032}}. An Ed25519 signature is represented as a 64-byte array containing
-the the concatenation of R and S, and an Ed448 signature is represented as a
+the concatenation of R and S, and an Ed448 signature is represented as a
 114-byte array containing the concatenation of R and S. RAINS signatures using
 Ed25519 are therefore the array [1, 0, valid-from, valid-until, R|S]; using Ed448
 the array [2, 0, valid-from, valid-until, R|S].
@@ -1721,8 +1755,8 @@ the mostly compatible information models used by the two.
 
 While DNSSEC and RAINS keys for equivalent ciphersuites are compatible with
 each other, there is no equivalent to query option 7 for gateways, since the
-RAINS signatures are generated over the RAINS bytestream for an assertion, not
-the DNS bytestream. Therefore, RAINS to DNS gateways must provide verification
+RAINS signatures are generated over the RAINS byte stream for an assertion, not
+the DNS byte stream. Therefore, RAINS to DNS gateways must provide verification
 services for DNS clients. DNS over TLS {{RFC7858}} SHOULD be used between the
 DNS client and gateway to ensure confidentiality and integrity for queries and
 answers.
