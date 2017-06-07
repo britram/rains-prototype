@@ -886,8 +886,8 @@ within the zone are contained within the zone's address. These Address Zones
 are similar to Zones containing assertions about names, but are keyed by
 network address and restricted in their semantics.
 
-An Address Zone body is a map. Zones MUST contain the content (23), signatures (0),
-subject-addr (5), and context (6) keys. 
+An Address Zone body is a map. Zones MUST contain signatures (0),
+subject-addr (5), content (23), and context (6) keys. 
 
 Signatures on the Zone are to be verified against the appropriate key for the
 Zone in the given context, as described in {{signatures-in-assertions}}.
@@ -930,6 +930,13 @@ The value of the context (6) key is a UTF-8 encoded string containing the name
 of the context for which the Query is valid. Unlike queries for names, Address 
 Queries can only pertain to a single context. See {{context-in-address-assertions}} 
 for more.
+
+The value of the query-types (10) key is an array of integers encoding the
+type(s) of objects (as in {{cbor-object}}) acceptable in answers to the query.
+All values in the query-type array are treated at equal priority: [4,5] means
+the querier is equally interested in both redirection and delegation for the
+subject-addr. An empty query-types array indicates that objects of any type are
+acceptable in answers to the query.
 
 The value of the query-expires (12) key is a CBOR integer
 counting seconds since the UNIX epoch UTC, identified with tag value 1 and
