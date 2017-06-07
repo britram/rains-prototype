@@ -1259,13 +1259,13 @@ the signature according to the algorithm selected.
 
 ### Signing format {#signing-format}
 
-[Editor's Note write in the introducation why we have 2 different formats for signing and as the wire format. Future improvement of wire format
-should not affect signature process. In case of changing requirements for a signature the wireformat does not have to be adapted. ]
+[Editor's Note write an introducation why we have 2 different formats for signing and for the wire. Decouple them, in case of changes in the future, 
+one should not influence the other. ]
 
 A RAINS Message or Message Section is parsed to a byte stream according to its type. The signing 
 format does not contain white spaces. Instead there are different markers between elements to give
 a hint about the next value to a user (e.g. :A: for Assertion). Every element in byte format 
-(e.g. a token, key, etc.) contained in a rains message or message section must be hex encoded prior to parsing. 
+(e.g. a token, key, etc.) contained in a RAINS Message or Message Section must be hexadecimal encoded prior to parsing. 
 Timestamps are represented as seconds since the UNIX epoch UTC. An object (or several in parentheses) 
 followed by a star `*` means that the preceding object can occur several times. The star (and parantheses) is 
 not part of the format. Similarly for `<>`, the word between pointy brackets describes the value which should 
@@ -1273,7 +1273,7 @@ be there instead. The expression `(x|y)` means that either `x` or `y` can be the
 
 - Assertion: `:A::CN:<context name>:ZN:<zone-name>:SN:<subject name>[Object*]SignatureMetaData`
   - Object: as described in {{tabobjsig}} depending on the object's type.
-  - SignatureMetaData: `:AI:<signature algorithm id>:VF:<valid from>:VU:<valid until>`
+  - SignatureMetaData: `:AI:<signature algorithm id>:VS:<valid since>:VU:<valid until>`
 - Shard: `:S::CN:<context name>:ZN:<zone name>:RB:<range begin>:RE:<range end>[ContainedAssertion*]SignatureMetaData`
   - ContainedAssertion: `:CA::SN:<subject name>[Object*]`
 - Zone: `:Z::CN:<context name>:ZN:<zone name>[(ContainedShard|ContainedAssertion)*]SignatureMetaData`
@@ -1283,9 +1283,9 @@ be there instead. The expression `(x|y)` means that either `x` or `y` can be the
 - Address Zone: `:AZ::CN:<context name>:AF:<address family>:PL:<prefix length>:IP:<IP Address>[ContainedAddressAssertion*]SignatureMetaData`
   - ContainedAddressAssertion: `:CAA::AF:<address family>:PL:<prefix length>:IP:<IP Address>[Object*]`
 
-- Message: `:M::TO:<token>:CB:<capabilities>[(Assertion|Shard|Zone|Query|Notification|Address Assertion|Address Zone|AddressQuery)*]SignatureMetaData`
- - Query: `:Q::TO:<token>:CN:<context name>:FN:<fully qualified name>[(:OT:<object type>)*]:EX:<query expires>:[(:QO:<query option>)*]`
- - Notification: `:N::TO:<token>:NT:<notification type:ND:<notification data>`
+- Message: `:M::TO:<token>:CB:<capabilities>[(Assertion|Shard|Zone|Query|Notification|Address Assertion|Address Zone|Address Query)*]SignatureMetaData`
+ - Query: `:Q::TO:<token>:CN:<context name>:FN:<fully qualified name>[(:OT:<object type>)*]:EX:<query expiration>:[(:QO:<query option>)*]`
+ - Notification: `:N::TO:<token>:NT:<notification type>:ND:<notification data>`
  - Address Query: `:AQ::TO:<token>:CN:<context name>:FN:<fully qualified name>[(:OT:<object type>)*]:EX:<query expires>:[(:QO:<query option>)*]`
 
 {: #tabobjsig title="Object signature format"}
