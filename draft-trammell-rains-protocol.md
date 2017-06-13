@@ -337,7 +337,7 @@ A signature over an assertion contains the following information elements:
 
 
 The signature protects all the information in an assertion as well as its own
-valid-since and valid-until values; it does not protect other signatures on the
+algorithm identifier, valid-since, and valid-until values; it does not protect other signatures on the
 assertion.
 
 ### Shards and Zones
@@ -532,7 +532,7 @@ assertions to determine the scope of an address assertion, and the signature
 chain used to verify it.
 
 - The global addressing context for each address family is identified by the
-  special context name `.'. For both IPv4 and IPv6 addresses, this is rooted at IANA, which delegates to the RIRs, which then delegates to LIRs and to address-holding registries.
+  special context name '.'. For both IPv4 and IPv6 addresses, this is rooted at IANA, which delegates to the RIRs, which then delegates to LIRs and to address-holding registries.
 - Local contexts associated with a given authority in a forward tree can 
   also make assertions about addresses. As with contexts in forward 
   assertions, the authority-part and
@@ -609,7 +609,7 @@ verified against the infrastructure key for the RAINS Server originating the
 message.
 
 A Message map MAY contain a capabilities (1) key, whose value is described in
-{#cbor-capabilities}.
+{cbor-capabilities}.
 
 A Message map SHOULD contain a token (2) key, whose value is a 16-byte array.
 See {{cbor-tokens}} for details.
@@ -712,7 +712,7 @@ RAINS server to answer a query for nonexistence; it must be returned in a
 signed Zone. 
 
 The value of the content (23) key is an array of Assertion bodies as defined in
-{#cbor-assertion}.
+{cbor-assertion}.
 
 The value of the signatures (0) key, if present, is an array of one or more
 Signatures as defined in {{cbor-signature}}. If not present, the containing
@@ -762,7 +762,7 @@ Signatures on the Zone are to be verified against the appropriate key for the
 Zone in the given context, as described in {{signatures-in-assertions}}.
 
 The value of the content (23) key is an array of Shard bodies as defined in
-{#cbor-shard} and/or Assertion bodies as defined in {#cbor-assertion}.
+{cbor-shard} and/or Assertion bodies as defined in {cbor-assertion}.
 
 The value of the subject-zone (4) key is a UTF-8 encoded string
 containing the name of the Zone.
@@ -773,8 +773,8 @@ containing the name of the context for which the Zone is valid.
 ## Query Message Section body {#cbor-query}
 
 A Query body is a map. Queries MUST contain the the token (2), query-name (8),
-context (6), and query-types (10) keys. Queries MAY contain the query-
-expires (12) and query-opts (13) keys.
+context (6), query-types (10), and query-expires (12) keys. Queries MAY contain
+the query-opts (13) keys.
 
 The value of the token (2) key, is a 16-byte array. Future messages or
 notifications containing answers to this query MUST contain this token, if
@@ -791,7 +791,7 @@ the querier is equally interested in both IPv4 and IPv6 addresses for the
 query-name. An empty query-types array indicates that objects of any type are
 acceptable in answers to the query.
 
-The value of the query-expires (12) key, if present, is a CBOR integer
+The value of the query-expires (12) key, is a CBOR integer
 counting seconds since the UNIX epoch UTC, identified with tag value 1 and
 encoded as in section 2.4.1 of {{RFC7049}}. After the query-expires time, the
 query will have been considered not answered by the original issuer.
@@ -891,8 +891,8 @@ within the zone are contained within the zone's address. These Address Zones
 are similar to Zones containing assertions about names, but are keyed by
 network address and restricted in their semantics.
 
-An Address Zone body is a map. Zones MUST contain the content (23), signatures (0),
-subject-addr (5), and context (6) keys. 
+An Address Zone body is a map. Zones MUST contain signatures (0),
+subject-addr (5), content (23), and context (6) keys. 
 
 Signatures on the Zone are to be verified against the appropriate key for the
 Zone in the given context, as described in {{signatures-in-assertions}}.
@@ -905,7 +905,7 @@ element is the address, encoded as in {{cbor-object}}. Only subject network
 addresses are acceptable for Address Zones.
 
 The value of the content (23) key is an array of Address Assertion bodies as
-defined in {#cbor-revassert}. The Address Assertions within the content array
+defined in {cbor-revassert}. The Address Assertions within the content array
 MUST fall completely within the network designated by the subject-addr value.
 
 The value of the context (6) key is a UTF-8 encoded string
@@ -915,11 +915,11 @@ containing the name of the context for which the Zone is valid.
 
 Queries for assertions about addresses are similar to queries for assertions
 about names, but have semantic restrictions similar to those for Address
-Assertions and Address Zones. An address query may have only one context.
+Assertions and Address Zones.
 
 An Address Query body is a map. Queries MUST contain the the token (2), subject-addr (5),
-context (6), and query-types (10) keys. Queries MAY contain query-opts
-(13) and query-expires (12) keys.
+context (6), query-types (10), and query-expires (12) keys. Address Queries MAY contain 
+query-opts (13) key.
 
 The value of the token (2) key, is a 16-byte array. Future messages or
 notifications containing answers to this query MUST contain this token, if
@@ -932,11 +932,18 @@ length encoded as an integer, 0-128 for IPv6 and 0-32 for IPv4. The third
 element is the address, encoded as in {{cbor-object}}. 
 
 The value of the context (6) key is a UTF-8 encoded string containing the name
-of the context for which the Query is valid. Unlike queries for names, queries
-for Address Queries can only pertain to a single context.  
-See {{context-in-address-assertions}} for more.
+of the context for which the Query is valid. Unlike queries for names, Address 
+Queries can only pertain to a single context. See {{context-in-address-assertions}} 
+for more.
 
-The value of the query-expires (12) key, if present, is a CBOR integer
+The value of the query-types (10) key is an array of integers encoding the
+type(s) of objects (as in {{cbor-object}}) acceptable in answers to the query.
+All values in the query-type array are treated at equal priority: [4,5] means
+the querier is equally interested in both redirection and delegation for the
+subject-addr. An empty query-types array indicates that objects of any type are
+acceptable in answers to the query.
+
+The value of the query-expires (12) key is a CBOR integer
 counting seconds since the UNIX epoch UTC, identified with tag value 1 and
 encoded as in section 2.4.1 of {{RFC7049}}. After the query-expires time, the
 query will have been considered not answered by the original issuer.
@@ -945,9 +952,8 @@ The value of the query-opts (13) key, if present, is an array of integers in
 priority order of the querier's preferences in tradeoffs in answering the
 query, as in {{tabqopts}}. See {{cbor-query}} for more.
 
-Any Address Assertion relating to an address containing the address queried
-for is considered to respond to the query, with more-specific prefixes being
-preferred over less-specific.
+An Address Assertion with a more-specific prefix is preferred over a less-specific
+in response to a Address Query.
 
 ## Notification Message Section body {#cbor-notification}
 
@@ -1054,14 +1060,14 @@ integer, with lower numbers having higher priority.
 
 A registrar (9) object gives the name and other identifying information of the
 registrar (the organization which caused the name to be added to the
-namespace) for organization-level names. It is represented as a UTF-8 string
-of maximum length 256 bytes containing identifying information chosen by the
-registrar according to the registry's policy.
+namespace) for organization-level names. It is represented as a two element array. 
+The second element is a UTF-8 string of maximum length 256 bytes containing identifying 
+information chosen by the registrar according to the registry's policy.
 
 A registrant (10) object gives information about the registrant of an
-organization-level name. It is represented as a UTF-8 string with a maximum
-length of 4096 bytes containing this information, with a format chosen by the
-registrar according to the registry's policy.
+organization-level name. It is represented as a two element array. The second 
+element is a UTF-8 string with a maximum length of 4096 bytes containing this 
+information, with a format chosen by the registrar according to the registry's policy.
 
 An infrakey (11) object contains a public key used to generate signatures on
 messages by a named RAINS server, by which a RAINS message signature may be
@@ -1200,14 +1206,17 @@ causing it. Likewise, a Notification sent in response to a Message MUST
 contain the token from the Message causing it.
 
 Since tokens are used to link queries to replies, and to link notifications to
-messages, regardless of the sender or recipient of a message, the MUST be chosen
+messages, regardless of the sender or recipient of a message, they MUST be chosen
 by servers to be hard to guess; e.g. generated by a cryptographic random number
 generator.
 
 When a server creates a new query to forward to another server in response to
 a query it received, it MUST NOT use the same token on the delegated query
 as on the received query, unless option 6 Enable Tracing is present in the
-received, in which case it MUST use the same token. 
+received, in which case it MUST use the same token.
+
+If a Message contains a token and a Query, the token of the Message and of the 
+Query MUST be identical. The same holds for Address Queries.
 
 ## Signatures, delegation keys, and RAINS infrastructure keys {#cbor-signature}
 
@@ -1255,32 +1264,11 @@ valid-until timestamp. If a signature has no specified valid-since time (i.e.,
 is valid from the beginning of time until its valid-until timestamp), the
 valid-since time MAY be null (as in Table 2 in Section 2.3 of {{RFC7049}}).
 
-Signatures in RAINS are generated over a normalized serialized CBOR object (a
-Message; or an Assertion, Shard, or Zone section body). To normalize and
-serialize an object for signing:
+A signature in RAINS is generated over a byte stream. The signing process is
+defined as:
 
-- Serialize the object with a stub for the signature to be generated:
-
-  - Strip all other signatures during serialization by omitting all signatures
-    (0) keys and their values. When signing a shard or zone, the signatures on
-    contained assertions, if present, must be omitted too. When signing a
-    message, the signatures on contained assertions, shards, and zones must be
-    omitted.
-
-  - Add subject zone and context to contained shards and assertions if not
-    present, inheriting them from their containing shard or zone.
-
-  - Create a stub signature within an array within a signatures (0) key at the
-    appropriate place in the object, containing the algorithm ID, timestamps
-    and hash chain token, if present, but a null value in the place of the
-    signature content.
-
-  - Normalize the serialized object by emitting all keys in CBOR maps in
-    ascending numerical order. Note that when serializing anything with a 
-    Content array, the order of the content array is preserved.
-
-  - If the serialized object is a Message, it should be tagged with the RAINS
-    tag.
+- Parse the object to be signed into a byte stream according to the format
+specified in {{signing-format}}.
 
 - Generate a signature on the resulting byte stream according to the algorithm
   selected.
@@ -1290,6 +1278,61 @@ serialize an object for signing:
 
 To verify a signature, generate the byte stream as for signing, then verify
 the signature according to the algorithm selected.
+
+### Signing format {#signing-format}
+
+[Editor's Note write an introducation why we have 2 different formats for signing and for the wire. Decouple them, in case of changes in the future, 
+one should not influence the other. ]
+
+A RAINS Message or Message Section is parsed to a byte stream according to its type. The signing 
+format does not contain white spaces. Instead there are different markers between elements to give
+a hint about the next value to a user (e.g. :A: for Assertion). Every element in byte format 
+(e.g. a token, key, etc.) contained in a RAINS Message or Message Section must be hexadecimal encoded prior to parsing. 
+Timestamps are represented as seconds since the UNIX epoch UTC. An object (or several in parentheses) 
+followed by a star `*` means that the preceding object can occur several times. The star (and parantheses) is 
+not part of the format. Similarly for `<>`, the word between pointy brackets describes the value which should 
+be there instead. The expression `(x|y)` means that either `x` or `y` can be there.     
+
+- Assertion: `:A::CN:<context name>:ZN:<zone-name>:SN:<subject name>[Object*]SignatureMetaData`
+  - Object: as described in {{tabobjsig}} depending on the object's type.
+  - SignatureMetaData: `:AI:<signature algorithm id>:VS:<valid since>:VU:<valid until>`
+- Shard: `:S::CN:<context name>:ZN:<zone name>:RB:<range begin>:RE:<range end>[ContainedAssertion*]SignatureMetaData`
+  - ContainedAssertion: `:CA::SN:<subject name>[Object*]`
+- Zone: `:Z::CN:<context name>:ZN:<zone name>[(ContainedShard|ContainedAssertion)*]SignatureMetaData`
+  - ContainedShard: `:CS::RB:<range begin>:RE:<range end>[Contained Assertion*]`
+
+- Address Assertion: `:AA::CN:<context name>:AF:<address family>:PL:<prefix length>:IP:<IP Address>[Object*]SignatureMetaData`
+- Address Zone: `:AZ::CN:<context name>:AF:<address family>:PL:<prefix length>:IP:<IP Address>[ContainedAddressAssertion*]SignatureMetaData`
+  - ContainedAddressAssertion: `:CAA::AF:<address family>:PL:<prefix length>:IP:<IP Address>[Object*]`
+
+- Message: `:M::TO:<token>:CB:<capabilities>[(Assertion|Shard|Zone|Query|Notification|Address Assertion|Address Zone|Address Query)*]SignatureMetaData`
+ - Query: `:Q::TO:<token>:CN:<context name>:FN:<fully qualified name>[(:OT:<object type>)*]:EX:<query expiration>:[(:QO:<query option>)*]`
+ - Notification: `:N::TO:<token>:NT:<notification type>:ND:<notification data>`
+ - Address Query: `:AQ::TO:<token>:CN:<context name>:FN:<fully qualified name>[(:OT:<object type>)*]:EX:<query expires>:[(:QO:<query option>)*]`
+
+{: #tabobjsig title="Object signature format"}
+
+| Object Type  | Signature format (Object)                                                    |
+|--------------|------------------------------------------------------------------------------|
+| name         | `:name::NA:<name>[(:OT:<object type>)*]`                                     | 
+| ip6-addr     | `:ip4::IP:<ip4 address>`                                                     |
+| ip4-addr     | `:ip6::IP:<ip6 address>`                                                     |
+| redirection  | `:redir::AS:<authority server>`                                              |
+| delegation   | `:deleg::SA:<signature algorithm id>:KD:<public key data>`                   |
+| nameset      | `:nameset::NS:<name set expression>`                                         |
+| cert-info    | `:cert::PF:<protocol family id>CertData` see {{tabcertsig}}                  |         
+| service-info | `:srv::HN:<host name>:PN:<port number>:PR:<priority>`                        |
+| registrar    | `:regr::RN:<name and id info>`                                               |
+| registrant   | `:regt::RI:<registrant info>`                                                |
+| infrakey     | `:infra::SA:<signature algorithm id>:KD:<public key data>`                   |
+| extrakey     | `:extra::SA:<signature algorithm id>:KS:<key space id>:KD:<public key data>` |
+
+{: #tabcertsig title="Certificate signature format"}
+
+| Cert Type    | Signature format (CertData)                                |
+|--------------|------------------------------------------------------------|
+| Unspecified  |                                                            | 
+| TLS          | `:CU:<certificate usage>:HA:<hash algo id>:CD:<signature>` |
 
 ### EdDSA signature and public key format {#eddsa-format}
 
@@ -1303,7 +1346,7 @@ delegation objects for Ed25519 keys are therefore represented by the array [5,
 Ed25519 and Ed448 signatures are are a combination of two non-negative
 integers, called "R" and "S" in sections 5.1.6 and 5.2.6, respectively, of
 {{RFC8032}}. An Ed25519 signature is represented as a 64-byte array containing
-the the concatenation of R and S, and an Ed448 signature is represented as a
+the concatenation of R and S, and an Ed448 signature is represented as a
 114-byte array containing the concatenation of R and S. RAINS signatures using
 Ed25519 are therefore the array [1, 0, valid-from, valid-until, R|S]; using Ed448
 the array [2, 0, valid-from, valid-until, R|S].
@@ -1594,6 +1637,10 @@ servers. The following types of inconsistency are possible:
   which is valid at the same time as the shard.
 - A zone omits an assertion within its zone which is valid at the same time
   as the zone.
+- An address zone omits an address assertion within its context and network
+  which is valid at the same time as the address zone.
+- An address zone contains an address assertion that is not within its network.
+- An address assertion contains an object that is not allowed (see {{cbor-revassert}})
 - An assertion prohibited by its zone's nameset is valid at the same time
   as the zone's nameset assertion.
 - A zone contains a valid reflexive assertion of a given object type at the same
@@ -1757,8 +1804,8 @@ the mostly compatible information models used by the two.
 
 While DNSSEC and RAINS keys for equivalent ciphersuites are compatible with
 each other, there is no equivalent to query option 7 for gateways, since the
-RAINS signatures are generated over the RAINS bytestream for an assertion, not
-the DNS bytestream. Therefore, RAINS to DNS gateways must provide verification
+RAINS signatures are generated over the RAINS byte stream for an assertion, not
+the DNS byte stream. Therefore, RAINS to DNS gateways must provide verification
 services for DNS clients. DNS over TLS {{RFC7858}} SHOULD be used between the
 DNS client and gateway to ensure confidentiality and integrity for queries and
 answers.
