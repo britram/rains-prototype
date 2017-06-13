@@ -4,8 +4,8 @@
 
 Network Working Group                                        B. Trammell
 Internet-Draft                                                ETH Zurich
-Intended status: Experimental                               May 30, 2017
-Expires: December 1, 2017
+Intended status: Experimental                              June 13, 2017
+Expires: December 15, 2017
 
 
                        RAINS Parameters for SCION
@@ -31,7 +31,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on December 1, 2017.
+   This Internet-Draft will expire on December 15, 2017.
 
 Copyright Notice
 
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Trammell                Expires December 1, 2017                [Page 1]
+Trammell                Expires December 15, 2017               [Page 1]
 
-Internet-Draft                    RAINS                         May 2017
+Internet-Draft                    RAINS                        June 2017
 
 
 Table of Contents
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Trammell                Expires December 1, 2017                [Page 2]
+Trammell                Expires December 15, 2017               [Page 2]
 
-Internet-Draft                    RAINS                         May 2017
+Internet-Draft                    RAINS                        June 2017
 
 
    is an ISD number as an integer less than or equal to 2^16-1.  The
@@ -165,9 +165,9 @@ Internet-Draft                    RAINS                         May 2017
 
 
 
-Trammell                Expires December 1, 2017                [Page 3]
+Trammell                Expires December 15, 2017               [Page 3]
 
-Internet-Draft                    RAINS                         May 2017
+Internet-Draft                    RAINS                        June 2017
 
 
                    +------+----------------------------+
@@ -221,9 +221,9 @@ Internet-Draft                    RAINS                         May 2017
 
 
 
-Trammell                Expires December 1, 2017                [Page 4]
+Trammell                Expires December 15, 2017               [Page 4]
 
-Internet-Draft                    RAINS                         May 2017
+Internet-Draft                    RAINS                        June 2017
 
 
 Author's Address
@@ -277,4 +277,4 @@ Author's Address
 
 
 
-Trammell                Expires December 1, 2017                [Page 5]
+Trammell                Expires December 15, 2017               [Page 5]
