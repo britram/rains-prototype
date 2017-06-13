@@ -265,6 +265,10 @@ The Types supported for each assertion are:
   on assertions. The external key is usually discovered outside RAINS, and can
   be verified by comparison with the key stored in a RAINS assertion. The
   Object contains an external public key.
+- Subsequent Key: Assertions about delegations are made by a zone's
+  superordinate. A zone may request that its superordinate delegate to a new
+  public key by publishing a subsequent key assertion (replacing the mechanism
+  implemented by CDS/CDNSKEY in DNS).
 
 For a given {subject, type} tuple, multiple assertions can be valid at a given
 point in time; the union of the object values of all of these assertions is
@@ -390,9 +394,10 @@ A zone has the following information elements:
 
 A zone may make an assertion about itself by using the string "@" as a subject
 name. This facility can be used for any assertion type, but is especially useful
-for self-signing root zones. If an assertion of a given type about a
-zone is available both in the zone itself and in the superordinate zone, the
-assertion in the superordinate zone will take precedence.
+for self-signing root zones, and for a zone to make a subsequent key assertion
+about itself. If an assertion of a given type about a zone is available both in
+the zone itself and in the superordinate zone, the assertion in the
+superordinate zone will take precedence.
 
 ## Query
 
@@ -1001,6 +1006,7 @@ the object, encoded as an integer in the following table:
 | 10    | registrant   | registrant information                  |
 | 11    | infrakey     | public key for RAINS infrastructure     |
 | 12    | extrakey     | external public key for subject         |
+| 13    | nextkey      | next public key for subject             |
 
 A name (1) object contains a name associated with a name as an alias. It is
 represented as a three-element array. The second element is a fully-qualified
@@ -1066,14 +1072,23 @@ the messages sent by the query server.
 
 An extrakey (12) object contains a public key used to generate signatures on
 assertions in a named zone outside of the normal delegation chain. It is
-represented as an N-element array, where the second element is a signature
+represented as an 4-element array, where the second element is a signature
 algorithm identifier, and the third element is keyspace identifier, as in
-{{cbor-signature}}. Additional elements are as defined in {{cbor-signature}} for
-the given algorithm identifier. An extrakey may be matched with a public key
-obtained through other means for additional authentication of an assertion.
-Extrakeys are different from delegation keys in that they may not be used in the
-delegation chain: an extrakey signature is valid only on assertions of object
-types other than delegation.
+{{cbor-signature}}. The fourth element is the public key, as defined in
+{{cbor-signature}} for the given algorithm identifier. An extrakey may be
+matched with a public key obtained through other means for additional
+authentication of an assertion. Extrakeys are different from delegation keys in
+that they may not be used in the delegation chain: an extrakey signature is
+valid only on assertions of object types other than delegation.
+
+A nextkey (13) object contains the a public key that a zone owner would like its
+superordinate to delegate to in the future. It is represented as an 5-element
+array The second element is a signature algorithm identifier as in
+{{cbor-signature}}. The third element is the public key, as defined in
+{{cbor-signature}} for the given algorithm identifier. The fourth element is the
+requested-valid-since time, and the fifth element is the requested-valid-until
+time, formatted as for signatures as in {{cbor-signature}}. See
+{{public-key-management}} for more.
 
 ### Certificate information format {#cbor-certinfo}
 
@@ -1678,6 +1693,33 @@ being necessary, authority servers have an additional signer interface, from
 which they will accept and cache any assertion, shard, or zone for which they
 are authority servers until at least the end of validity of the last
 signature, provided the signature is verifiable.
+
+## Public Key Management
+
+As signature lifetime is used to manage assertion lifetime, and key rotation
+strategies may be used both for revocation as well as operational flexibility
+purposes, RAINS presents a much more dynamic key management environment than
+that presented by DNSSEC. One problem this raises is how a zone authority
+communicates to its superordinate that it would like to begin using a new public
+key to sign its assertions.
+
+This can be done out of band, using private APIs provided by the superordinate
+authority. Through the nextkey object type, RAINS provides a way for a future
+public key to be shared with the superordinate authority (and all other
+queriers) in-band. An authority that wishes to use a new key publishes a
+reflexive nextkey assertion (i.e., in its own zone, with subject @) with the new
+public key and a requested valid-since and valid-until time range. The
+superordinate issues periodic queries for nextkey assertions from its
+subordinate zone, or the subordinate pushes these assertions to an intermediate
+service designated to receive them. When the superordinate receives a nextkey,
+and it decides it wants to delegate to the new key, it creates and signs a
+delegation assertion. 
+
+This process is not mandatory: the superordinate is free to ignore the request,
+or to use a different time range, depending on its policy and/or the status of
+its business relationship with the subordinate. The subordinate can discover
+this, in turn, using its own RAINS queries, or through the delegation assertions
+being similarly pushed to a designated intermediate service.
 
 ## Unsigned Contained Assertions
 
