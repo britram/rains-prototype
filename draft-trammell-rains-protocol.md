@@ -1281,58 +1281,7 @@ the signature according to the algorithm selected.
 
 ### Signing format {#signing-format}
 
-[Editor's Note write an introducation why we have 2 different formats for signing and for the wire. Decouple them, in case of changes in the future, 
-one should not influence the other. ]
-
-A RAINS Message or Message Section is parsed to a byte stream according to its type. The signing 
-format does not contain white spaces. Instead there are different markers between elements to give
-a hint about the next value to a user (e.g. :A: for Assertion). Every element in byte format 
-(e.g. a token, key, etc.) contained in a RAINS Message or Message Section must be hexadecimal encoded prior to parsing. 
-Timestamps are represented as seconds since the UNIX epoch UTC. An object (or several in parentheses) 
-followed by a star `*` means that the preceding object can occur several times. The star (and parantheses) is 
-not part of the format. Similarly for `<>`, the word between pointy brackets describes the value which should 
-be there instead. The expression `(x|y)` means that either `x` or `y` can be there.     
-
-- Assertion: `:A::CN:<context name>:ZN:<zone-name>:SN:<subject name>[Object*]SignatureMetaData`
-  - Object: as described in {{tabobjsig}} depending on the object's type.
-  - SignatureMetaData: `:AI:<signature algorithm id>:VS:<valid since>:VU:<valid until>`
-- Shard: `:S::CN:<context name>:ZN:<zone name>:RB:<range begin>:RE:<range end>[ContainedAssertion*]SignatureMetaData`
-  - ContainedAssertion: `:CA::SN:<subject name>[Object*]`
-- Zone: `:Z::CN:<context name>:ZN:<zone name>[(ContainedShard|ContainedAssertion)*]SignatureMetaData`
-  - ContainedShard: `:CS::RB:<range begin>:RE:<range end>[Contained Assertion*]`
-
-- Address Assertion: `:AA::CN:<context name>:AF:<address family>:PL:<prefix length>:IP:<IP Address>[Object*]SignatureMetaData`
-- Address Zone: `:AZ::CN:<context name>:AF:<address family>:PL:<prefix length>:IP:<IP Address>[ContainedAddressAssertion*]SignatureMetaData`
-  - ContainedAddressAssertion: `:CAA::AF:<address family>:PL:<prefix length>:IP:<IP Address>[Object*]`
-
-- Message: `:M::TO:<token>:CB:<capabilities>[(Assertion|Shard|Zone|Query|Notification|Address Assertion|Address Zone|Address Query)*]SignatureMetaData`
- - Query: `:Q::TO:<token>:CN:<context name>:FN:<fully qualified name>[(:OT:<object type>)*]:EX:<query expiration>:[(:QO:<query option>)*]`
- - Notification: `:N::TO:<token>:NT:<notification type>:ND:<notification data>`
- - Address Query: `:AQ::TO:<token>:CN:<context name>:FN:<fully qualified name>[(:OT:<object type>)*]:EX:<query expires>:[(:QO:<query option>)*]`
-
-{: #tabobjsig title="Object signature format"}
-
-| Object Type  | Signature format (Object)                                                    |
-|--------------|------------------------------------------------------------------------------|
-| name         | `:name::NA:<name>[(:OT:<object type>)*]`                                     | 
-| ip6-addr     | `:ip4::IP:<ip4 address>`                                                     |
-| ip4-addr     | `:ip6::IP:<ip6 address>`                                                     |
-| redirection  | `:redir::AS:<authority server>`                                              |
-| delegation   | `:deleg::SA:<signature algorithm id>:KD:<public key data>`                   |
-| nameset      | `:nameset::NS:<name set expression>`                                         |
-| cert-info    | `:cert::PF:<protocol family id>CertData` see {{tabcertsig}}                  |         
-| service-info | `:srv::HN:<host name>:PN:<port number>:PR:<priority>`                        |
-| registrar    | `:regr::RN:<name and id info>`                                               |
-| registrant   | `:regt::RI:<registrant info>`                                                |
-| infrakey     | `:infra::SA:<signature algorithm id>:KD:<public key data>`                   |
-| extrakey     | `:extra::SA:<signature algorithm id>:KS:<key space id>:KD:<public key data>` |
-
-{: #tabcertsig title="Certificate signature format"}
-
-| Cert Type    | Signature format (CertData)                                |
-|--------------|------------------------------------------------------------|
-| Unspecified  |                                                            | 
-| TLS          | `:CU:<certificate usage>:HA:<hash algo id>:CD:<signature>` |
+[EDITOR'S NOTE: to define, based on the zonefile format, which also needs to be defined in the draft.]
 
 ### EdDSA signature and public key format {#eddsa-format}
 
@@ -1348,8 +1297,8 @@ integers, called "R" and "S" in sections 5.1.6 and 5.2.6, respectively, of
 {{RFC8032}}. An Ed25519 signature is represented as a 64-byte array containing
 the concatenation of R and S, and an Ed448 signature is represented as a
 114-byte array containing the concatenation of R and S. RAINS signatures using
-Ed25519 are therefore the array [1, 0, valid-from, valid-until, R|S]; using Ed448
-the array [2, 0, valid-from, valid-until, R|S].
+Ed25519 are therefore the array [1, 0, valid-since, valid-until, R|S]; using Ed448
+the array [2, 0, valid-since, valid-until, R|S].
 
 Ed25519 keys are generated as in Section 5.1.5 of {{RFC8032}}, and Ed448 keys
 as in Section 5.2.5 of {{RFC8032}}.  Ed25519 signatures are generated from a
@@ -1375,8 +1324,8 @@ represented as a byte array as described in Section C.2 of {{FIPS-186-3}}, and
 s represented as a byte array as described in Section C.2 of {{FIPS-186-3}}.
 For ECDSA-256 signatures, each integer MUST be represented as a 32-byte array.
 For ECDSA-384 signatures, each integer MUST be represented as a 48-byte array.
-RAINS signatures using ECDSA-256 are therefore the array [3, 0, valid-from,
-valid-until, r|s]; and for ECDSA-384 the array [4, 0, valid-from, valid-until,
+RAINS signatures using ECDSA-256 are therefore the array [3, 0, valid-since,
+valid-until, r|s]; and for ECDSA-384 the array [4, 0, valid-since, valid-until,
 r|s].
 
 ECDSA-256 signatures and public keys use the P-256 curve as defined in {{FIPS-186-3}}.
@@ -1905,9 +1854,11 @@ subsections below:
 
 ## Server state exhaustion
 
-[EDITOR'S NOTE: attack: attacker can create domain, use long-validity queries to exhaust
-state at server. defense: server can consider shorter validity time than that
-requested, but not longer. attack: attacker can push garbage assertions proactively. defense: server doesn't accept assertions it's never seen a query for. how to handle an attacker that pushes assertions and queries?]
+[EDITOR'S NOTE: attack: attacker can create domain, use long-validity queries to
+exhaust state at server. defense: server can consider shorter validity time than
+that requested, but not longer. attack: attacker can push garbage assertions
+proactively. defense: server doesn't accept assertions it's never seen a query
+for. how to handle an attacker that pushes assertions and queries?]
 
 # Acknowledgments
 
