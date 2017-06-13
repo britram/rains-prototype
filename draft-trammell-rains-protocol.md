@@ -548,7 +548,7 @@ address spaces may only delegate addresses that are reserved for local use
 {{RFC1918}} {{RFC4193}}. Local context assertions for other addresses are
 invalid.
 
-# Data Model {#cbor}
+# CBOR Data Model {#cbor}
 
 The RAINS data model is a relatively straightforward mapping of the
 information model in {{information-model}} to the Concise Binary Object
@@ -1113,10 +1113,10 @@ is defined by the protocol family and hash algorithm.
 
 {: #tabcertproto title="Certificate information protocol families"}
 
-| Code | Protocol family                            | Certificate format |
-|-----:|--------------------------------------------|--------------------|
-|    0 | Unspecified                                | Unspecified        |
-|    1 | Transport Layer Security (TLS) {{RFC5246}} | {{RFC5280}}        |
+| Code | Name     | Protocol family                            | Certificate format |
+|-----:|----------|--------------------------------------------|--------------------|
+|    0 | unspec   | Unspecified                                | Unspecified        |
+|    1 | tls      | Transport Layer Security (TLS) {{RFC5246}} | {{RFC5280}}        |
 
 Protocol family 0 leaves the protocol family unspecified; client validation
 and usage of cert-info assertions, and the protocol used to connect, are up to
@@ -1126,10 +1126,10 @@ secured with PKIX {{RFC5280}} certificates.
 
 {: #tabcertusage title="Certificate information usage values"}
 
-| Code | Certificate usage                |
-|-----:|----------------------------------|
-|    2 | Trust Anchor Certificate         |
-|    3 | End-Entity Certificate           |
+| Code | Name | Certificate usage                |
+|-----:|------|----------------------------------|
+|    2 | ta   | Trust Anchor Certificate         |
+|    3 | ee   | End-Entity Certificate           |
 
 A trust anchor certificate constraint specifies a certificate that MUST appear
 as the trust anchor for the certificate presented by the subject of the
@@ -1139,9 +1139,9 @@ on a connection attempt.
 
 {: #tabcerthash title="Certificate information hash algorithms"}
 
-| Code | Hash/HMAC | Notes                                 |
+| Code | Name      | Notes                                 |
 |-----:|-----------|---------------------------------------|
-| 0    | None      | Data contains full certificate        | 
+| 0    | full      | Data contains full certificate        | 
 | 1    | sha-256   | Data contains SHA-256 hash (32 bytes) |
 | 2    | sha-512   | Data contains SHA-512 hash (64 bytes) |
 | 3    | sha-384   | Data contains SHA-384 hash (48 bytes) |
@@ -1264,8 +1264,9 @@ valid-until timestamp. If a signature has no specified valid-since time (i.e.,
 is valid from the beginning of time until its valid-until timestamp), the
 valid-since time MAY be null (as in Table 2 in Section 2.3 of {{RFC7049}}).
 
-A signature in RAINS is generated over a byte stream. The signing process is
-defined as:
+A signature in RAINS is generated over a byte stream representing the message or
+message section in its textual data model (see {{zonefiles}}). The signing
+process is defined as follows:
 
 - Parse the object to be signed into a byte stream according to the format
 specified in {{signing-format}}.
@@ -1278,10 +1279,6 @@ specified in {{signing-format}}.
 
 To verify a signature, generate the byte stream as for signing, then verify
 the signature according to the algorithm selected.
-
-### Signing format {#signing-format}
-
-[EDITOR'S NOTE: to define, based on the zonefile format, which also needs to be defined in the draft.]
 
 ### EdDSA signature and public key format {#eddsa-format}
 
@@ -1373,6 +1370,16 @@ An exception are the capabilities indicating that a server listens for
 connections using a given transport protocol; servers and clients can also
 learn this information from RAINS itself (given a redirection assertion for a
 named zone) or from external configuration values.
+
+# Textual data model: RAINS Zonefiles {#zonefiles}
+
+[EDITOR'S NOTE: frontmatter: cbor hard to read by eye, may want to support multiple data models in future.]
+
+[EDITOR'S NOTE: to define.]
+
+## Canonical signing format {#signing-format}
+
+[EDITOR'S NOTE: to define, based on the zonefile format.]
 
 # RAINS Protocol Definition {#protocol-def}
 
