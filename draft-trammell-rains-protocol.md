@@ -1935,15 +1935,6 @@ To support this experiment, a server must additionally evaluate an assertion
 it receives to determine whether it replaces any information presently in its
 cache. If so, it discards the old information, and caches the new section.
 
-# Pending Edits
-
-- Remove the ability to have incomplete shards - they're not very useful, and
-  having shards always be lexicographically complete simplifies server
-  implementation.
-- For simplifications, change queries to be only for a single type in a single
-  context. An all-addresses type metatype might be useful for multistacked
-  hosts.
-
 # Open Questions and Issues
 
 - A method for clients to discover local oracles needs to be specified.
