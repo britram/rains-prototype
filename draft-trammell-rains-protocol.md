@@ -279,7 +279,7 @@ considered to be the set of valid values at that point in time.
 Assertion contexts are used to determine the validity of the signature by the
 declared authority as follows:
 
-- The global context is identified by the special context name `.'. Assertions
+- The global context is identified by the special context name '.'. Assertions
   in the global context are signed by the authority for the subject name. For
   example, assertions about the name simplon.inf.ethz.ch in the global context
   are only valid if signed by the relevant authority inf.ethz.ch.
@@ -655,9 +655,6 @@ NOT be present. They are assumed to have the same value as the corresponding
 values in the containing Shard or Zone for signature generation and signature
 verification purposes; see {{cbor-signature}}.
 
-It MAY contain , but in this case the values of these keys MUST be identical to the
-values in the containing Shard or Zone.
-
 A contained Assertion SHOULD contain the signatures (0) key, since an unsigned
 contained Assertion cannot be used by a RAINS server to answer a query; it
 must be returned in a signed Shard or Zone.
@@ -848,9 +845,10 @@ context (6), and objects (7) keys.
 Address Assertions contained in an Address Zone are "contained Address
 Assertions", and can inherit their context from and be signed within their
 containing Zone. A contained Address Assertion MUST contain the 
-subject-addr (5) and objects (7) keys. It MAY contain the context (6) key, but in
-this case the value of this keys MUST be identical to the value in the
-containing Address Zone.
+subject-addr (5) and objects (7) keys. The context (6) key MUST
+NOT be present. It is assumed to have the same value as the corresponding
+value in the containing Zone for signature generation and signature
+verification purposes; see {{cbor-signature}}.
 
 A contained Address Assertion SHOULD contain the signatures (0) key, since an
 unsigned contained Address Assertion cannot be used by a RAINS server to
