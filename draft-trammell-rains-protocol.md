@@ -265,6 +265,10 @@ The Types supported for each assertion are:
   on assertions. The external key is usually discovered outside RAINS, and can
   be verified by comparison with the key stored in a RAINS assertion. The
   Object contains an external public key.
+- Subsequent Key: Assertions about delegations are made by a zone's
+  superordinate. A zone may request that its superordinate delegate to a new
+  public key by publishing a subsequent key assertion (replacing the mechanism
+  implemented by CDS/CDNSKEY in DNS).
 
 For a given {subject, type} tuple, multiple assertions can be valid at a given
 point in time; the union of the object values of all of these assertions is
@@ -275,7 +279,7 @@ considered to be the set of valid values at that point in time.
 Assertion contexts are used to determine the validity of the signature by the
 declared authority as follows:
 
-- The global context is identified by the special context name `.'. Assertions
+- The global context is identified by the special context name '.'. Assertions
   in the global context are signed by the authority for the subject name. For
   example, assertions about the name simplon.inf.ethz.ch in the global context
   are only valid if signed by the relevant authority inf.ethz.ch.
@@ -333,7 +337,7 @@ A signature over an assertion contains the following information elements:
 
 
 The signature protects all the information in an assertion as well as its own
-valid-since and valid-until values; it does not protect other signatures on the
+algorithm identifier, valid-since, and valid-until values; it does not protect other signatures on the
 assertion.
 
 ### Shards and Zones
@@ -390,9 +394,10 @@ A zone has the following information elements:
 
 A zone may make an assertion about itself by using the string "@" as a subject
 name. This facility can be used for any assertion type, but is especially useful
-for self-signing root zones. If an assertion of a given type about a
-zone is available both in the zone itself and in the superordinate zone, the
-assertion in the superordinate zone will take precedence.
+for self-signing root zones, and for a zone to make a subsequent key assertion
+about itself. If an assertion of a given type about a zone is available both in
+the zone itself and in the superordinate zone, the assertion in the
+superordinate zone will take precedence.
 
 ## Query
 
@@ -527,7 +532,7 @@ assertions to determine the scope of an address assertion, and the signature
 chain used to verify it.
 
 - The global addressing context for each address family is identified by the
-  special context name `.'. For both IPv4 and IPv6 addresses, this is rooted at IANA, which delegates to the RIRs, which then delegates to LIRs and to address-holding registries.
+  special context name '.'. For both IPv4 and IPv6 addresses, this is rooted at IANA, which delegates to the RIRs, which then delegates to LIRs and to address-holding registries.
 - Local contexts associated with a given authority in a forward tree can 
   also make assertions about addresses. As with contexts in forward 
   assertions, the authority-part and
@@ -543,7 +548,7 @@ address spaces may only delegate addresses that are reserved for local use
 {{RFC1918}} {{RFC4193}}. Local context assertions for other addresses are
 invalid.
 
-# Data Model {#cbor}
+# CBOR Data Model {#cbor}
 
 The RAINS data model is a relatively straightforward mapping of the
 information model in {{information-model}} to the Concise Binary Object
@@ -604,9 +609,9 @@ verified against the infrastructure key for the RAINS Server originating the
 message.
 
 A Message map MAY contain a capabilities (1) key, whose value is described in
-{#cbor-capabilities}.
+{{cbor-capabilities}}.
 
-A Message map SHOULD contain a token (2) key, whose value is a 16-byte array.
+A Message map MUST contain a token (2) key, whose value is a 16-byte array.
 See {{cbor-tokens}} for details.
 
 A Message map MUST contain a content (23) key, whose value is an array of
@@ -649,9 +654,6 @@ name (3) and objects (7) keys. The subject-zone (4) and context (6) keys MUST
 NOT be present. They are assumed to have the same value as the corresponding
 values in the containing Shard or Zone for signature generation and signature
 verification purposes; see {{cbor-signature}}.
-
-It MAY contain , but in this case the values of these keys MUST be identical to the
-values in the containing Shard or Zone.
 
 A contained Assertion SHOULD contain the signatures (0) key, since an unsigned
 contained Assertion cannot be used by a RAINS server to answer a query; it
@@ -707,7 +709,7 @@ RAINS server to answer a query for nonexistence; it must be returned in a
 signed Zone. 
 
 The value of the content (23) key is an array of Assertion bodies as defined in
-{#cbor-assertion}.
+{{cbor-assertion}}.
 
 The value of the signatures (0) key, if present, is an array of one or more
 Signatures as defined in {{cbor-signature}}. If not present, the containing
@@ -727,7 +729,7 @@ containing the name of the context in which the Assertions within the Shard
 are valid. If not present, the context of the assertion is inherited from the
 containing Zone.
 
-If the shard-range (11) key is present, the the shard is lexicographically complete
+If the shard-range (11) key is present, the shard is lexicographically complete
 within the range described in its value: a mapping for a (subject-name,
 object-type) pair that should be between the two values given in the range but
 is not is asserted to not exist. Lexicographic sorting is done on subject names
@@ -748,7 +750,7 @@ that are not contained within the shard
 If the shard-range key is not present, the shard is not lexicographically
 complete and MUST NOT be used to make assertions about nonexistance.
 
-## Zone Message Section body {#cbor-zone}
+## Zone body {#cbor-zone}
 
 A Zone body is a map. Zones MUST contain the content (23), signatures (0),
 subject-zone (4), and context (6) keys. 
@@ -757,7 +759,7 @@ Signatures on the Zone are to be verified against the appropriate key for the
 Zone in the given context, as described in {{signatures-in-assertions}}.
 
 The value of the content (23) key is an array of Shard bodies as defined in
-{#cbor-shard} and/or Assertion bodies as defined in {#cbor-assertion}.
+{{cbor-shard}} and/or Assertion bodies as defined in {{cbor-assertion}}.
 
 The value of the subject-zone (4) key is a UTF-8 encoded string
 containing the name of the Zone.
@@ -765,15 +767,11 @@ containing the name of the Zone.
 The value of the context (6) key is a UTF-8 encoded string
 containing the name of the context for which the Zone is valid.
 
-## Query Message Section body {#cbor-query}
+## Query body {#cbor-query}
 
-A Query body is a map. Queries MUST contain the the token (2), query-name (8),
-context (6), and query-types (10) keys. Queries MAY contain the query-
-expires (12) and query-opts (13) keys.
-
-The value of the token (2) key, is a 16-byte array. Future messages or
-notifications containing answers to this query MUST contain this token, if
-present. See {{cbor-tokens}}.
+A Query body is a map. Queries MUST contain the query-name (8),
+context (6), query-types (10), and query-expires (12) keys. Queries MAY contain
+the query-opts (13) keys.
 
 The value of the context (6) key is a UTF-8 encoded string containing the name
 of the context to which a query pertains. A zero-length string indicates that
@@ -786,7 +784,7 @@ the querier is equally interested in both IPv4 and IPv6 addresses for the
 query-name. An empty query-types array indicates that objects of any type are
 acceptable in answers to the query.
 
-The value of the query-expires (12) key, if present, is a CBOR integer
+The value of the query-expires (12) key, is a CBOR integer
 counting seconds since the UNIX epoch UTC, identified with tag value 1 and
 encoded as in section 2.4.1 of {{RFC7049}}. After the query-expires time, the
 query will have been considered not answered by the original issuer.
@@ -829,7 +827,7 @@ Option 8 specifies that a querier's interest in a query is strictly ephemeral,
 and that future assertions related to this query SHOULD NOT be proactively
 pushed to the querier.
 
-## Address Assertion Message Section body {#cbor-revassert}
+## Address Assertion body {#cbor-revassert}
 
 Assertions about addresses are similar to assertions about names, but keyed by
 address and restricted in terms of the objects they can contain. An Address
@@ -843,9 +841,10 @@ context (6), and objects (7) keys.
 Address Assertions contained in an Address Zone are "contained Address
 Assertions", and can inherit their context from and be signed within their
 containing Zone. A contained Address Assertion MUST contain the 
-subject-addr (5) and objects (7) keys. It MAY contain the context (6) key, but in
-this case the value of this keys MUST be identical to the value in the
-containing Address Zone.
+subject-addr (5) and objects (7) keys. The context (6) key MUST
+NOT be present. It is assumed to have the same value as the corresponding
+value in the containing Zone for signature generation and signature
+verification purposes; see {{cbor-signature}}.
 
 A contained Address Assertion SHOULD contain the signatures (0) key, since an
 unsigned contained Address Assertion cannot be used by a RAINS server to
@@ -879,15 +878,15 @@ The value of the objects (7) key is an array of objects, as defined in
 available for subject network addresses, and only object type name is
 available for subject host addresses.
 
-## Address Zone Message Section body {#cbor-revzone}
+## Address Zone body {#cbor-revzone}
 
 Assertions about addresses can be grouped into zones, where all the assertions
 within the zone are contained within the zone's address. These Address Zones
 are similar to Zones containing assertions about names, but are keyed by
 network address and restricted in their semantics.
 
-An Address Zone body is a map. Zones MUST contain the content (23), signatures (0),
-subject-addr (5), and context (6) keys. 
+An Address Zone body is a map. Zones MUST contain signatures (0),
+subject-addr (5), content (23), and context (6) keys. 
 
 Signatures on the Zone are to be verified against the appropriate key for the
 Zone in the given context, as described in {{signatures-in-assertions}}.
@@ -900,25 +899,21 @@ element is the address, encoded as in {{cbor-object}}. Only subject network
 addresses are acceptable for Address Zones.
 
 The value of the content (23) key is an array of Address Assertion bodies as
-defined in {#cbor-revassert}. The Address Assertions within the content array
+defined in {{cbor-revassert}}. The Address Assertions within the content array
 MUST fall completely within the network designated by the subject-addr value.
 
 The value of the context (6) key is a UTF-8 encoded string
 containing the name of the context for which the Zone is valid.
 
-## Address Query Message Section body {#cbor-revquery}
+## Address Query body {#cbor-revquery}
 
 Queries for assertions about addresses are similar to queries for assertions
 about names, but have semantic restrictions similar to those for Address
-Assertions and Address Zones. An address query may have only one context.
+Assertions and Address Zones.
 
-An Address Query body is a map. Queries MUST contain the the token (2), subject-addr (5),
-context (6), and query-types (10) keys. Queries MAY contain query-opts
-(13) and query-expires (12) keys.
-
-The value of the token (2) key, is a 16-byte array. Future messages or
-notifications containing answers to this query MUST contain this token, if
-present. See {{cbor-tokens}}.
+An Address Query body is a map. Queries MUST contain the subject-addr (5),
+context (6), query-types (10), and query-expires (12) keys. Address Queries MAY contain 
+query-opts (13) key.
 
 The value of the subject-addr (5) key is a three-element CBOR array. The first
 element of the array is the address family encoded as an object type, 2 for
@@ -927,11 +922,18 @@ length encoded as an integer, 0-128 for IPv6 and 0-32 for IPv4. The third
 element is the address, encoded as in {{cbor-object}}. 
 
 The value of the context (6) key is a UTF-8 encoded string containing the name
-of the context for which the Query is valid. Unlike queries for names, queries
-for Address Queries can only pertain to a single context.  
-See {{context-in-address-assertions}} for more.
+of the context for which the Query is valid. Unlike queries for names, Address 
+Queries can only pertain to a single context. See {{context-in-address-assertions}} 
+for more.
 
-The value of the query-expires (12) key, if present, is a CBOR integer
+The value of the query-types (10) key is an array of integers encoding the
+type(s) of objects (as in {{cbor-object}}) acceptable in answers to the query.
+All values in the query-type array are treated at equal priority: [4,5] means
+the querier is equally interested in both redirection and delegation for the
+subject-addr. An empty query-types array indicates that objects of any type are
+acceptable in answers to the query.
+
+The value of the query-expires (12) key is a CBOR integer
 counting seconds since the UNIX epoch UTC, identified with tag value 1 and
 encoded as in section 2.4.1 of {{RFC7049}}. After the query-expires time, the
 query will have been considered not answered by the original issuer.
@@ -940,11 +942,10 @@ The value of the query-opts (13) key, if present, is an array of integers in
 priority order of the querier's preferences in tradeoffs in answering the
 query, as in {{tabqopts}}. See {{cbor-query}} for more.
 
-Any Address Assertion relating to an address containing the address queried
-for is considered to respond to the query, with more-specific prefixes being
-preferred over less-specific.
+An Address Assertion with a more-specific prefix is preferred over a less-specific
+in response to a Address Query.
 
-## Notification Message Section body {#cbor-notification}
+## Notification body {#cbor-notification}
 
 [EDITOR'S NOTE: ensure it is clear everywhere that notifications are message sections too.]
 
@@ -1001,6 +1002,7 @@ the object, encoded as an integer in the following table:
 | 10    | registrant   | registrant information                  |
 | 11    | infrakey     | public key for RAINS infrastructure     |
 | 12    | extrakey     | external public key for subject         |
+| 13    | nextkey      | next public key for subject             |
 
 A name (1) object contains a name associated with a name as an alias. It is
 represented as a three-element array. The second element is a fully-qualified
@@ -1048,14 +1050,14 @@ integer, with lower numbers having higher priority.
 
 A registrar (9) object gives the name and other identifying information of the
 registrar (the organization which caused the name to be added to the
-namespace) for organization-level names. It is represented as a UTF-8 string
-of maximum length 256 bytes containing identifying information chosen by the
-registrar according to the registry's policy.
+namespace) for organization-level names. It is represented as a two element array. 
+The second element is a UTF-8 string of maximum length 256 bytes containing identifying 
+information chosen by the registrar according to the registry's policy.
 
 A registrant (10) object gives information about the registrant of an
-organization-level name. It is represented as a UTF-8 string with a maximum
-length of 4096 bytes containing this information, with a format chosen by the
-registrar according to the registry's policy.
+organization-level name. It is represented as a two element array. The second 
+element is a UTF-8 string with a maximum length of 4096 bytes containing this 
+information, with a format chosen by the registrar according to the registry's policy.
 
 An infrakey (11) object contains a public key used to generate signatures on
 messages by a named RAINS server, by which a RAINS message signature may be
@@ -1066,14 +1068,23 @@ the messages sent by the query server.
 
 An extrakey (12) object contains a public key used to generate signatures on
 assertions in a named zone outside of the normal delegation chain. It is
-represented as an N-element array, where the second element is a signature
+represented as an 4-element array, where the second element is a signature
 algorithm identifier, and the third element is keyspace identifier, as in
-{{cbor-signature}}. Additional elements are as defined in {{cbor-signature}} for
-the given algorithm identifier. An extrakey may be matched with a public key
-obtained through other means for additional authentication of an assertion.
-Extrakeys are different from delegation keys in that they may not be used in the
-delegation chain: an extrakey signature is valid only on assertions of object
-types other than delegation.
+{{cbor-signature}}. The fourth element is the public key, as defined in
+{{cbor-signature}} for the given algorithm identifier. An extrakey may be
+matched with a public key obtained through other means for additional
+authentication of an assertion. Extrakeys are different from delegation keys in
+that they may not be used in the delegation chain: an extrakey signature is
+valid only on assertions of object types other than delegation.
+
+A nextkey (13) object contains the a public key that a zone owner would like its
+superordinate to delegate to in the future. It is represented as an 5-element
+array The second element is a signature algorithm identifier as in
+{{cbor-signature}}. The third element is the public key, as defined in
+{{cbor-signature}} for the given algorithm identifier. The fourth element is the
+requested-valid-since time, and the fifth element is the requested-valid-until
+time, formatted as for signatures as in {{cbor-signature}}. See
+{{public-key-management}} for more.
 
 ### Certificate information format {#cbor-certinfo}
 
@@ -1092,10 +1103,10 @@ is defined by the protocol family and hash algorithm.
 
 {: #tabcertproto title="Certificate information protocol families"}
 
-| Code | Protocol family                            | Certificate format |
-|-----:|--------------------------------------------|--------------------|
-|    0 | Unspecified                                | Unspecified        |
-|    1 | Transport Layer Security (TLS) {{RFC5246}} | {{RFC5280}}        |
+| Code | Name     | Protocol family                            | Certificate format |
+|-----:|----------|--------------------------------------------|--------------------|
+|    0 | unspec   | Unspecified                                | Unspecified        |
+|    1 | tls      | Transport Layer Security (TLS) {{RFC5246}} | {{RFC5280}}        |
 
 Protocol family 0 leaves the protocol family unspecified; client validation
 and usage of cert-info assertions, and the protocol used to connect, are up to
@@ -1105,10 +1116,10 @@ secured with PKIX {{RFC5280}} certificates.
 
 {: #tabcertusage title="Certificate information usage values"}
 
-| Code | Certificate usage                |
-|-----:|----------------------------------|
-|    2 | Trust Anchor Certificate         |
-|    3 | End-Entity Certificate           |
+| Code | Name | Certificate usage                |
+|-----:|------|----------------------------------|
+|    2 | ta   | Trust Anchor Certificate         |
+|    3 | ee   | End-Entity Certificate           |
 
 A trust anchor certificate constraint specifies a certificate that MUST appear
 as the trust anchor for the certificate presented by the subject of the
@@ -1118,9 +1129,9 @@ on a connection attempt.
 
 {: #tabcerthash title="Certificate information hash algorithms"}
 
-| Code | Hash/HMAC | Notes                                 |
+| Code | Name      | Notes                                 |
 |-----:|-----------|---------------------------------------|
-| 0    | None      | Data contains full certificate        | 
+| 0    | full      | Data contains full certificate        | 
 | 1    | sha-256   | Data contains SHA-256 hash (32 bytes) |
 | 2    | sha-512   | Data contains SHA-512 hash (64 bytes) |
 | 3    | sha-384   | Data contains SHA-384 hash (48 bytes) |
@@ -1173,26 +1184,29 @@ matches any name made up of one or more lowercase Cyrillic letters and digits. T
 
 ## Tokens in queries and messages {#cbor-tokens}
 
-Messages, queries, and notifications all contain an opaque token (2) key, whose
+Messages and notifications contain an opaque token (2) key, whose
 content is a 16-byte array, and is used to link Messages to the Queries they
 respond to, and Notifications to the Messages they respond to. Tokens MUST be
 treated as opaque values by RAINS servers.
 
-A Message sent in response to a Query MUST contain the token in that Query.
-Otherwise, the Message SHOULD contain a token selected by the server
-originating it, so that future Notifications can be linked to the message
+A Message sent in response to a Query MUST contain the token of the Message containing the Query.
+Otherwise, the Message MUST contain a token selected by the server
+originating it, so that future Notifications can be linked to the Message
 causing it. Likewise, a Notification sent in response to a Message MUST
-contain the token from the Message causing it.
+contain the token from the Message causing it (where the new Message contains a
+fresh token selected by the server). This allows sending multiple Notifications
+within one Message and the receiving server to respond to a Message containing 
+Notifications (e.g. when it is malformed).
 
 Since tokens are used to link queries to replies, and to link notifications to
-messages, regardless of the sender or recipient of a message, the MUST be chosen
+messages, regardless of the sender or recipient of a message, they MUST be chosen
 by servers to be hard to guess; e.g. generated by a cryptographic random number
 generator.
 
 When a server creates a new query to forward to another server in response to
 a query it received, it MUST NOT use the same token on the delegated query
 as on the received query, unless option 6 Enable Tracing is present in the
-received, in which case it MUST use the same token. 
+received, in which case it MUST use the same token.
 
 ## Signatures, delegation keys, and RAINS infrastructure keys {#cbor-signature}
 
@@ -1240,32 +1254,12 @@ valid-until timestamp. If a signature has no specified valid-since time (i.e.,
 is valid from the beginning of time until its valid-until timestamp), the
 valid-since time MAY be null (as in Table 2 in Section 2.3 of {{RFC7049}}).
 
-Signatures in RAINS are generated over a normalized serialized CBOR object (a
-Message; or an Assertion, Shard, or Zone section body). To normalize and
-serialize an object for signing:
+A signature in RAINS is generated over a byte stream representing the message or
+message section in its textual data model (see {{zonefiles}}). The signing
+process is defined as follows:
 
-- Serialize the object with a stub for the signature to be generated:
-
-  - Strip all other signatures during serialization by omitting all signatures
-    (0) keys and their values. When signing a shard or zone, the signatures on
-    contained assertions, if present, must be omitted too. When signing a
-    message, the signatures on contained assertions, shards, and zones must be
-    omitted.
-
-  - Add subject zone and context to contained shards and assertions if not
-    present, inheriting them from their containing shard or zone.
-
-  - Create a stub signature within an array within a signatures (0) key at the
-    appropriate place in the object, containing the algorithm ID, timestamps
-    and hash chain token, if present, but a null value in the place of the
-    signature content.
-
-  - Normalize the serialized object by emitting all keys in CBOR maps in
-    ascending numerical order. Note that when serializing anything with a 
-    Content array, the order of the content array is preserved.
-
-  - If the serialized object is a Message, it should be tagged with the RAINS
-    tag.
+- Parse the object to be signed into a byte stream according to the format
+specified in {{signing-format}}.
 
 - Generate a signature on the resulting byte stream according to the algorithm
   selected.
@@ -1288,10 +1282,10 @@ delegation objects for Ed25519 keys are therefore represented by the array [5,
 Ed25519 and Ed448 signatures are are a combination of two non-negative
 integers, called "R" and "S" in sections 5.1.6 and 5.2.6, respectively, of
 {{RFC8032}}. An Ed25519 signature is represented as a 64-byte array containing
-the the concatenation of R and S, and an Ed448 signature is represented as a
+the concatenation of R and S, and an Ed448 signature is represented as a
 114-byte array containing the concatenation of R and S. RAINS signatures using
-Ed25519 are therefore the array [1, 0, valid-from, valid-until, R|S]; using Ed448
-the array [2, 0, valid-from, valid-until, R|S].
+Ed25519 are therefore the array [1, 0, valid-since, valid-until, R|S]; using Ed448
+the array [2, 0, valid-since, valid-until, R|S].
 
 Ed25519 keys are generated as in Section 5.1.5 of {{RFC8032}}, and Ed448 keys
 as in Section 5.2.5 of {{RFC8032}}.  Ed25519 signatures are generated from a
@@ -1317,8 +1311,8 @@ represented as a byte array as described in Section C.2 of {{FIPS-186-3}}, and
 s represented as a byte array as described in Section C.2 of {{FIPS-186-3}}.
 For ECDSA-256 signatures, each integer MUST be represented as a 32-byte array.
 For ECDSA-384 signatures, each integer MUST be represented as a 48-byte array.
-RAINS signatures using ECDSA-256 are therefore the array [3, 0, valid-from,
-valid-until, r|s]; and for ECDSA-384 the array [4, 0, valid-from, valid-until,
+RAINS signatures using ECDSA-256 are therefore the array [3, 0, valid-since,
+valid-until, r|s]; and for ECDSA-384 the array [4, 0, valid-since, valid-until,
 r|s].
 
 ECDSA-256 signatures and public keys use the P-256 curve as defined in {{FIPS-186-3}}.
@@ -1366,6 +1360,16 @@ An exception are the capabilities indicating that a server listens for
 connections using a given transport protocol; servers and clients can also
 learn this information from RAINS itself (given a redirection assertion for a
 named zone) or from external configuration values.
+
+# Textual data model: RAINS Zonefiles {#zonefiles}
+
+[EDITOR'S NOTE: frontmatter: cbor hard to read by eye, may want to support multiple data models in future.]
+
+[EDITOR'S NOTE: to define.]
+
+## Canonical signing format {#signing-format}
+
+[EDITOR'S NOTE: to define, based on the zonefile format.]
 
 # RAINS Protocol Definition {#protocol-def}
 
@@ -1579,6 +1583,10 @@ servers. The following types of inconsistency are possible:
   which is valid at the same time as the shard.
 - A zone omits an assertion within its zone which is valid at the same time
   as the zone.
+- An address zone omits an address assertion within its context and network
+  which is valid at the same time as the address zone.
+- An address zone contains an address assertion that is not within its network.
+- An address assertion contains an object that is not allowed (see {{cbor-revassert}})
 - An assertion prohibited by its zone's nameset is valid at the same time
   as the zone's nameset assertion.
 - A zone contains a valid reflexive assertion of a given object type at the same
@@ -1679,6 +1687,33 @@ which they will accept and cache any assertion, shard, or zone for which they
 are authority servers until at least the end of validity of the last
 signature, provided the signature is verifiable.
 
+## Public Key Management
+
+As signature lifetime is used to manage assertion lifetime, and key rotation
+strategies may be used both for revocation as well as operational flexibility
+purposes, RAINS presents a much more dynamic key management environment than
+that presented by DNSSEC. One problem this raises is how a zone authority
+communicates to its superordinate that it would like to begin using a new public
+key to sign its assertions.
+
+This can be done out of band, using private APIs provided by the superordinate
+authority. Through the nextkey object type, RAINS provides a way for a future
+public key to be shared with the superordinate authority (and all other
+queriers) in-band. An authority that wishes to use a new key publishes a
+reflexive nextkey assertion (i.e., in its own zone, with subject @) with the new
+public key and a requested valid-since and valid-until time range. The
+superordinate issues periodic queries for nextkey assertions from its
+subordinate zone, or the subordinate pushes these assertions to an intermediate
+service designated to receive them. When the superordinate receives a nextkey,
+and it decides it wants to delegate to the new key, it creates and signs a
+delegation assertion. 
+
+This process is not mandatory: the superordinate is free to ignore the request,
+or to use a different time range, depending on its policy and/or the status of
+its business relationship with the subordinate. The subordinate can discover
+this, in turn, using its own RAINS queries, or through the delegation assertions
+being similarly pushed to a designated intermediate service.
+
 ## Unsigned Contained Assertions
 
 Although RAINS supports Shards and Zones containing unsigned assertions,
@@ -1715,8 +1750,8 @@ the mostly compatible information models used by the two.
 
 While DNSSEC and RAINS keys for equivalent ciphersuites are compatible with
 each other, there is no equivalent to query option 7 for gateways, since the
-RAINS signatures are generated over the RAINS bytestream for an assertion, not
-the DNS bytestream. Therefore, RAINS to DNS gateways must provide verification
+RAINS signatures are generated over the RAINS byte stream for an assertion, not
+the DNS byte stream. Therefore, RAINS to DNS gateways must provide verification
 services for DNS clients. DNS over TLS {{RFC7858}} SHOULD be used between the
 DNS client and gateway to ensure confidentiality and integrity for queries and
 answers.
@@ -1816,13 +1851,22 @@ subsections below:
 
 ## Server state exhaustion
 
-[EDITOR'S NOTE: attack: attacker can create domain, use long-validity queries to exhaust
-state at server. defense: server can consider shorter validity time than that
-requested, but not longer. attack: attacker can push garbage assertions proactively. defense: server doesn't accept assertions it's never seen a query for. how to handle an attacker that pushes assertions and queries? attack: attacker can push garbage delegations, exhausting delegation chain cache. defense: server doesn't accept sigs for domains it doesn't know about, but what about a domain with hundreds of valid delegations? in all cases, blacklisting both clients and domains seems like a good idea.]
+\[EDITOR'S NOTE: attack: attacker can create domain, use long-validity queries
+to exhaust state at server. defense: server can consider shorter validity time
+than that requested, but not longer. attack: attacker can push garbage
+assertions proactively. defense: server doesn't accept assertions it's never
+seen a query for. how to handle an attacker that pushes assertions and queries?
+attack: attacker can push garbage delegations, exhausting delegation chain
+cache. defense: server doesn't accept sigs for domains it doesn't know about,
+but what about a domain with hundreds of valid delegations? in all cases,
+blacklisting both clients and domains seems like a good idea.]
 
 ## Query relay attacks
 
-[EDITOR'S NOTE: attack: attacker can cause traffic overload at a targeted intermediate or authority service by crafting queries and sending them via multiple query services. There is no amplification here, but a concentration, with indirection that makes tracing difficult. defense: think about this a bit.]
+\[EDITOR'S NOTE: attack: attacker can cause traffic overload at a targeted
+intermediate or authority service by crafting queries and sending them via
+multiple query services. There is no amplification here, but a concentration,
+with indirection that makes tracing difficult. defense: think about this a bit.]
 
 # Acknowledgments
 
@@ -1896,15 +1940,6 @@ protocol changes to work reliably.
 To support this experiment, a server must additionally evaluate an assertion
 it receives to determine whether it replaces any information presently in its
 cache. If so, it discards the old information, and caches the new section.
-
-# Pending Edits
-
-- Remove the ability to have incomplete shards - they're not very useful, and
-  having shards always be lexicographically complete simplifies server
-  implementation.
-- For simplifications, change queries to be only for a single type in a single
-  context. An all-addresses type metatype might be useful for multistacked
-  hosts.
 
 # Open Questions and Issues
 
