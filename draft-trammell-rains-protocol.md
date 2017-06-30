@@ -609,9 +609,9 @@ verified against the infrastructure key for the RAINS Server originating the
 message.
 
 A Message map MAY contain a capabilities (1) key, whose value is described in
-{cbor-capabilities}.
+{{cbor-capabilities}}.
 
-A Message map SHOULD contain a token (2) key, whose value is a 16-byte array.
+A Message map MUST contain a token (2) key, whose value is a 16-byte array.
 See {{cbor-tokens}} for details.
 
 A Message map MUST contain a content (23) key, whose value is an array of
@@ -709,7 +709,7 @@ RAINS server to answer a query for nonexistence; it must be returned in a
 signed Zone. 
 
 The value of the content (23) key is an array of Assertion bodies as defined in
-{cbor-assertion}.
+{{cbor-assertion}}.
 
 The value of the signatures (0) key, if present, is an array of one or more
 Signatures as defined in {{cbor-signature}}. If not present, the containing
@@ -729,7 +729,7 @@ containing the name of the context in which the Assertions within the Shard
 are valid. If not present, the context of the assertion is inherited from the
 containing Zone.
 
-If the shard-range (11) key is present, the the shard is lexicographically complete
+If the shard-range (11) key is present, the shard is lexicographically complete
 within the range described in its value: a mapping for a (subject-name,
 object-type) pair that should be between the two values given in the range but
 is not is asserted to not exist. Lexicographic sorting is done on subject names
@@ -750,7 +750,7 @@ that are not contained within the shard
 If the shard-range key is not present, the shard is not lexicographically
 complete and MUST NOT be used to make assertions about nonexistance.
 
-## Zone Message Section body {#cbor-zone}
+## Zone body {#cbor-zone}
 
 A Zone body is a map. Zones MUST contain the content (23), signatures (0),
 subject-zone (4), and context (6) keys. 
@@ -759,7 +759,7 @@ Signatures on the Zone are to be verified against the appropriate key for the
 Zone in the given context, as described in {{signatures-in-assertions}}.
 
 The value of the content (23) key is an array of Shard bodies as defined in
-{cbor-shard} and/or Assertion bodies as defined in {cbor-assertion}.
+{{cbor-shard}} and/or Assertion bodies as defined in {{cbor-assertion}}.
 
 The value of the subject-zone (4) key is a UTF-8 encoded string
 containing the name of the Zone.
@@ -767,15 +767,11 @@ containing the name of the Zone.
 The value of the context (6) key is a UTF-8 encoded string
 containing the name of the context for which the Zone is valid.
 
-## Query Message Section body {#cbor-query}
+## Query body {#cbor-query}
 
-A Query body is a map. Queries MUST contain the the token (2), query-name (8),
+A Query body is a map. Queries MUST contain the query-name (8),
 context (6), query-types (10), and query-expires (12) keys. Queries MAY contain
 the query-opts (13) keys.
-
-The value of the token (2) key, is a 16-byte array. Future messages or
-notifications containing answers to this query MUST contain this token, if
-present. See {{cbor-tokens}}.
 
 The value of the context (6) key is a UTF-8 encoded string containing the name
 of the context to which a query pertains. A zero-length string indicates that
@@ -831,7 +827,7 @@ Option 8 specifies that a querier's interest in a query is strictly ephemeral,
 and that future assertions related to this query SHOULD NOT be proactively
 pushed to the querier.
 
-## Address Assertion Message Section body {#cbor-revassert}
+## Address Assertion body {#cbor-revassert}
 
 Assertions about addresses are similar to assertions about names, but keyed by
 address and restricted in terms of the objects they can contain. An Address
@@ -882,7 +878,7 @@ The value of the objects (7) key is an array of objects, as defined in
 available for subject network addresses, and only object type name is
 available for subject host addresses.
 
-## Address Zone Message Section body {#cbor-revzone}
+## Address Zone body {#cbor-revzone}
 
 Assertions about addresses can be grouped into zones, where all the assertions
 within the zone are contained within the zone's address. These Address Zones
@@ -903,25 +899,21 @@ element is the address, encoded as in {{cbor-object}}. Only subject network
 addresses are acceptable for Address Zones.
 
 The value of the content (23) key is an array of Address Assertion bodies as
-defined in {cbor-revassert}. The Address Assertions within the content array
+defined in {{cbor-revassert}}. The Address Assertions within the content array
 MUST fall completely within the network designated by the subject-addr value.
 
 The value of the context (6) key is a UTF-8 encoded string
 containing the name of the context for which the Zone is valid.
 
-## Address Query Message Section body {#cbor-revquery}
+## Address Query body {#cbor-revquery}
 
 Queries for assertions about addresses are similar to queries for assertions
 about names, but have semantic restrictions similar to those for Address
 Assertions and Address Zones.
 
-An Address Query body is a map. Queries MUST contain the the token (2), subject-addr (5),
+An Address Query body is a map. Queries MUST contain the subject-addr (5),
 context (6), query-types (10), and query-expires (12) keys. Address Queries MAY contain 
 query-opts (13) key.
-
-The value of the token (2) key, is a 16-byte array. Future messages or
-notifications containing answers to this query MUST contain this token, if
-present. See {{cbor-tokens}}.
 
 The value of the subject-addr (5) key is a three-element CBOR array. The first
 element of the array is the address family encoded as an object type, 2 for
@@ -953,7 +945,7 @@ query, as in {{tabqopts}}. See {{cbor-query}} for more.
 An Address Assertion with a more-specific prefix is preferred over a less-specific
 in response to a Address Query.
 
-## Notification Message Section body {#cbor-notification}
+## Notification body {#cbor-notification}
 
 [EDITOR'S NOTE: ensure it is clear everywhere that notifications are message sections too.]
 
@@ -1192,16 +1184,19 @@ matches any name made up of one or more lowercase Cyrillic letters and digits. T
 
 ## Tokens in queries and messages {#cbor-tokens}
 
-Messages, queries, and notifications all contain an opaque token (2) key, whose
+Messages and notifications contain an opaque token (2) key, whose
 content is a 16-byte array, and is used to link Messages to the Queries they
 respond to, and Notifications to the Messages they respond to. Tokens MUST be
 treated as opaque values by RAINS servers.
 
-A Message sent in response to a Query MUST contain the token in that Query.
-Otherwise, the Message SHOULD contain a token selected by the server
-originating it, so that future Notifications can be linked to the message
+A Message sent in response to a Query MUST contain the token of the Message containing the Query.
+Otherwise, the Message MUST contain a token selected by the server
+originating it, so that future Notifications can be linked to the Message
 causing it. Likewise, a Notification sent in response to a Message MUST
-contain the token from the Message causing it.
+contain the token from the Message causing it (where the new Message contains a
+fresh token selected by the server). This allows sending multiple Notifications
+within one Message and the receiving server to respond to a Message containing 
+Notifications (e.g. when it is malformed).
 
 Since tokens are used to link queries to replies, and to link notifications to
 messages, regardless of the sender or recipient of a message, they MUST be chosen
@@ -1212,9 +1207,6 @@ When a server creates a new query to forward to another server in response to
 a query it received, it MUST NOT use the same token on the delegated query
 as on the received query, unless option 6 Enable Tracing is present in the
 received, in which case it MUST use the same token.
-
-If a Message contains a token and a Query, the token of the Message and of the 
-Query MUST be identical. The same holds for Address Queries.
 
 ## Signatures, delegation keys, and RAINS infrastructure keys {#cbor-signature}
 
