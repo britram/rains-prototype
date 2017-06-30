@@ -1818,14 +1818,18 @@ subsections below:
 
 [EDITOR'S NOTE: attack: attacker can create domain, use long-validity queries to exhaust
 state at server. defense: server can consider shorter validity time than that
-requested, but not longer. attack: attacker can push garbage assertions proactively. defense: server doesn't accept assertions it's never seen a query for. how to handle an attacker that pushes assertions and queries?]
+requested, but not longer. attack: attacker can push garbage assertions proactively. defense: server doesn't accept assertions it's never seen a query for. how to handle an attacker that pushes assertions and queries? attack: attacker can push garbage delegations, exhausting delegation chain cache. defense: server doesn't accept sigs for domains it doesn't know about, but what about a domain with hundreds of valid delegations? in all cases, blacklisting both clients and domains seems like a good idea.]
+
+## Query relay attacks
+
+[EDITOR'S NOTE: attack: attacker can cause traffic overload at a targeted intermediate or authority service by crafting queries and sending them via multiple query services. There is no amplification here, but a concentration, with indirection that makes tracing difficult. defense: think about this a bit.]
 
 # Acknowledgments
 
 Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Christian Fehlmann, Ted
 Hardie, Joe Hildebrand, Tobias Klausmann, Steve Matsumoto, Adrian Perrig,
 Raphael Reischuk, Stephen Shirley, Andrew Sullivan, and Suzanne Woolf for the
-discussions leading to the design of this protocol.
+discussions leading to the design of this protocol. Thanks especially to Christian Fehlmann and Stephen Shirley for detailed feedback.
 
 --- back
 
