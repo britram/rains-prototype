@@ -1,7 +1,7 @@
 ---
 title: RAINS (Another Internet Naming Service) Protocol Specification
 abbrev: RAINS
-docname: draft-trammell-rains-protocol-02
+docname: draft-trammell-rains-protocol-latest
 date: 
 category: exp
 
@@ -1397,7 +1397,7 @@ to open a connection with that server.
 
 This section describes the operation of the protocol as used among RAINS
 servers. A simplified version of the protocol for client access is described
-in {{protocol-client}}.
+in {{protocol-client}}, and a simplified version of the protocol for publication by authorities is described in {{protocol-publish}}.
 
 ## Message processing {#protocol-processing}
 
@@ -1626,6 +1626,7 @@ caching, default use of non-persistent tokens, and redirection among servers
 can be used to mix queries and reduce the linkability of query information to
 specific clients.
 
+
 # RAINS Client Protocol {#protocol-client}
 
 The protocol used by clients to issue queries to and receive responses from an
@@ -1648,6 +1649,14 @@ corresponding to the signature it verified with the longest lifetime,
 stripping other signatures from the reply. This behavior can be disabled by a
 client by specifying query option 7, allowing the client to do its own
 verification.
+
+# RAINS Publication Protocol {#protocol-publish}
+
+The protocol used by authorities to publish assertions to an authority service
+is a subset of the full RAINS protocol, with the following differences:
+
+- Servers only process assertion, shard, zone, and notification sections when connected to publishers; sending a query to a server via the publication procotol results in a 400 Bad Message notification. Servers only process notifications for capability negotiation purposes (see {{cbor-capabilities}}).
+- Publishers only process notification sections; sending a query or assertion to a publisher results in a 400 Bad Message notification.
 
 # Deployment Considerations
 
