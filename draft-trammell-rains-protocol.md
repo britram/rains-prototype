@@ -1361,6 +1361,8 @@ is e5365a09be554ae55b855f15264dbc837b04f5831daeb321359e18cdabab5745; the hash
 presented by a server supporting no capabilities is
 76be8b528d0075f7aae98d6fa57a6d3c83ae480a8469e668d7b0af968995ac71.
 
+Servers MAY piggyback capability negotiation on other messages, or use dedicated messages for capability negotiation. 
+
 A RAINS server MUST NOT assume that a peer server supports a given capability
 unless it has received a message containing that capability from that server.
 An exception are the capabilities indicating that a server listens for
