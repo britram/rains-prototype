@@ -1637,6 +1637,13 @@ caching, default use of non-persistent tokens, and redirection among servers
 can be used to mix queries and reduce the linkability of query information to
 specific clients.
 
+## Cooperative Delegation Distribution
+
+Regardless of any other configuration directive, a RAINS server MUST be prepared to
+provide a full chain of delegation assertions from the appropriate delegation
+root to the signature on any assertion it gives to a peer or a client, whether
+as additional assertions on a message answering a query, or in reply to a subsequent query. This property allows RAINS servers to maintain a full delegation tree 
+
 # RAINS Client Protocol {#protocol-client}
 
 The protocol used by clients to issue queries to and receive responses from an
@@ -1711,7 +1718,15 @@ signature, provided the signature is verifiable.
 As signature lifetime is used to manage assertion lifetime, and key rotation
 strategies may be used both for revocation as well as operational flexibility
 purposes, RAINS presents a much more dynamic key management environment than
-that presented by DNSSEC. One problem this raises is how a zone authority
+that presented by DNSSEC. 
+
+### Key Phase and Key Rotation
+
+\[EDITOR'S NOTE: talk about rapid rotation and keyphases here.]
+
+### Next Key Assertions
+
+Another problem this dyanmic envrionment raises is how a zone authority
 communicates to its superordinate that it would like to begin using a new public
 key to sign its assertions.
 
@@ -1889,10 +1904,12 @@ with indirection that makes tracing difficult. defense: think about this a bit.]
 
 # Acknowledgments
 
-Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Christian Fehlmann, Ted
-Hardie, Joe Hildebrand, Tobias Klausmann, Steve Matsumoto, Adrian Perrig,
-Raphael Reischuk, Stephen Shirley, Andrew Sullivan, and Suzanne Woolf for the
-discussions leading to the design of this protocol. Thanks especially to Christian Fehlmann and Stephen Shirley for detailed feedback.
+Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Ted Hardie, Joe
+Hildebrand, Tobias Klausmann, Steve Matsumoto, Adrian Perrig, Raphael Reischuk,
+Andrew Sullivan, and Suzanne Woolf for the discussions leading to the design of
+this protocol. Thanks especially to Stephen Shirley for detailed feedback, and
+to Christian Fehlmann for extensive implementation experience which has informed
+the further development of the protocol.
 
 --- back
 
