@@ -4,12 +4,12 @@
 
 Network Working Group                                        B. Trammell
 Internet-Draft                                                ETH Zurich
-Intended status: Experimental                              July 06, 2017
-Expires: January 7, 2018
+Intended status: Experimental                            August 02, 2017
+Expires: February 3, 2018
 
 
      RAINS (Another Internet Naming Service) Protocol Specification
-                    draft-trammell-rains-protocol-02
+                  draft-trammell-rains-protocol-latest
 
 Abstract
 
@@ -35,7 +35,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on January 7, 2018.
+   This Internet-Draft will expire on February 3, 2018.
 
 Copyright Notice
 
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Trammell                 Expires January 7, 2018                [Page 1]
+Trammell                Expires February 3, 2018                [Page 1]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    the Trust Legal Provisions and are provided without warranty as
@@ -100,39 +100,40 @@ Table of Contents
      5.15. Capabilities  . . . . . . . . . . . . . . . . . . . . . .  35
    6.  Textual data model: RAINS Zonefiles . . . . . . . . . . . . .  36
      6.1.  Canonical signing format  . . . . . . . . . . . . . . . .  36
-   7.  RAINS Protocol Definition . . . . . . . . . . . . . . . . . .  36
+   7.  RAINS Protocol Definition . . . . . . . . . . . . . . . . . .  37
      7.1.  Message processing  . . . . . . . . . . . . . . . . . . .  37
      7.2.  Message Transmission  . . . . . . . . . . . . . . . . . .  41
      7.3.  Message Limits  . . . . . . . . . . . . . . . . . . . . .  41
      7.4.  Runtime Consistency Checking  . . . . . . . . . . . . . .  42
-     7.5.  Integrity and Confidentiality Protection  . . . . . . . .  42
+     7.5.  Integrity and Confidentiality Protection  . . . . . . . .  43
 
 
 
-Trammell                 Expires January 7, 2018                [Page 2]
+Trammell                Expires February 3, 2018                [Page 2]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    8.  RAINS Client Protocol . . . . . . . . . . . . . . . . . . . .  43
-   9.  Deployment Considerations . . . . . . . . . . . . . . . . . .  44
-     9.1.  Assertion Lifetime Management . . . . . . . . . . . . . .  44
-     9.2.  Secret Key Management . . . . . . . . . . . . . . . . . .  44
-     9.3.  Public Key Management . . . . . . . . . . . . . . . . . .  44
-     9.4.  Unsigned Contained Assertions . . . . . . . . . . . . . .  45
-     9.5.  Query Service Discovery . . . . . . . . . . . . . . . . .  45
-     9.6.  Transition using translation between RAINS and DNS
-           information models  . . . . . . . . . . . . . . . . . . .  46
-   10. Experimental Design and Evaluation  . . . . . . . . . . . . .  47
-   11. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  48
-   12. Security Considerations . . . . . . . . . . . . . . . . . . .  48
-     12.1.  Server state exhaustion  . . . . . . . . . . . . . . . .  48
-     12.2.  Query relay attacks  . . . . . . . . . . . . . . . . . .  49
-   13. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  49
-   14. References  . . . . . . . . . . . . . . . . . . . . . . . . .  49
-     14.1.  Normative References . . . . . . . . . . . . . . . . . .  49
-     14.2.  Informative References . . . . . . . . . . . . . . . . .  50
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  52
+   9.  RAINS Publication Protocol  . . . . . . . . . . . . . . . . .  44
+   10. Deployment Considerations . . . . . . . . . . . . . . . . . .  44
+     10.1.  Assertion Lifetime Management  . . . . . . . . . . . . .  44
+     10.2.  Secret Key Management  . . . . . . . . . . . . . . . . .  45
+     10.3.  Public Key Management  . . . . . . . . . . . . . . . . .  45
+     10.4.  Unsigned Contained Assertions  . . . . . . . . . . . . .  46
+     10.5.  Query Service Discovery  . . . . . . . . . . . . . . . .  46
+     10.6.  Transition using translation between RAINS and DNS
+            information models . . . . . . . . . . . . . . . . . . .  46
+   11. Experimental Design and Evaluation  . . . . . . . . . . . . .  48
+   12. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  48
+   13. Security Considerations . . . . . . . . . . . . . . . . . . .  49
+     13.1.  Server state exhaustion  . . . . . . . . . . . . . . . .  49
+     13.2.  Query relay attacks  . . . . . . . . . . . . . . . . . .  49
+   14. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  49
+   15. References  . . . . . . . . . . . . . . . . . . . . . . . . .  49
+     15.1.  Normative References . . . . . . . . . . . . . . . . . .  50
+     15.2.  Informative References . . . . . . . . . . . . . . . . .  51
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  53
 
 1.  Introduction
 
@@ -164,10 +165,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-
-Trammell                 Expires January 7, 2018                [Page 3]
+Trammell                Expires February 3, 2018                [Page 3]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    o  All assertions have validity within a specific context.  A context
@@ -221,9 +221,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018                [Page 4]
+Trammell                Expires February 3, 2018                [Page 4]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    o  Subject: The name to which an assertion pertains.
@@ -277,9 +277,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018                [Page 5]
+Trammell                Expires February 3, 2018                [Page 5]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
 3.  Architecture
@@ -333,9 +333,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018                [Page 6]
+Trammell                Expires February 3, 2018                [Page 6]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    o  Zone: name of the zone in which the assertion is made.  The fully
@@ -389,9 +389,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018                [Page 7]
+Trammell                Expires February 3, 2018                [Page 7]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    o  Zone-Registrar: Information about the organization that caused a
@@ -445,9 +445,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018                [Page 8]
+Trammell                Expires February 3, 2018                [Page 8]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    Assertion context is the mechanism by which RAINS provides explicit
@@ -501,9 +501,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018                [Page 9]
+Trammell                Expires February 3, 2018                [Page 9]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    o  Valid-Until: a timestamp of the end of validity of this signature.
@@ -557,9 +557,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 10]
+Trammell                Expires February 3, 2018               [Page 10]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    o  Zones containing no delegation assertions are final zones.  Final
@@ -613,9 +613,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 11]
+Trammell                Expires February 3, 2018               [Page 11]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    o  Query Token: a client-generated token for the query, which can be
@@ -669,9 +669,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 12]
+Trammell                Expires February 3, 2018               [Page 12]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
 4.2.2.  Answers to Queries
@@ -725,9 +725,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 13]
+Trammell                Expires February 3, 2018               [Page 13]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    o  Redirection: The name(s) of one or more a RAINS servers providing
@@ -781,9 +781,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 14]
+Trammell                Expires February 3, 2018               [Page 14]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
 4.3.1.  Context in Address Assertions
@@ -837,9 +837,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 15]
+Trammell                Expires February 3, 2018               [Page 15]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    extended.  Message section types are given in Table 2, object types
@@ -893,9 +893,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 16]
+Trammell                Expires February 3, 2018               [Page 16]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
 5.2.  Message
@@ -949,9 +949,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 17]
+Trammell                Expires February 3, 2018               [Page 17]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
        +------+--------------+-------------------------------------+
@@ -1005,9 +1005,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 18]
+Trammell                Expires February 3, 2018               [Page 18]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    Assertion are generated as if the inherited subject-zone and context
@@ -1061,9 +1061,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 19]
+Trammell                Expires February 3, 2018               [Page 19]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    The value of the content (23) key is an array of Assertion bodies as
@@ -1117,9 +1117,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 20]
+Trammell                Expires February 3, 2018               [Page 20]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
 5.6.  Zone body
@@ -1173,9 +1173,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 21]
+Trammell                Expires February 3, 2018               [Page 21]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    +------+------------------------------------------------------------+
@@ -1229,9 +1229,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 22]
+Trammell                Expires February 3, 2018               [Page 22]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
 5.8.  Address Assertion body
@@ -1285,9 +1285,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 23]
+Trammell                Expires February 3, 2018               [Page 23]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    The value of the objects (7) key is an array of objects, as defined
@@ -1341,9 +1341,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 24]
+Trammell                Expires February 3, 2018               [Page 24]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    second element is the prefix length encoded as an integer, 0-128 for
@@ -1397,9 +1397,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 25]
+Trammell                Expires February 3, 2018               [Page 25]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
            +------+--------------------------------------------+
@@ -1453,9 +1453,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 26]
+Trammell                Expires February 3, 2018               [Page 26]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
        +------+--------------+-------------------------------------+
@@ -1509,9 +1509,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 27]
+Trammell                Expires February 3, 2018               [Page 27]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    A redirection (4) object contains the fully-qualified name of a RAINS
@@ -1565,9 +1565,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 28]
+Trammell                Expires February 3, 2018               [Page 28]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    structure to a delegation object, as defined in Section 5.14.
@@ -1594,7 +1594,7 @@ Internet-Draft                    RAINS                        July 2017
    public key, as defined in Section 5.14 for the given algorithm
    identifier.  The fourth element is the requested-valid-since time,
    and the fifth element is the requested-valid-until time, formatted as
-   for signatures as in Section 5.14.  See Section 9.3 for more.
+   for signatures as in Section 5.14.  See Section 10.3 for more.
 
 5.12.1.  Certificate information format
 
@@ -1621,9 +1621,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 29]
+Trammell                Expires February 3, 2018               [Page 29]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    +------+--------+---------------------------------+-----------------+
@@ -1677,9 +1677,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 30]
+Trammell                Expires February 3, 2018               [Page 30]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    Code 0 is used to store full certificates in RAINS assertions, while
@@ -1733,9 +1733,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 31]
+Trammell                Expires February 3, 2018               [Page 31]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    bracket expression joined by the sequence && are equivalent to the
@@ -1789,9 +1789,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 32]
+Trammell                Expires February 3, 2018               [Page 32]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
 5.14.  Signatures, delegation keys, and RAINS infrastructure keys
@@ -1845,9 +1845,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 33]
+Trammell                Expires February 3, 2018               [Page 33]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    tag value 1 and encoded as in section 2.4.1 of [RFC7049].  A
@@ -1901,9 +1901,9 @@ Internet-Draft                    RAINS                        July 2017
 
 
 
-Trammell                 Expires January 7, 2018               [Page 34]
+Trammell                Expires February 3, 2018               [Page 34]
 
-Internet-Draft                    RAINS                        July 2017
+Internet-Draft                    RAINS                      August 2017
 
 
    RAINS Server and Client implementations MUST support Ed25519
@@ -1936,7 +1936,8 @@ Internet-Draft                    RAINS                        July 2017
    curve as defined in [FIPS-186-3].
 
    ECDSA-256 and ECDSA-384 support are primarily meant for compatibility
-   with and migration from existing DNSSEC deployments; see Section 9.6.
+   with and migration from existing DNSSEC deployments; see
+   Section 10.6.
 
 5.15.  Capabilities
 
@@ -1952,16 +1953,17 @@ Internet-Draft                    RAINS                        July 2017
       such an array by sorting it in lexicographically increasing order,
       then serializing it.
 
+
+
+
+
+Trammell                Expires February 3, 2018               [Page 35]
+
+Internet-Draft                    RAINS                      August 2017
+
+
    This mechanism is inspired by [XEP0115], and is intended to be used
    to reduce the overhead in exposing common sets of capabilities.  Each
-
-
-
-Trammell                 Expires January 7, 2018               [Page 35]
-
-Internet-Draft                    RAINS                        July 2017
-
-
    RAINS server can cache a set of recently-seen or common hashes, and
    only request the full URN set (using notification code 399) on a
    cache miss.
@@ -2004,20 +2006,24 @@ Internet-Draft                    RAINS                        July 2017
 
    [EDITOR'S NOTE: to define, based on the zonefile format.]
 
+
+
+
+
+
+
+
+Trammell                Expires February 3, 2018               [Page 36]
+
+Internet-Draft                    RAINS                      August 2017
+
+
 7.  RAINS Protocol Definition
 
    As noted in Section 5, RAINS is a message-exchange protocol that uses
    CBOR [RFC7049] as its framing.  Since CBOR is self-framing - a CBOR
    parser can determine when a CBOR object is complete at the point at
    which it has read its final byte - RAINS requires no external
-
-
-
-Trammell                 Expires January 7, 2018               [Page 36]
-
-Internet-Draft                    RAINS                        July 2017
-
-
    framing.  It can therefore run over any streaming, multistreaming, or
    message-oriented transport protocol.  In order to protect query
    confidentiality, and support rapid deployment over a ubiquitously
@@ -2040,7 +2046,8 @@ Internet-Draft                    RAINS                        July 2017
 
    This section describes the operation of the protocol as used among
    RAINS servers.  A simplified version of the protocol for client
-   access is described in Section 8.
+   access is described in Section 8, and a simplified version of the
+   protocol for publication by authorities is described in Section 9.
 
 7.1.  Message processing
 
@@ -2060,19 +2067,19 @@ Internet-Draft                    RAINS                        July 2017
    o  notes the token on the message.  This token MUST be present on any
       messages sent in reply to this message.
 
+
+
+Trammell                Expires February 3, 2018               [Page 37]
+
+Internet-Draft                    RAINS                      August 2017
+
+
    o  processes any capabilities present, replacing the set of
       capabilities known for the peer with the set present in the
       message.  If the present capabilities are represented by a hash
       that the server does not have in its cache, it prepares a
       notification of type 399 "Capability hash not understood" to send
       to its peer.
-
-
-
-Trammell                 Expires January 7, 2018               [Page 37]
-
-Internet-Draft                    RAINS                        July 2017
-
 
    o  splits the contents into its constituent message sections, and
       verifies that each is acceptable.  Specifically, queries are not
@@ -2115,6 +2122,14 @@ Internet-Draft                    RAINS                        July 2017
       message section which answers the query.  If so, it prepares to
       return the most specific such section (i.e., if it has both a
       shard and an assertion that would answer the query, it returns the
+
+
+
+Trammell                Expires February 3, 2018               [Page 38]
+
+Internet-Draft                    RAINS                      August 2017
+
+
       assertion) with the signature of the longest remaining validity to
       the peer that issued the query.  If not, it:
 
@@ -2122,14 +2137,6 @@ Internet-Draft                    RAINS                        July 2017
       only).  If so, and if option 5 (expired assertions acceptable) is
       also specified, it then checks to see if it has any cached
       sections that answer the query on which signatures are expired;
-
-
-
-Trammell                 Expires January 7, 2018               [Page 38]
-
-Internet-Draft                    RAINS                        July 2017
-
-
       otherwise, processing stops, and the server returns a 504 No
       Assertion Available notification, as if the query had instantly
       expired.. If the query does not specify option 4, delegation
@@ -2171,6 +2178,14 @@ Internet-Draft                    RAINS                        July 2017
    query- expires time of the server's choosing, according to its
    configuration.
 
+
+
+
+Trammell                Expires February 3, 2018               [Page 39]
+
+Internet-Draft                    RAINS                      August 2017
+
+
    On receipt of a notification, a server's behavior depends on the
    notification type:
 
@@ -2178,13 +2193,6 @@ Internet-Draft                    RAINS                        July 2017
       these null messages are used to keep long-lived connections open
       in the presence of network behaviors that may drop state for idle
       connections.
-
-
-
-Trammell                 Expires January 7, 2018               [Page 39]
-
-Internet-Draft                    RAINS                        July 2017
-
 
    o  For type 399 "Capability hash not understood", the server prepares
       to send a full capabilities list on the next message it sends to
@@ -2226,6 +2234,14 @@ Internet-Draft                    RAINS                        July 2017
 
    o  For type 400 "Bad message", type 403 "Inconsistent message", type
       500 "Server error", or type 501 "Server not capable", the client
+
+
+
+Trammell                Expires February 3, 2018               [Page 40]
+
+Internet-Draft                    RAINS                      August 2017
+
+
       logs the error along with the note-data content, as these
       notifications generally represent implementation or configuration
       error conditions which will require human intervention to
@@ -2233,15 +2249,6 @@ Internet-Draft                    RAINS                        July 2017
 
    The first message a server or client sends to a peer after a new
    connection is established SHOULD contain a capabilities section, if
-
-
-
-
-Trammell                 Expires January 7, 2018               [Page 40]
-
-Internet-Draft                    RAINS                        July 2017
-
-
    the server or client supports any optional capabilities.  See
    Section 5.15.
 
@@ -2284,20 +2291,18 @@ Internet-Draft                    RAINS                        July 2017
    successfully sent that peer, or cap messages to that peer to 65536
    bytes in length.
 
+
+
+Trammell                Expires February 3, 2018               [Page 41]
+
+Internet-Draft                    RAINS                      August 2017
+
+
    Since a bare assertion with a single Ed25519 signature requires on
    the order of 180 bytes, it is clear that many full zones won't fit
    into a single minimum maximum-size message.  Authorities are
    therefore encouraged to publish zones grouped into shards that will
    fit into 65536-byte messages, to allow servers to reply using these
-
-
-
-
-Trammell                 Expires January 7, 2018               [Page 41]
-
-Internet-Draft                    RAINS                        July 2017
-
-
    shards when full-zone transfers are not possible due to message size
    limitations.
 
@@ -2337,6 +2342,18 @@ Internet-Draft                    RAINS                        July 2017
    shards, and zones in its cache, log the error, and send a 403
    Inconsistent Message to the source of the message.
 
+
+
+
+
+
+
+
+Trammell                Expires February 3, 2018               [Page 42]
+
+Internet-Draft                    RAINS                      August 2017
+
+
 7.5.  Integrity and Confidentiality Protection
 
    Assertions are not valid unless they contain at least one signature
@@ -2346,13 +2363,6 @@ Internet-Draft                    RAINS                        July 2017
    keys to be associated with RAINS servers in addition to zone
    authorities, which allows a client to delegate integrity verification
    of assertions to a trusted query service (see Section 8).
-
-
-
-Trammell                 Expires January 7, 2018               [Page 42]
-
-Internet-Draft                    RAINS                        July 2017
-
 
    Since the job of an Internet naming service is to provide publicly-
    available information mapping names to information needed to connect
@@ -2391,6 +2401,15 @@ Internet-Draft                    RAINS                        July 2017
       connected to clients; a client sending assertions to a server
       results in a 400 Bad Message notification.
 
+
+
+
+
+Trammell                Expires February 3, 2018               [Page 43]
+
+Internet-Draft                    RAINS                      August 2017
+
+
    Since signature verification is resource-intensive, clients delegate
    signature verification to query servers by default.  The query server
    signs the message containing results for a query using its own key
@@ -2400,22 +2419,28 @@ Internet-Draft                    RAINS                        July 2017
    This behavior can be disabled by a client by specifying query option
    7, allowing the client to do its own verification.
 
+9.  RAINS Publication Protocol
 
+   The protocol used by authorities to publish assertions to an
+   authority service is a subset of the full RAINS protocol, with the
+   following differences:
 
+   o  Servers only process assertion, shard, zone, and notification
+      sections when connected to publishers; sending a query to a server
+      via the publication procotol results in a 400 Bad Message
+      notification.  Servers only process notifications for capability
+      negotiation purposes (see Section 5.15).
 
+   o  Publishers only process notification sections; sending a query or
+      assertion to a publisher results in a 400 Bad Message
+      notification.
 
-
-Trammell                 Expires January 7, 2018               [Page 43]
-
-Internet-Draft                    RAINS                        July 2017
-
-
-9.  Deployment Considerations
+10.  Deployment Considerations
 
    The following subsections discuss issues that must be considered in
    any deployment of RAINS at scale.
 
-9.1.  Assertion Lifetime Management
+10.1.  Assertion Lifetime Management
 
    An assertion can contain multiple signatures, each with a different
    lifetime.  Signature lifetimes are equivalent to a time to live in
@@ -2434,7 +2459,14 @@ Internet-Draft                    RAINS                        July 2017
    T3) as well.  Authorites MUST NOT rely on non-caching or non-
    availability of assertions during such intervals.
 
-9.2.  Secret Key Management
+
+
+Trammell                Expires February 3, 2018               [Page 44]
+
+Internet-Draft                    RAINS                      August 2017
+
+
+10.2.  Secret Key Management
 
    The secret keys associated with public keys for each RAINS server
    (via infrakey objects) must be available on that server, whether
@@ -2452,20 +2484,12 @@ Internet-Draft                    RAINS                        July 2017
    at least the end of validity of the last signature, provided the
    signature is verifiable.
 
-9.3.  Public Key Management
+10.3.  Public Key Management
 
    As signature lifetime is used to manage assertion lifetime, and key
    rotation strategies may be used both for revocation as well as
    operational flexibility purposes, RAINS presents a much more dynamic
    key management environment than that presented by DNSSEC.  One
-
-
-
-Trammell                 Expires January 7, 2018               [Page 44]
-
-Internet-Draft                    RAINS                        July 2017
-
-
    problem this raises is how a zone authority communicates to its
    superordinate that it would like to begin using a new public key to
    sign its assertions.
@@ -2490,7 +2514,15 @@ Internet-Draft                    RAINS                        July 2017
    own RAINS queries, or through the delegation assertions being
    similarly pushed to a designated intermediate service.
 
-9.4.  Unsigned Contained Assertions
+
+
+
+Trammell                Expires February 3, 2018               [Page 45]
+
+Internet-Draft                    RAINS                      August 2017
+
+
+10.4.  Unsigned Contained Assertions
 
    Although RAINS supports Shards and Zones containing unsigned
    assertions, protecting the integrity of those Assertions by the
@@ -2498,7 +2530,7 @@ Internet-Draft                    RAINS                        July 2017
    sign each Assertion, even those contained within a Shard or Zone, in
    order to minimize the size of positive answers to queries.
 
-9.5.  Query Service Discovery
+10.5.  Query Service Discovery
 
    A client that will not do its own verification must be able to
    discover the query server(s) it should trust for resolution.
@@ -2512,18 +2544,8 @@ Internet-Draft                    RAINS                        July 2017
    key verification on its own for bootstrapping), before connecting to
    that query server for normal name resolution.
 
-
-
-
-
-
-Trammell                 Expires January 7, 2018               [Page 45]
-
-Internet-Draft                    RAINS                        July 2017
-
-
-9.6.  Transition using translation between RAINS and DNS information
-      models
+10.6.  Transition using translation between RAINS and DNS information
+       models
 
    Full adoption of RAINS would require changes to every client device
    (replacing DNS stub resolvers with RAINS clients) and name server on
@@ -2549,6 +2571,13 @@ Internet-Draft                    RAINS                        July 2017
 
    Object type mappings are as follows:
 
+
+
+Trammell                Expires February 3, 2018               [Page 46]
+
+Internet-Draft                    RAINS                      August 2017
+
+
    o  Objects of type name can (largely) be represented as CNAME RRs.
 
    o  Objects of type ip6-addr can be represented as AAAA RRs.
@@ -2567,16 +2596,6 @@ Internet-Draft                    RAINS                        July 2017
       signatures as RRSIG RRs, but since these keys are verified by the
       gateway, there is no need to represent this information to the
       client.
-
-
-
-
-
-
-Trammell                 Expires January 7, 2018               [Page 46]
-
-Internet-Draft                    RAINS                        July 2017
-
 
    o  Objects of type infrakey cannot be represented in DNS, but are
       irrelevant for DNS translation of RAINS messages, since DNS does
@@ -2603,7 +2622,19 @@ Internet-Draft                    RAINS                        July 2017
    answer.  Therefore, queries and answers at a RAINS gateway are only
    supported for the global context ".".
 
-10.  Experimental Design and Evaluation
+
+
+
+
+
+
+
+Trammell                Expires February 3, 2018               [Page 47]
+
+Internet-Draft                    RAINS                      August 2017
+
+
+11.  Experimental Design and Evaluation
 
    The protocol described in this document is intended primarily as a
    prototype for discussion, though the goal of the document is to
@@ -2627,14 +2658,7 @@ Internet-Draft                    RAINS                        July 2017
    benefits derived from RAINS' features, as information for future
    development of the DNS protocol.
 
-
-
-Trammell                 Expires January 7, 2018               [Page 47]
-
-Internet-Draft                    RAINS                        July 2017
-
-
-11.  IANA Considerations
+12.  IANA Considerations
 
    The present revision of this document has no actions for IANA.
 
@@ -2655,20 +2679,31 @@ Internet-Draft                    RAINS                        July 2017
    Section 5.15 may be a candidate for replacement with an IANA-
    registered namespace in a future revision of this document.
 
-12.  Security Considerations
+
+
+
+
+
+
+Trammell                Expires February 3, 2018               [Page 48]
+
+Internet-Draft                    RAINS                      August 2017
+
+
+13.  Security Considerations
 
    This document specifies a new, experimental protocol for Internet
    name resolution, with mandatory integrity protection for assertions
    about names built into the information model, and confidentiality for
    query information protected on a hop-by-hop basis.  See especially
    Section 4.1.2, Section 7.5, Section 5.14, Section 5.12.1, and
-   Section 9.2 for security-relevant details.
+   Section 10.2 for security-relevant details.
 
    With respect to the resistance of the protocol itself to various
    attacks, we consider a few potential attacks against RAINS servers
    and RAINS clients in the subsections below:
 
-12.1.  Server state exhaustion
+13.1.  Server state exhaustion
 
    [EDITOR'S NOTE: attack: attacker can create domain, use long-validity
    queries to exhaust state at server. defense: server can consider
@@ -2681,16 +2716,7 @@ Internet-Draft                    RAINS                        July 2017
    what about a domain with hundreds of valid delegations? in all cases,
    blacklisting both clients and domains seems like a good idea.]
 
-
-
-
-
-Trammell                 Expires January 7, 2018               [Page 48]
-
-Internet-Draft                    RAINS                        July 2017
-
-
-12.2.  Query relay attacks
+13.2.  Query relay attacks
 
    [EDITOR'S NOTE: attack: attacker can cause traffic overload at a
    targeted intermediate or authority service by crafting queries and
@@ -2698,7 +2724,7 @@ Internet-Draft                    RAINS                        July 2017
    here, but a concentration, with indirection that makes tracing
    difficult. defense: think about this a bit.]
 
-13.  Acknowledgments
+14.  Acknowledgments
 
    Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Christian
    Fehlmann, Ted Hardie, Joe Hildebrand, Tobias Klausmann, Steve
@@ -2707,9 +2733,20 @@ Internet-Draft                    RAINS                        July 2017
    of this protocol.  Thanks especially to Christian Fehlmann and
    Stephen Shirley for detailed feedback.
 
-14.  References
+15.  References
 
-14.1.  Normative References
+
+
+
+
+
+
+Trammell                Expires February 3, 2018               [Page 49]
+
+Internet-Draft                    RAINS                      August 2017
+
+
+15.1.  Normative References
 
    [FIPS-186-3]
               NIST, ., "Digital Signature Standard FIPS 186-3", June
@@ -2739,13 +2776,6 @@ Internet-Draft                    RAINS                        July 2017
               DOI 10.17487/RFC2782, February 2000,
               <http://www.rfc-editor.org/info/rfc2782>.
 
-
-
-Trammell                 Expires January 7, 2018               [Page 49]
-
-Internet-Draft                    RAINS                        July 2017
-
-
    [RFC3629]  Yergeau, F., "UTF-8, a transformation format of ISO
               10646", STD 63, RFC 3629, DOI 10.17487/RFC3629, November
               2003, <http://www.rfc-editor.org/info/rfc3629>.
@@ -2764,6 +2794,14 @@ Internet-Draft                    RAINS                        July 2017
               DOI 10.17487/RFC5246, August 2008,
               <http://www.rfc-editor.org/info/rfc5246>.
 
+
+
+
+Trammell                Expires February 3, 2018               [Page 50]
+
+Internet-Draft                    RAINS                      August 2017
+
+
    [RFC5280]  Cooper, D., Santesson, S., Farrell, S., Boeyen, S.,
               Housley, R., and W. Polk, "Internet X.509 Public Key
               Infrastructure Certificate and Certificate Revocation List
@@ -2779,7 +2817,7 @@ Internet-Draft                    RAINS                        July 2017
               DOI 10.17487/RFC8032, January 2017,
               <http://www.rfc-editor.org/info/rfc8032>.
 
-14.2.  Informative References
+15.2.  Informative References
 
    [I-D.thomson-postel-was-wrong]
               Thomson, M., "The Harmful Consequences of Postel's Maxim",
@@ -2793,14 +2831,6 @@ Internet-Draft                    RAINS                        July 2017
    [RFC1035]  Mockapetris, P., "Domain names - implementation and
               specification", STD 13, RFC 1035, DOI 10.17487/RFC1035,
               November 1987, <http://www.rfc-editor.org/info/rfc1035>.
-
-
-
-
-Trammell                 Expires January 7, 2018               [Page 50]
-
-Internet-Draft                    RAINS                        July 2017
-
 
    [RFC4291]  Hinden, R. and S. Deering, "IP Version 6 Addressing
               Architecture", RFC 4291, DOI 10.17487/RFC4291, February
@@ -2820,6 +2850,13 @@ Internet-Draft                    RAINS                        July 2017
               "Network Time Protocol Version 4: Protocol and Algorithms
               Specification", RFC 5905, DOI 10.17487/RFC5905, June 2010,
               <http://www.rfc-editor.org/info/rfc5905>.
+
+
+
+Trammell                Expires February 3, 2018               [Page 51]
+
+Internet-Draft                    RAINS                      August 2017
+
 
    [RFC6605]  Hoffman, P. and W. Wijngaards, "Elliptic Curve Digital
               Signature Algorithm (DSA) for DNSSEC", RFC 6605,
@@ -2848,16 +2885,6 @@ Internet-Draft                    RAINS                        July 2017
               BCP 201, RFC 7696, DOI 10.17487/RFC7696, November 2015,
               <http://www.rfc-editor.org/info/rfc7696>.
 
-
-
-
-
-
-Trammell                 Expires January 7, 2018               [Page 51]
-
-Internet-Draft                    RAINS                        July 2017
-
-
    [RFC7858]  Hu, Z., Zhu, L., Heidemann, J., Mankin, A., Wessels, D.,
               and P. Hoffman, "Specification for DNS over Transport
               Layer Security (TLS)", RFC 7858, DOI 10.17487/RFC7858, May
@@ -2876,6 +2903,16 @@ Internet-Draft                    RAINS                        July 2017
    [XEP0115]  Hildebrand, J., Saint-Andre, P., Troncon, R., and J.
               Konieczny, "XEP-0115 Entity Capababilities", February
               2008.
+
+
+
+
+
+
+Trammell                Expires February 3, 2018               [Page 52]
+
+Internet-Draft                    RAINS                      August 2017
+
 
 Author's Address
 
@@ -2909,4 +2946,23 @@ Author's Address
 
 
 
-Trammell                 Expires January 7, 2018               [Page 52]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Trammell                Expires February 3, 2018               [Page 53]
