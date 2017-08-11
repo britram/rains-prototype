@@ -1245,8 +1245,9 @@ is defined, and support for it is REQUIRED.
 Within the RAINS delegation chain keyspace, the key phase is an unbounded,
 unsigned integer matching a signature's key phase to the delegation key phase.
 Multiple keys may be valid for a delegation at a given point in time, in order
-to support seamless rollover of keys, but only one per key phase may be valid at
-once. The third element of delegation objects and signatures is the key phase. 
+to support seamless rollover of keys, but only one per key phase and algorithm
+may be valid at once. The third element of delegation objects and signatures is
+the key phase. 
 
 Valid-since and valid-until timestamps are represented as CBOR integers
 counting seconds since the UNIX epoch UTC, identified with tag value 1 and
