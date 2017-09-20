@@ -9,7 +9,7 @@
 <?rfc sortrefs="yes"?>
 <?rfc symrefs="yes"?>
 
-<rfc ipr="trust200902" docName="draft-trammell-rains-protocol-00" category="exp">
+<rfc ipr="trust200902" docName="draft-trammell-rains-protocol-03" category="exp">
 
   <front>
     <title abbrev="RAINS">RAINS (Another Internet Naming Service) Protocol Specification</title>
