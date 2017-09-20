@@ -697,7 +697,8 @@ RAINS server to answer a query for nonexistence; it must be returned in a
 signed Zone. 
 
 The value of the content (23) key is an array of Assertion bodies as defined in
-{{cbor-assertion}}.
+{{cbor-assertion}} .Assertions within a Shard SHOULD be sorted by name in
+ascending lexicographic order.
 
 The value of the signatures (0) key, if present, is an array of one or more
 Signatures as defined in {{cbor-signature}}. If not present, the containing
@@ -721,7 +722,7 @@ Shards are lexicographically complete within the range described in its the
 shard-range value: a mapping for a subject-name that should be between the two
 values given in the range but is not is asserted to not exist. Lexicographic
 sorting is done on subject names by ordering Unicode codepoints in ascending
-order.
+order. 
 
 The shard-range value MUST be a two element array of strings or nulls
 (subject-name A, subject-name B). A must lexicographically sort before B, but
@@ -743,7 +744,8 @@ Signatures on the Zone are to be verified against the appropriate key for the
 Zone in the given context, as described in {{signatures-in-assertions}}.
 
 The value of the content (23) key is an array of Shard bodies as defined in
-{{cbor-shard}} and/or Assertion bodies as defined in {{cbor-assertion}}.
+{{cbor-shard}} and/or Assertion bodies as defined in {{cbor-assertion}}. Shards
+and Assertions in the content array SHOULD be sorted by shard range or name in ascending qlexicographic order.
 
 The value of the subject-zone (4) key is a UTF-8 encoded string
 containing the name of the Zone.
