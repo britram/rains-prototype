@@ -622,7 +622,6 @@ section body, a CBOR map defined as in the subsections shown in {{cbor-symtab}}:
 | -1   | revassertion | Address Assertion (see {{cbor-revassert}})    |
 | 2    | shard        | Shard (see {{cbor-shard}})                    |
 | 3    | zone         | Zone (see {{cbor-zone}})                      |
-| -3   | revzone      | Address Zone (see {{cbor-revzone}})           |
 | 4    | query        | Query (see {{cbor-query}})                    |
 | -4   | revquery     | Address Query (see {{cbor-revquery}}          |
 | 23   | notification | Notification (see {{cbor-notification}})      |
@@ -816,33 +815,11 @@ pushed to the querier.
 
 Assertions about addresses are similar to assertions about names, but keyed by
 address and restricted in terms of the objects they can contain. An Address
-Assertion body is a map. The keys present in this map depend on whether the
-Assertion is contained in a Message Section or in an Address Zone.
-
-Address Assertions contained in Message Sections are "bare Address
-Assertions", and MUST contain the signatures (0), subject-addr (5),
+Assertion body is a map which MUST contain the signatures (0), subject-addr (5),
 context (6), and objects (7) keys.
 
-Address Assertions contained in an Address Zone are "contained Address
-Assertions", and can inherit their context from and be signed within their
-containing Zone. A contained Address Assertion MUST contain the 
-subject-addr (5) and objects (7) keys. The context (6) key MUST
-NOT be present. It is assumed to have the same value as the corresponding
-value in the containing Zone for signature generation and signature
-verification purposes; see {{cbor-signature}}.
-
-A contained Address Assertion SHOULD contain the signatures (0) key, since an
-unsigned contained Address Assertion cannot be used by a RAINS server to
-answer a query; it must be returned in a signed Address Zone.
-
-The value of the signatures (0) key, if present, is an array of one or more
-Signatures as defined in {{cbor-signature}}. If not present, the containing
-Address Zone MUST be signed. Signatures on a contained Address Assertion are
-generated as if the inherited context value are present in
-the Assertion, whether actually present or not. The signatures on the
-Assertion are to be verified against the appropriate key for the Address Zone
-containing the Assertion in the given context, as described in 
-{{signatures-in-assertions}}.
+The value of the signatures (0) key is an array of one or more Signatures as
+defined in {{cbor-signature}}. 
 
 The value of the subject-addr (5) key is a three element CBOR array. The first
 element of the array is the address family encoded as an object type, 2 for
@@ -853,48 +830,20 @@ the maximum prefix length for the address family are subject host addresses,
 and are nameable; subject addresses with less than the maximum prefix length
 are subject network addresses, and are delegatable.
 
-The value of the context (6) key, if present, is a UTF-8 string
-containing the name of the context in which the Address Assertion is valid. If
-not present, the context of the Address Assertion is inherited from the
-containing Address Zone. See {{context-in-address-assertions}}.
+The value of the context (6) key, if present, is a UTF-8 string containing the
+name of the context in which the Address Assertion is valid. See
+{{context-in-address-assertions}}.
 
 The value of the objects (7) key is an array of objects, as defined in
 {{cbor-object}}. Only object types redirection, delegation, and registrant are
 available for subject network addresses, and only object type name is
 available for subject host addresses.
 
-## Address Zone body {#cbor-revzone}
-
-Assertions about addresses can be grouped into zones, where all the assertions
-within the zone are contained within the zone's address. These Address Zones
-are similar to Zones containing assertions about names, but are keyed by
-network address and restricted in their semantics.
-
-An Address Zone body is a map. Zones MUST contain signatures (0),
-subject-addr (5), content (23), and context (6) keys. 
-
-Signatures on the Zone are to be verified against the appropriate key for the
-Zone in the given context, as described in {{signatures-in-assertions}}.
-
-The value of the subject-addr (5) key is a three element CBOR array. The first
-element of the array is the address family encoded as an object type, 2 for
-IPv6 addresses and 3 for IPv4 addresses. The second element is the prefix
-length encoded as an integer, 0-127 for IPv6 and 0-31 for IPv4. The third
-element is the address, encoded as in {{cbor-object}}. Only subject network
-addresses are acceptable for Address Zones.
-
-The value of the content (23) key is an array of Address Assertion bodies as
-defined in {{cbor-revassert}}. The Address Assertions within the content array
-MUST fall completely within the network designated by the subject-addr value.
-
-The value of the context (6) key is a UTF-8 encoded string
-containing the name of the context for which the Zone is valid.
-
 ## Address Query body {#cbor-revquery}
 
 Queries for assertions about addresses are similar to queries for assertions
 about names, but have semantic restrictions similar to those for Address
-Assertions and Address Zones.
+Assertions.
 
 An Address Query body is a map. Queries MUST contain the subject-addr (5),
 context (6), query-types (10), and query-expires (12) keys. Address Queries MAY contain 
@@ -1569,9 +1518,6 @@ servers. The following types of inconsistency are possible:
   time as the shard.
 - A zone omits an assertion within its zone which is valid at the same time
   as the zone.
-- An address zone omits an address assertion within its context and network
-  which is valid at the same time as the address zone.
-- An address zone contains an address assertion that is not within its network.
 - An address assertion contains an object that is not allowed (see {{cbor-revassert}})
 - An assertion prohibited by its zone's nameset is valid at the same time
   as the zone's nameset assertion.
