@@ -236,7 +236,7 @@ several object values of the same type, and consists of the following elements:
 
 - Context: name of the context in which the assertion is valid;
   see {{context-in-assertions}} below.
-- Subject: name about which the assertion is made.
+- Subject: name about which the assertion is made. It MAY contain dots ('.').
 - Zone: name of the zone in which the assertion is made. The fully qualified
   name of the subject is made by appending the zone name to the subject name
   with a domain name separator ('.').
@@ -251,13 +251,13 @@ The Types supported for each assertion are:
 
 - Delegation: the authority associated with the zone identified by the name
   (roughly equivalent to the DNSSEC DS RRTYPE). The Object contains a public
-  key by which the authority can be identified. 
+  key by which the authority can be identified.
 - Redirection: The name(s) of one or more RAINS servers providing authority
   service for the authority associated with the zone (roughly equivalent to
   the DNSSEC NS RRTYPE, but not always consulted directly during resolution).
   The Object contains a set of names.
 - Address: one or more addresses associated with the name (replaces DNS A and
-  AAAA RTYPEs). The Object contains a set of Addresses. An Address is an 
+  AAAA RTYPEs). The Object contains a set of Addresses. An Address is an
   {address-family, value} tuple.
 - Service-Info: one or more layer 4 ports and hostnames associated with a
   service name (replaces DNS SRV RRTYPE). The object contains a {hostname,
@@ -270,14 +270,14 @@ The Types supported for each assertion are:
 - Zone-Nameset: an expression of the set of names allowed within a zone; e.g.
   Unicode scripts or codepages in which names in the zone may be issued. This
   allows a zone to set policy on names in support of the distinguishability
-  property in {{I-D.trammell-inip-pins}} that can be checked by RAINS 
-  servers at runtime. An assertion about a Subject within a Zone whose
-  name is not allowed by a valid signed Zone-Nameset expression is taken to be
-  invalid, even if it has a valid signature.
-- Zone-Registrar: Information about the organization that caused a Subject name 
+  property in {{I-D.trammell-inip-pins}} that can be checked by RAINS servers at
+  runtime. An assertion about a Subject within a Zone whose name is not allowed
+  by a valid signed Zone-Nameset expression is taken to be invalid, even if it
+  has a valid signature.
+- Zone-Registrar: Information about the organization that caused a Subject name
   to exist, for registrant-level names.
-- Zone-Registrant: Information about the organization responsible for a 
-  Subject name, for registrant-level names.
+- Zone-Registrant: Information about the organization responsible for a Subject
+  name, for registrant-level names.
 - Infrastructure Key: Information about public keys used for object security
   within the RAINS infrastructure itself. The Object contains a public key by
   which a named RAINS server can be identified.
@@ -301,43 +301,45 @@ declared authority as follows:
 
 - The global context is identified by the special context name '.'. Assertions
   in the global context are signed by the authority for the subject name. For
-  example, assertions about the name simplon.inf.ethz.ch in the global context
-  are only valid if signed by the relevant authority inf.ethz.ch.
+  example, assertions about the name 'ethz.ch.' in the global context are only
+  valid if signed by the relevant authority which is either 'ethz.ch.', 'ch.',
+  or '.' depending on the value of the subject name of the assertion.
 - A local context is associated with a given authority. The authority-part and
-  the context-part of a local context name are divided by a context marker 
+  the context-part of a local context name are divided by a context marker
   ('cx--'). The authority-part directly identifies the authority whose key was
   used to sign the assertion; assertions within a local context are only valid
-  if signed by the identified authority. Authorities have complete control
-  over how the contexts under their namespaces are arranged, and over the names 
-  within those contexts.
+  if signed by the identified authority. Authorities have complete control over
+  how the contexts under their namespaces are arranged, and over the names
+  within those contexts. Both the authority-part and the context-part MUST end
+  with a '.'.
 
 Assertion context is the mechanism by which RAINS provides explicit
 inconsistency (see section 5.3.2 of {{I-D.trammell-inip-pins}}). Some
 examples illustrate how context works:
 
-- For the common split-DNS case, an enterprise could place names for machines
-  on its local networks within a separate context. E.g., a workstation could
-  be named simplon.cab.inf.ethz.ch within the context 
-  staff-workstations.cx--.inf.ethz.ch. Assertions about this name would 
-  be signed by the authority
-  for inf.ethz.ch. Here, the context serves simply as a marker, without enabling
-  an alternate signature chain: note that the name simplon.cab.inf.ethz.ch can
-  be validly signed by the authority for inf.ethz.ch if no delegation exists
-  for cab.inf.ethz.ch. The context simply marks this assertion as internal. This
-  allows a client making requests of local names to know they are local, and
-  for local resolvers to manage visibility of assertions outside the
+- For the common split-DNS case, an enterprise could place names for machines on
+  its local networks within a separate context. E.g., a workstation could be
+  named 'simplon.cab.inf.ethz.ch.' within the context
+  'staff-workstations.cx--inf.ethz.ch.' Assertions about this name would be
+  signed by the authority for 'inf.ethz.ch.'. Here, the context serves simply as
+  a marker, without enabling an alternate signature chain: note that the name
+  'simplon.cab.inf.ethz.ch' could at the same time be validly signed in the
+  global context by the authority over that name to allow external users access
+  this workstation. The local context simply marks this assertion as internal.
+  This allows a client making requests of local names to know they are local,
+  and for local resolvers to manage visibility of assertions outside the
   enterprise: explicit context makes accidental leakage of both queries and
   assertions easier to detect and avoid.
-- Contexts make captive-portal interactions more explicit: a captive portal 
+- Contexts make captive-portal interactions more explicit: a captive portal
   resolver could respond to a query for a common website (e.g. www.google.ch)
   with a signed response directed at the captive portal, but within a context
-  identifying the location as well as the ISP (e.g. 
-  sihlquai.zurich.ch.cx--.starbucks.access.some-isp.net.). This response will
-  be signed by the authority for starbucks.access.some-isp.net. This
-  signature achieves two things: first, the client knows the result for
-  www.google.ch is not globally valid; second, it can present the user with
-  some indication as to the identity of the captive portal it is connected to.
- 
+  identifying the location as well as the ISP (e.g.
+  sihlquai.zurich.ch.cx--starbucks.access.some-isp.net.). This response will be
+  signed by the authority for 'starbucks.access.some-isp.net.'. This signature
+  achieves two things: first, the client knows the result for www.google.ch is
+  not globally valid; second, it can present the user with some indication as to
+  the identity of the captive portal it is connected to.
+
 Further examples showing how context can be used in queries as well are given
 in {{context-in-queries}} below.
 
@@ -457,22 +459,21 @@ context (represented by the empty string) indicates that assertions in any
 context will be accepted.
 
 Query contexts can also be used to provide additional information to RAINS
-servers about the query. For example, context can provide a method for
-explicit selection of a CDN server not based on either the client's or the
-resolver's address (see {{RFC7871}}). Here, the CDN creates a context for
-each of its content zones, and an external service selects appropriate
-contexts for the client based not just on client source address but passive
-and active measurement of performance. Queries for names at which content
-resides can then be made within these contexts, with the priority order of
-the contexts reflecting the goodness of the zone for the client. Here, a
-context might be zrh.cx--.cdn-zones.some-cdn.com for names of servers
-hosting content in a CDN's Zurich data center, and a client could represent
-its desire to find content nearby by making queries in the zrh.cx--,
-fra.cx-- (Frankfurt), and ams.cx-- (Amsterdam) contexts within cdn-zones
-.some-cdn.com. In all cases, the assertions themselves will be signed by the
-authority for cdn-zones.some-cdn.com, accurately representing that it is
-the CDN, not the owner of the related name in the global context, that is
-making the assertion.
+servers about the query. For example, context can provide a method for explicit
+selection of a CDN server not based on either the client's or the resolver's
+address (see {{RFC7871}}). Here, the CDN creates a context for each of its
+content zones, and an external service selects appropriate contexts for the
+client based not just on client source address but passive and active
+measurement of performance. Queries for names at which content resides can then
+be made within these contexts, with the priority order of the contexts
+reflecting the goodness of the zone for the client. Here, a context might be
+'zrh.cx--cdn-zones.some-cdn.com.' for names of servers hosting content in a
+CDN's Zurich data center. A client could represent its desire to find content
+nearby by making queries in the zrh.cx--, fra.cx-- (Frankfurt), and ams.cx--
+(Amsterdam) contexts of the 'cdn-zones.some-cdn.com.' authority. In all cases,
+the assertions themselves will be signed by the authority for
+'cdn-zones.some-cdn.com.', accurately representing that it is the CDN, not the
+owner of the related name in the global context, that is making the assertion.
 
 As with assertion contexts, developing conventions for query contexts for
 different situations will require implementation and deployment experience,
@@ -675,23 +676,23 @@ must be returned in a signed Shard or Zone.
 
 The value of the signatures (0) key, if present, is an array of one or more
 Signatures as defined in {{cbor-signature}}. If not present, the containing
-Shard or Zone MUST be signed. Signatures on a contained Assertion are
-generated as if the inherited subject-zone and context values are present in
-the Assertion, whether actually present or not. The signatures on the
-Assertion are to be verified against the appropriate key for the Zone
-containing the Assertion in the given context, as described in 
-{{signatures-in-assertions}}.
+Shard or Zone MUST be signed. Signatures on a contained Assertion are generated
+as if the inherited subject-zone and context values are present in the
+Assertion, whether actually present or not. The signatures on the Assertion are
+to be verified against the appropriate key for the Zone containing the Assertion
+in the given context, as described in {{signatures-in-assertions}}.
 
 The value of the subject-name (3) key is a UTF-8 encoded {{RFC3629}} string
-containing the name of the subject of the assertion. The subject name never
-contains the zone in which the subject name is registered; the fully-qualified
-name is obtained by joining the subject-name to the subject-zone with a '.'
-character. The subject-name must be valid according to the nameset expression
-for the zone, if any.
+containing the name of the subject of the assertion. The subject name MAY
+contain dot(s) '.'. The subject name never contains the zone in which the
+subject name is registered; the fully-qualified name is obtained by joining the
+subject-name to the subject-zone with a '.' character. The subject-name must be
+valid according to the nameset expression for the zone, if any.
 
 The value of the subject-zone (4) key, if present, is a UTF-8 encoded string
-containing the name of the zone in which the assertion is made. If not present,
-the zone of the assertion is inherited from the containing Shard or Zone.
+containing the name of the zone in which the assertion is made and MUST end with
+'.' (the root zone). If not present, the zone of the assertion is inherited from
+the containing Shard or Zone.
 
 The value of the context (6) key, if present, is a UTF-8 encoded string
 containing the name of the context in which the assertion is valid. If not
@@ -739,9 +740,9 @@ the appropriate key for the Zone containing the Shard in the given context, as
 described in {{signatures-in-assertions}}.
 
 The value of the subject-zone (4) key, if present, is a UTF-8 encoded string
-containing the name of the zone in which the Assertions within the Shard is
-made. If not present, the zone of the assertion is inherited from the
-containing Zone.
+containing the name of the zone in which the Assertions within the Shard is made
+and MUST end with '.' (the root zone). If not present, the zone of the assertion
+is inherited from the containing Zone.
 
 The value of the context (6) key, if present, is a UTF-8 encoded string
 containing the name of the context in which the Assertions within the Shard
@@ -778,8 +779,8 @@ Shards are lexicographically sorted by their range where the start of the range
 takes precedence over the end of the range. If the range is equal, the contained
 assertions determine the ordering, which is again ascending.
 
-The value of the subject-zone (4) key is a UTF-8 encoded string
-containing the name of the Zone.
+The value of the subject-zone (4) key is a UTF-8 encoded string containing the
+name of the Zone which MUST end with '.' (the root zone).
 
 The value of the context (6) key is a UTF-8 encoded string
 containing the name of the context for which the Zone is valid.
@@ -789,6 +790,9 @@ containing the name of the context for which the Zone is valid.
 A Query body is a map. Queries MUST contain the query-name (8),
 context (6), query-types (10), and query-expires (12) keys. Queries MAY contain
 the query-opts (13) keys.
+
+The value of the query-name (8) key is a UTF-8 encoded string containing the
+name for which the query is issued and MUST end with a '.' (the root zone).
 
 The value of the context (6) key is a UTF-8 encoded string containing the name
 of the context to which a query pertains. A zero-length string indicates that
@@ -1401,7 +1405,6 @@ If the server or client can parse the message, it:
   or client returns a 400 Bad Message notification to its peer, and ceases
   processing of the message.
 
-
 On receipt of an assertion, shard, or zone message section, a server:
 
 - verifies its consistency (see {{runtime-consistency-checking}}). If the
@@ -1421,8 +1424,8 @@ On receipt of an assertion, shard, or zone message section, a client:
 
 On receipt of a query, a server:
 
-- determines whether it has expired by checking the query-expires value. 
-  If so, it drops the query silently. If not, it:
+- determines whether it has expired by checking the query-expires value. If so,
+  it drops the query silently. If not, it:
 - determines whether it has a stored assertion, shard, and/or zone message
   section which answers the query. If so, it prepares to return the most
   specific such section (i.e., if it has both a shard and an assertion that
