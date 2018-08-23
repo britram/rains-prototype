@@ -236,7 +236,7 @@ several object values of the same type, and consists of the following elements:
 
 - Context: name of the context in which the assertion is valid;
   see {{context-in-assertions}} below.
-- Subject: name about which the assertion is made. It MAY contain dots ('.').
+- Subject: name about which the assertion is made.
 - Zone: name of the zone in which the assertion is made. The fully qualified
   name of the subject is made by appending the zone name to the subject name
   with a domain name separator ('.').
