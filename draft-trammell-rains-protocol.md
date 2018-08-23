@@ -1302,8 +1302,8 @@ migration from existing DNSSEC deployments; see {{dns-transition}}.
 
 ## Capabilities {#cbor-capabilities}
 
-When a RAINS server or client sends the first message in a stream to a peer,
-it MAY expose optional capabilities to its peer using the capabilities (1)
+When a RAINS server or client sends the first message in a stream to a peer, it
+MUST expose its configured capabilities to its peer using the capabilities (1)
 key. This key contains either:
 
 - an array of uniform resource names specifying capabilities supported by the
@@ -1326,15 +1326,15 @@ algorithms, etc.
 |--------------------|-------------------------------------------------------------------|
 | urn:x-rains:tlssrv | Listens for connections on TLS over TCP from other RAINS servers. |
 
-Since there are only two defined capabilities at this time, RAINS servers can
-be implemented with two hard-coded hashes to determine whether a peer is
-listening or not. The hash presented by a server supporting urn:x-rains:tlssrv
-is e5365a09be554ae55b855f15264dbc837b04f5831daeb321359e18cdabab5745; the hash
-presented by a server supporting no capabilities is
+Since there are only two defined capabilities at this time, RAINS servers can be
+implemented with two hard-coded hashes to determine whether a peer is listening
+or not. The hash presented by a server supporting urn:x-rains:tlssrv is
+e5365a09be554ae55b855f15264dbc837b04f5831daeb321359e18cdabab5745; the hash
+presented by a client or a server supporting no capabilities (not listening) is
 76be8b528d0075f7aae98d6fa57a6d3c83ae480a8469e668d7b0af968995ac71.
 
 Servers MAY piggyback capability negotiation on other messages, or use dedicated
-messages for capability negotiation. 
+messages for capability negotiation.
 
 A RAINS server MUST NOT assume that a peer server supports a given capability
 unless it has received a message containing that capability from that server.
@@ -1477,9 +1477,9 @@ On receipt of a notification, a server's behavior depends on the notification ty
   full capabilities list on the next message it sends to the peer.
 - For type 504 "No assertion available", the server checks the token on the
   message, and prepares to forward the assertion to the associated query.
-- For type 413 "Message too large" the server notes that large messages may 
-  not be sent to a peer and tries again (see {{protocol-limits}}), or logs
-  the error along with the note-data content.
+- For type 413 "Message too large" the server notes that large messages may not
+  be sent to a peer and tries again (see {{protocol-limits}}), or logs the error
+  along with the note-data content.
 - For type 400 "Bad message", type 403 "Inconsistent message", type 500
   "Server error", or type 501 "Server not capable", the server logs the error
   along with the note-data content, as these notifications generally represent
