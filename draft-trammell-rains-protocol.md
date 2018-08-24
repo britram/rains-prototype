@@ -21,6 +21,11 @@ author:
     code: 8092
     country: Switzerland
     email: ietf@trammell.ch
+ -
+    ins: C. Fehlmann
+    name: Christian Fehlmann
+    org: ETH Zurich
+    email: fehlmannch@gmail.com
 
 normative:
     I-D.trammell-inip-pins:
@@ -102,7 +107,6 @@ background of the properties of an ideal naming service described in
 
 --- middle
 
-
 # Introduction
 
 This document defines an experimental protocol for providing Internet name
@@ -178,6 +182,10 @@ In addition, the following terms are used in this document as defined:
 - Zone: A group of all assertions valid at a given point in time, with common
   signatures, for a given level of delegation and context within the namespace.
   See {{shards-and-zones}}.
+- Assertion Update Query: An expression of interest about the current validity
+  status of an unexpired assertion one already has.
+- Non-existence Update Query: An expression of interest about the current
+  validity status of an unexpired shard or zone one already has.
 - RAINS Message: Unit of exchange in the RAINS protocol, containing assertions,
   shards, zones, queries, and notifications. See {{cbor-message}}.
 - Notification: A RAINS-internal message section carrying information about the
@@ -393,19 +401,7 @@ assertions (zone, context, signature) within the shard may be omitted from the
 assertions themselves.
 
 A zone is the entire set of shards and assertions subject to a given
-authority within a given context. There are three kinds of zones;
-treating these zones differently may allow lookup protocol
-optimizations:
-
-- Zones containing only delegation assertions are delegation-only zones.
-  Delegation-only zones are not relevant as part of an assertion lookup, other
-  than for discovering and verifying authority. Top-level domains are
-  generally delegation-only.
-- Zones containing no delegation assertions are final zones. Final zones are
-  not relevant as part of an authority discovery.
-- Zones containing at least one delegation assertion and at least one
-  assertion that is not a delegation assertion are mixed zones. No
-  optimizations are available for mixed zones.
+authority within a given context.
 
 A zone has the following information elements:
 
@@ -431,8 +427,8 @@ A query is a request for a set of assertions supporting a conclusion about a
 given subject-object mapping. It consists of the following information
 elements:
 
-- Context: The context(s) in which assertions answering the
-  query will be accepted; see {{context-in-queries}} below.
+- Context: the context(s) in which assertions answering the query will be
+  accepted; see {{context-in-queries}} below.
 - Qualified-Subject: the name about which the query is made. The subject name
   in a query must be fully-qualified.
 - Types: a set of assertion types the querier is interested in.
@@ -493,6 +489,70 @@ Zone-Nameset assertion showing the name is illegal within the zone.
 
 A query is taken to have an inconclusive answer when no answer returns to the
 querier before the query's Valid-Until time.
+
+## Assertion Update Query
+
+An assertion update query is a request for an updated version of a specified
+assertion. It consists of the following information elements:
+
+- Qualified-Subject: the fully-qualified name of the assertion.
+- Hash function: the hash function used to hash the assertion.
+- Hashed Assertion: The hash value obtained by hashing the assertion.
+- Valid-Until: an optional client-generated timestamp for the query after which
+  it expires and should not be answered.
+- Query Token: a client-generated token for the query, which must be used in the
+  answer to refer to the query.
+
+### Answers to Assertion Update Queries
+
+An answer consists of an assertion, a shard, a zone, or a notification which
+responds to an assertion update query. If the update query contained a token, it
+is bound to that query via the token.
+
+The content of an answer depends on whether there is a newer version of the
+assertion that is already valid. If the hashed assertion is still the most
+recent one, a notification with 'ok' is returned. In case there is an assertion
+for the same name, type and object value with a longer valid signature it is
+returned. Otherwise a shard, zone or notification with content 'non-existent' is
+returned. A shard or zone is preferred over the notification answer.
+
+An update query is taken to have an inconclusive answer when no answer returns
+to the querier before the update query's Valid-Until time.
+
+## Non-existence Update Query
+
+A non-existence update query is a request for an updated version of a previously
+non-existent name proven through a shard or zone. It consists of the following
+information elements:
+
+- Context: the context(s) in which sections answering the update query will be
+  accepted; see {{context-in-queries}} above.
+- Qualified-Subject: the fully-qualified name within the range of the shard or
+  the zone for which a non-existence proof is requested.
+- Type: the assertion type the querier is interested in.
+- Hash function: the hash function used to hash the shard or the zone.
+- Hashed Section: the hash value obtained by hashing the shard or the zone.
+- Valid-Until: an optional client-generated timestamp for the query after which
+  it expires and should not be answered.
+- Query Token: a client-generated token for the query, which must be used in the
+  answer to refer to the query.
+
+### Answers to Non-existence Update Queries
+
+An answer consists of an assertion, a shard, a zone, or a notification which
+responds to an update query. If the update query contained a token, it is bound
+to that query via the token.
+
+The content of an answer depends on whether there is a new assertion for the
+queried context, subject-name and type or a newer version of the hashed shard or
+zone which is already valid. If a new assertion exists, it is returned. In case
+there is no matching assertion and there is a zone or a shard in the range of
+the FQDN with a longer valid signature that is already valid, the section with
+the highest validUntil value is returned. Otherwise, the shard or zone is still
+the most recent one and a notification with content 'ok' is returned.
+
+An update query is taken to have an inconclusive answer when no answer returns
+to the querier before the query's Valid-Until time.
 
 ## Address to Object Mapping
 
@@ -608,6 +668,8 @@ and notification maps is given in the symbol table below:
 | 11   | shard-range    | Lexical range of Assertions in Shard          |
 | 12   | query-expires  | Absolute timestamp for query expiration       |
 | 13   | query-opts     | Set of query options requested                |
+| 14   | hash-type      | hash function used in an update query         |
+| 15   | hash-value     | value of a hashed assertion, shard or zone    |
 | 21   | note-type      | Notification type                             |
 | 22   | note-data      | Additional notification data                  |
 | 23   | content        | Content of a message, shard, or zone          |
@@ -643,15 +705,17 @@ section body, a CBOR map defined as in the subsections
 
 {: #tabsection title="Message Section Type Codes"}
 
-| Code | Name         | Description                                   |
-|-----:|--------------|-----------------------------------------------|
-| 1    | assertion    | Assertion (see {{cbor-assertion}})            |
-| -1   | revassertion | Address Assertion (see {{cbor-revassert}})    |
-| 2    | shard        | Shard (see {{cbor-shard}})                    |
-| 3    | zone         | Zone (see {{cbor-zone}})                      |
-| 4    | query        | Query (see {{cbor-query}})                    |
-| -4   | revquery     | Address Query (see {{cbor-revquery}})         |
-| 23   | notification | Notification (see {{cbor-notification}})      |
+| Code | Name         | Description                                       |
+|-----:|--------------|---------------------------------------------------|
+| 1    | assertion    | Assertion (see {{cbor-assertion}})                |
+| -1   | revassertion | Address Assertion (see {{cbor-revassert}})        |
+| 2    | shard        | Shard (see {{cbor-shard}})                        |
+| 3    | zone         | Zone (see {{cbor-zone}})                          |
+| 4    | query        | Query (see {{cbor-query}})                        |
+| -4   | revquery     | Address Query (see {{cbor-revquery}})             |
+| 5    | auquery      | Assertion update query (see {{cbor-auquery}})     |
+| 6    | nuquery      | Non-existence update query (see {{cbor-nuquery}}) |
+| 23   | notification | Notification (see {{cbor-notification}})          |
 
 ## Assertion body {#cbor-assertion}
 
@@ -805,10 +869,10 @@ the querier is equally interested in both IPv4 and IPv6 addresses for the
 query-name. An empty query-types array indicates that objects of any type are
 acceptable in answers to the query.
 
-The value of the query-expires (12) key, is a CBOR integer
-counting seconds since the UNIX epoch UTC, identified with tag value 1 and
-encoded as in section 2.4.1 of {{RFC7049}}. After the query-expires time, the
-query will have been considered not answered by the original issuer.
+The value of the query-expires (12) key, is a CBOR integer counting seconds
+since the UNIX epoch UTC, identified with tag value 1 and encoded as in section
+2.4.1 of {{RFC7049}}. After the query-expires time, the query will have been
+considered not answered by the original issuer.
 
 The value of the query-opts (13) key, if present, is an array of integers in
 priority order of the querier's preferences in tradeoffs in answering the
@@ -847,6 +911,41 @@ with untrusted query services.
 Option 8 specifies that a querier's interest in a query is strictly ephemeral,
 and that future assertions related to this query SHOULD NOT be proactively
 pushed to the querier.
+
+## Assertion Update Query body {#cbor-auquery}
+
+An Assertion Update Query body is a map. Assertion Update Queries MUST contain
+the query-name (8), hash-type (14), hash-value (15), query-expires (12) and
+token (2) keys.
+
+The value of the query-name (8) key is a UTF-8 encoded string containing the
+FQDN for which the update query is issued and MUST end with a '.' (the root
+zone).
+
+The value of the hash-type (14) key is an integer specifying a hash function
+identifier used to generate the hash-value of the assertion, as in
+{{tabuqhash}}.
+
+The value of the hash-value (15) key is the hash of the assertion for which an
+update is requested. The hash is generated over a byte stream representing the
+assertion in a canonical signing format {{cbor-signature}} (The signature itself
+is not hashed). The format is defined by the hash-type.
+
+The value of the query-expires (12) key, is a CBOR integer counting seconds
+since the UNIX epoch UTC, identified with tag value 1 and encoded as in section
+2.4.1 of {{RFC7049}}. After the query-expires time, the update query will have
+been considered not answered by the original issuer.
+
+The value of the token (2) key is a 16-byte array which MUST be part of the
+response. See {{cbor-tokens}} for details.
+
+{: #tabuqhash title="Update Query Hash Function Codes"}
+
+| Code | Name      | Notes                                  |
+|-----:|-----------|----------------------------------------|
+| 1    | sha-256   | Value contains SHA-256 hash (32 bytes) |
+| 2    | sha-512   | Value contains SHA-512 hash (64 bytes) |
+| 3    | sha-384   | Value contains SHA-384 hash (48 bytes) |
 
 ## Address Assertion body {#cbor-revassert}
 
@@ -1610,7 +1709,7 @@ to provide a full chain of delegation assertions from the appropriate delegation
 root to the signature on any assertion it gives to a peer or a client, whether
 as additional assertions on a message answering a query, or in reply to a
 subsequent query. This property allows RAINS servers to maintain a full
-delegation tree 
+delegation tree.
 
 # RAINS Client Protocol {#protocol-client}
 
