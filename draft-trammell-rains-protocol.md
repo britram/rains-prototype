@@ -511,10 +511,10 @@ is bound to that query via the token.
 
 The content of an answer depends on whether there is a newer version of the
 assertion that is already valid. If the hashed assertion is still the most
-recent one, a notification with 'ok' is returned. In case there is an assertion
-for the same name, type and object value with a longer valid signature it is
-returned. Otherwise a shard, zone or notification with content 'non-existent' is
-returned. A shard or zone is preferred over the notification answer.
+recent one, a 200 notification message is returned. In case there is an
+assertion for the same name, type and object value with a longer valid signature
+it is returned. Otherwise a shard, zone or 210 notification is returned. A shard
+or zone is preferred over the notification answer.
 
 An update query is taken to have an inconclusive answer when no answer returns
 to the querier before the update query's Valid-Until time.
@@ -549,7 +549,7 @@ zone which is already valid. If a new assertion exists, it is returned. In case
 there is no matching assertion and there is a zone or a shard in the range of
 the FQDN with a longer valid signature that is already valid, the section with
 the highest validUntil value is returned. Otherwise, the shard or zone is still
-the most recent one and a notification with content 'ok' is returned.
+the most recent one and a 200 notification message is returned.
 
 An update query is taken to have an inconclusive answer when no answer returns
 to the querier before the query's Valid-Until time.
@@ -668,8 +668,9 @@ and notification maps is given in the symbol table below:
 | 11   | shard-range    | Lexical range of Assertions in Shard          |
 | 12   | query-expires  | Absolute timestamp for query expiration       |
 | 13   | query-opts     | Set of query options requested                |
-| 14   | hash-type      | hash function used in an update query         |
-| 15   | hash-value     | value of a hashed assertion, shard or zone    |
+| 14   | hash-type      | Hash function used in an update query         |
+| 15   | hash-value     | Value of a hashed assertion, shard or zone    |
+| 16   | nuquery-type   | Object type in non-existence update query     |
 | 21   | note-type      | Notification type                             |
 | 22   | note-data      | Additional notification data                  |
 | 23   | content        | Content of a message, shard, or zone          |
@@ -916,7 +917,7 @@ pushed to the querier.
 
 An Assertion Update Query body is a map. Assertion Update Queries MUST contain
 the query-name (8), hash-type (14), hash-value (15), query-expires (12) and
-token (2) keys.
+token (2) keys. Assertion Update Queries MAY contain the query-opts (13) keys.
 
 The value of the query-name (8) key is a UTF-8 encoded string containing the
 FQDN for which the update query is issued and MUST end with a '.' (the root
@@ -939,6 +940,10 @@ been considered not answered by the original issuer.
 The value of the token (2) key is a 16-byte array which MUST be part of the
 response. See {{cbor-tokens}} for details.
 
+The value of the query-opts (13) key, if present, is an array of integers in
+priority order of the querier's preferences in tradeoffs in answering the
+assertion update query, as in {{tabqopts}}.
+
 {: #tabuqhash title="Update Query Hash Function Codes"}
 
 | Code | Name      | Notes                                  |
@@ -946,6 +951,45 @@ response. See {{cbor-tokens}} for details.
 | 1    | sha-256   | Value contains SHA-256 hash (32 bytes) |
 | 2    | sha-512   | Value contains SHA-512 hash (64 bytes) |
 | 3    | sha-384   | Value contains SHA-384 hash (48 bytes) |
+
+## Non-existence Update Query body {#cbor-nuquery}
+
+A Non-existence Update Query body is a map. Non-existence Update Queries MUST
+contain the query-name (8), context (6), nuquery-type (16), hash-type (14),
+hash-value (15), query-expires (12) and token (2) keys. Non-existence Update
+Queries MAY contain the query-opts (13) keys.
+
+The value of the query-name (8) key is a UTF-8 encoded string containing the
+FQDN for which the update query is issued and MUST end with a '.' (the root
+zone).
+
+The value of the context (6) key is a UTF-8 encoded string containing the name
+of the context to which an update query pertains. A zero-length string indicates
+that assertions will be accepted in any context.
+
+The value of the nuquery-type (16) key is an integer encoding the type of
+objects (as in {{cbor-object}}) acceptable in answers to the update query.
+
+The value of the hash-type (14) key is an integer specifying a hash function
+identifier used to generate the hash-value of the assertion, as in
+{{tabuqhash}}.
+
+The value of the hash-value (15) key is the hash of the assertion for which an
+update is requested. The hash is generated over a byte stream representing the
+assertion in a canonical signing format {{cbor-signature}} (The signature itself
+is not hashed). The format is defined by the hash-type.
+
+The value of the query-expires (12) key, is a CBOR integer counting seconds
+since the UNIX epoch UTC, identified with tag value 1 and encoded as in section
+2.4.1 of {{RFC7049}}. After the query-expires time, the update query will have
+been considered not answered by the original issuer.
+
+The value of the token (2) key is a 16-byte array which MUST be part of the
+response. See {{cbor-tokens}} for details.
+
+The value of the query-opts (13) key, if present, is an array of integers in
+priority order of the querier's preferences in tradeoffs in answering the
+non-existence update query, as in {{tabqopts}}.
 
 ## Address Assertion body {#cbor-revassert}
 
@@ -1028,8 +1072,10 @@ contain the token (2) and note-type (21) keys and MAY contain the note-data
 | Code | Description                                                    |
 |-----:|----------------------------------------------------------------|
 | 100  | Connection heartbeat                                           |
+| 200  | The hashed section in an update query is still fine            |
+| 210  | The hashed assertion has been revoked and is no longer valid   |
 | 399  | Capability hash not understood                                 |
-| 400  | Bad message received                                     |
+| 400  | Bad message received                                           |
 | 403  | Inconsistent message received                                  |
 | 404  | No assertion exists (client protocol only)                     |
 | 413  | Message too large                                              |
@@ -1537,6 +1583,65 @@ On receipt of a query, a server:
   504 No Assertion Available notification, as if the query had instantly
   expired. If the query does not specify option 4, delegation proceeds, and the
   server:
+- determines whether it has other non-authoritative servers it can forward the
+  query to, according to its configuration and policy, and in compliance with
+  any query options (see {{cbor-query}}). If so, it prepares to forward the
+  query to those servers, noting the reply for the received query depends on
+  the replies for the forwarded query. If not, it:
+- determines the responsible authority servers for the zone containing the
+  query name in the query for the context requested, and forwards the query to
+  those authority servers, noting the reply for the received query depends on
+  the reply for the forwarded query.
+
+If query delegation fails to return an answer within the maximum of the
+valid-until time in the received query and a configured maximum timeout for a
+delegated query, the server prepares to send a 504 No assertion available
+response to the peer from which it received the query.
+
+When a server creates a new query to forward to another server in response to
+a query it received, it SHOULD NOT use the same token on the delegated query
+as on the received query, unless option 6 Enable Tracing is present in the
+received, in which case it MUST use the same token. The Enable Tracing option
+is designed to allow debugging of query processing across multiple servers, It
+SHOULD only be enabled by clients designed explicitly for debugging RAINS
+itself, and MUST NOT be enabled by default by client resolvers.
+
+When a server creates a new query to forward to another server in response to a
+query it received, and the received query contains a query-expires time, the
+delegated query MUST NOT have a query-expires time after that in the received
+query. If the received query contains no query-expires time, the delegated query
+MAY contain a query- expires time of the server's choosing, according to its
+configuration.
+
+On receipt of an assertion update query, a server:
+
+- determines whether it has expired by checking the query-expires value. If so,
+  it drops the query silently. If not, it:
+- determines whether it is the authoritative server of the queried name. If so,
+  it checks if the hashed assertion is still the assertion currently valid with
+  the highest validUntil time for the given name, context, type and object
+  value. In that case it returns a notfication message containing the query's
+  token and 'ok' as the content. 
+
+If not, it: it has a stored assertion, shard, and/or zone message
+  section which answers the query. If so, it prepares to return the most
+  specific such section (i.e., if it has both a shard and an assertion that
+  would answer the query, it returns the assertion) with the signature of the
+  longest remaining validity to the peer that issued the query. If not, it:
+- checks to see whether the query specifies option 4 (cached answers only). If
+  so, and if option 5 (expired assertions acceptable) is also specified, it then
+  checks to see if it has any cached sections that answer the query on which
+  signatures are expired; otherwise, processing stops, and the server returns a
+  504 No Assertion Available notification, as if the query had instantly
+  expired. If the query does not specify option 4, delegation proceeds, and the
+  server:
+
+If the hashed assertion is still the most
+recent one, a notification with 'ok' is returned. In case there is an assertion
+for the same name, type and object value with a longer valid signature it is
+returned. Otherwise a shard, zone or notification with content 'non-existent' is
+returned. A shard or zone is preferred over the notification answer.
+
 - determines whether it has other non-authoritative servers it can forward the
   query to, according to its configuration and policy, and in compliance with
   any query options (see {{cbor-query}}). If so, it prepares to forward the
