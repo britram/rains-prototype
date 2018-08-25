@@ -942,7 +942,8 @@ response. See {{cbor-tokens}} for details.
 
 The value of the query-opts (13) key, if present, is an array of integers in
 priority order of the querier's preferences in tradeoffs in answering the
-assertion update query, as in {{tabqopts}}.
+assertion update query, as in {{tabqopts}}. Only query option codes 1, 2, 3, 6,
+7, 8 are allowed.
 
 {: #tabuqhash title="Update Query Hash Function Codes"}
 
@@ -989,7 +990,8 @@ response. See {{cbor-tokens}} for details.
 
 The value of the query-opts (13) key, if present, is an array of integers in
 priority order of the querier's preferences in tradeoffs in answering the
-non-existence update query, as in {{tabqopts}}.
+non-existence update query, as in {{tabqopts}}. Only query option codes 1, 2, 3,
+6, 7, 8 are allowed.
 
 ## Address Assertion body {#cbor-revassert}
 
@@ -1620,57 +1622,40 @@ On receipt of an assertion update query, a server:
 - determines whether it is the authoritative server of the queried name. If so,
   it checks if the hashed assertion is still the assertion currently valid with
   the highest validUntil time for the given name, context, type and object
-  value. In that case it returns a notfication message containing the query's
-  token and 'ok' as the content. 
-
-If not, it: it has a stored assertion, shard, and/or zone message
-  section which answers the query. If so, it prepares to return the most
-  specific such section (i.e., if it has both a shard and an assertion that
-  would answer the query, it returns the assertion) with the signature of the
-  longest remaining validity to the peer that issued the query. If not, it:
-- checks to see whether the query specifies option 4 (cached answers only). If
-  so, and if option 5 (expired assertions acceptable) is also specified, it then
-  checks to see if it has any cached sections that answer the query on which
-  signatures are expired; otherwise, processing stops, and the server returns a
-  504 No Assertion Available notification, as if the query had instantly
-  expired. If the query does not specify option 4, delegation proceeds, and the
-  server:
-
-If the hashed assertion is still the most
-recent one, a notification with 'ok' is returned. In case there is an assertion
-for the same name, type and object value with a longer valid signature it is
-returned. Otherwise a shard, zone or notification with content 'non-existent' is
-returned. A shard or zone is preferred over the notification answer.
-
+  value. In that case it returns a 200 notfication message. Otherwise, if there
+  is an assertion for the same name, type and object value which is already
+  valid and its validUntil time is higher, it is returned. In case the assertion
+  has been revoked in the meantime, either a 210 notification message or a shard
+  proofing non-existence is returned. The 210 notification message MUST only be
+  returned if no such shard exists. If it is not the authoritative server, it:
 - determines whether it has other non-authoritative servers it can forward the
-  query to, according to its configuration and policy, and in compliance with
-  any query options (see {{cbor-query}}). If so, it prepares to forward the
-  query to those servers, noting the reply for the received query depends on
-  the replies for the forwarded query. If not, it:
-- determines the responsible authority servers for the zone containing the
-  query name in the query for the context requested, and forwards the query to
-  those authority servers, noting the reply for the received query depends on
-  the reply for the forwarded query.
+  query to, according to its configuration and policy. If so, it prepares to
+  forward the query to those servers, noting the reply for the received query
+  depends on the replies for the forwarded query. If not, it:
+- determines the responsible authority servers for the zone containing the query
+  name and forwards the query to those authority servers, noting the reply for
+  the received query depends on the reply for the forwarded query.
 
-If query delegation fails to return an answer within the maximum of the
-valid-until time in the received query and a configured maximum timeout for a
-delegated query, the server prepares to send a 504 No assertion available
-response to the peer from which it received the query.
+If the server does not obtain an answer within the maximum of the valid-until
+time in the received query and a configured maximum timeout for an assertion
+update query, the server sends a 504 No assertion available response to the peer
+from which it received the query.
 
-When a server creates a new query to forward to another server in response to
-a query it received, it SHOULD NOT use the same token on the delegated query
-as on the received query, unless option 6 Enable Tracing is present in the
-received, in which case it MUST use the same token. The Enable Tracing option
-is designed to allow debugging of query processing across multiple servers, It
-SHOULD only be enabled by clients designed explicitly for debugging RAINS
-itself, and MUST NOT be enabled by default by client resolvers.
+When a server creates a new assertion update query to forward to another server
+in response to an assertion update query it received, it SHOULD NOT use the same
+token on the new query as on the received query, unless query option 6 Enable
+Tracing is present in the received query, in which case it MUST use the same
+token. The Enable Tracing option is designed to allow debugging of query
+processing across multiple servers, It SHOULD only be enabled by clients
+designed explicitly for debugging RAINS itself, and MUST NOT be enabled by
+default by client resolvers.
 
-When a server creates a new query to forward to another server in response to a
-query it received, and the received query contains a query-expires time, the
-delegated query MUST NOT have a query-expires time after that in the received
-query. If the received query contains no query-expires time, the delegated query
-MAY contain a query- expires time of the server's choosing, according to its
-configuration.
+When a server creates a new assertion update query to forward to another server
+in response to an assertion update query it received, and the received query
+contains a query-expires time, the new query MUST NOT have a query-expires time
+after that in the received query. If the received query contains no
+query-expires time, the new query MAY contain a query- expires time of the
+server's choosing, according to its configuration.
 
 On receipt of a notification, a server's behavior depends on the notification type:
 
