@@ -512,9 +512,10 @@ is bound to that query via the token.
 The content of an answer depends on whether there is a newer version of the
 assertion that is already valid. If the hashed assertion is still the most
 recent one, a 200 notification message is returned. In case there is an
-assertion for the same name, type and object value with a longer valid signature
-it is returned. Otherwise a shard, zone or 210 notification is returned. A shard
-or zone is preferred over the notification answer.
+assertion for the same name, type and object value with a higher validUntil
+value, the one with the highest value is returned. Otherwise a shard, zone or
+210 notification is returned. A shard or zone is preferred over the notification
+answer.
 
 An update query is taken to have an inconclusive answer when no answer returns
 to the querier before the update query's Valid-Until time.
@@ -546,10 +547,10 @@ to that query via the token.
 The content of an answer depends on whether there is a new assertion for the
 queried context, subject-name and type or a newer version of the hashed shard or
 zone which is already valid. If a new assertion exists, it is returned. In case
-there is no matching assertion and there is a zone or a shard in the range of
-the FQDN with a longer valid signature that is already valid, the section with
-the highest validUntil value is returned. Otherwise, the shard or zone is still
-the most recent one and a 200 notification message is returned.
+there is no matching assertion and there is a currently valid zone or a shard in
+the range of the FQDN in a matching context with a higher validUntil value, the
+section with the highest validUntil value is returned. Otherwise, the shard or
+zone is still the most recent one and a 200 notification message is returned.
 
 An update query is taken to have an inconclusive answer when no answer returns
 to the querier before the query's Valid-Until time.
@@ -1623,11 +1624,12 @@ On receipt of an assertion update query, a server:
   it checks if the hashed assertion is still the assertion currently valid with
   the highest validUntil time for the given name, context, type and object
   value. In that case it returns a 200 notfication message. Otherwise, if there
-  is an assertion for the same name, type and object value which is already
-  valid and its validUntil time is higher, it is returned. In case the assertion
-  has been revoked in the meantime, either a 210 notification message or a shard
-  proofing non-existence is returned. The 210 notification message MUST only be
-  returned if no such shard exists. If it is not the authoritative server, it:
+  is at least one assertion for the same name, type and object value which is
+  already valid and its validUntil time is higher, the assertion with the
+  highest validUntil value is returned. In case the assertion has been revoked
+  in the meantime, either a 210 notification message or a section proofing
+  non-existence is returned. The 210 notification message MUST only be returned
+  if no such section exists. If it is not the authoritative server, it:
 - determines whether it has other non-authoritative servers it can forward the
   query to, according to its configuration and policy. If so, it prepares to
   forward the query to those servers, noting the reply for the received query
@@ -1656,6 +1658,47 @@ contains a query-expires time, the new query MUST NOT have a query-expires time
 after that in the received query. If the received query contains no
 query-expires time, the new query MAY contain a query- expires time of the
 server's choosing, according to its configuration.
+
+On receipt of an non-existence update query, a server:
+
+- determines whether it has expired by checking the query-expires value. If so,
+  it drops the query silently. If not, it:
+- determines whether it is the authoritative server of the queried name. If so,
+  it checks if it has a valid assertion for the queried context, subject-name
+  and type. In this case it returns the assertion. Otherwise, if it has a
+  already valid zone or shard in the range of the queried FQDN in a matching
+  context with a higher validUntil value, the section with the highest
+  validUntil value is returned. Otherwise, the shard or zone is still the most
+  recent one and a 200 notification message is returned. If it is not the
+  authoritative server, it:
+- determines whether it has other non-authoritative servers it can forward the
+  query to, according to its configuration and policy. If so, it prepares to
+  forward the query to those servers, noting the reply for the received query
+  depends on the replies for the forwarded query. If not, it:
+- determines the responsible authority servers for the zone containing the query
+  name and forwards the query to those authority servers, noting the reply for
+  the received query depends on the reply for the forwarded query.
+
+If the server does not obtain an answer within the maximum of the valid-until
+time in the received query and a configured maximum timeout for an assertion
+update query, the server sends a 504 No assertion available response to the peer
+from which it received the query.
+
+When a server creates a new non-existence update query to forward to another
+server in response to an non-existence update query it received, it SHOULD NOT
+use the same token on the new query as on the received query, unless query
+option 6 Enable Tracing is present in the received query, in which case it MUST
+use the same token. The Enable Tracing option is designed to allow debugging of
+query processing across multiple servers, It SHOULD only be enabled by clients
+designed explicitly for debugging RAINS itself, and MUST NOT be enabled by
+default by client resolvers.
+
+When a server creates a new non-existence update query to forward to another
+server in response to an non-existence update query it received, and the
+received query contains a query-expires time, the new query MUST NOT have a
+query-expires time after that in the received query. If the received query
+contains no query-expires time, the new query MAY contain a query- expires time
+of the server's choosing, according to its configuration.
 
 On receipt of a notification, a server's behavior depends on the notification type:
 
