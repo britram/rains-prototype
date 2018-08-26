@@ -1531,7 +1531,10 @@ through a secure out of band mechanism. For a caching server, it is sufficient
 to have a connection to a recursive resolver which does the lookup on its
 behalf.
 
-[Authors note] TODO CFE: which entries to register in superordinate zone
+When a zone authority delegates a part of its namespace to a subordinate, it
+MUST sign and serve the assertions of the three above mentioned types. This
+information is necessary for a recursive resolver to determine in a recursive
+lookup where to ask for a more specific answer and to validate the response.
 
 ## Message processing {#protocol-processing}
 
