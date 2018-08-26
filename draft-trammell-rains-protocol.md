@@ -115,15 +115,14 @@ Internet Naming Service). It is designed as a prototype to facilitate
 conversation about the evolution or replacement of the Domain Name System
 protocol, and was developed as a name resolution system for the SCION
 ("Scalability, Control, and Isolation on Next-Generation Networks") future
-Internet architecture {{SCION}}. It attempts to answer the
-question: "how would we design the DNS knowing what we do now," on the
-background of the properties of an ideal naming service described in 
-{{I-D.trammell-inip-pins}}.
+Internet architecture {{SCION}}. It attempts to answer the question: "how would
+we design the DNS knowing what we do now," on the background of the properties
+of an ideal naming service described in {{I-D.trammell-inip-pins}}.
 
-Its architecture ({{architecture}}) and information model 
-({{information-model}}) are largely compatible with the existing 
-Domain Name System. However, it does take several radical departures 
-from DNS as presently defined and implemented:
+Its architecture ({{architecture}}) and information model
+({{information-model}}) are largely compatible with the existing Domain Name
+System. However, it does take several radical departures from DNS as presently
+defined and implemented:
 
 - Delegation from a superordinate zone to a subordinate zone is done solely
   with cryptography: a superordinate defines the key(s) that are valid for
@@ -139,7 +138,7 @@ from DNS as presently defined and implemented:
   of the DNS from local usage thereof, and allows other application-specific
   naming constraints to be bound to names; see {{context-in-assertions}}.
   Queries are valid in one or more contexts, with specific rules for
-  determining which assertions answer which queries; see 
+  determining which assertions answer which queries; see
   {{context-in-queries}}.
 - There is an explicit separation between registrant-level names and
   sub-registrant-level names, and explicit information about registrars and
@@ -378,7 +377,7 @@ it does not protect other signatures on the assertion.
 
 ### Shards and Zones
 
-Assertions may also be grouped and signed as a group. A shard is a set of
+Assertions may also be grouped and signed as a group. A shard is a sorted set of
 assertions within the same zone and context, protected by one or more signatures
 over all assertions within the shard. Shards have an exclusive lexicographic
 range, and contain all assertions for names within a zone within that range.
@@ -765,7 +764,7 @@ containing the name of the context in which the assertion is valid. If not
 present, the context of the assertion is inherited from the containing Shard
 or Zone.
 
-The value of the objects (7) key is an array of objects, as defined in 
+The value of the objects (7) key is an array of objects, as defined in
 {{cbor-object}}.
 
 ## Shard body {#cbor-shard}
@@ -824,10 +823,7 @@ The shard-range value MUST be a two element array of strings or nulls
 neither subject name need be present in the shard's contents. If A is null, the
 shard begins at the beginning of the zone. If B is null, the shard ends at the
 end of the zone. The shard MUST NOT contain any assertions whose subject names
-sort before A or after B. In addition, the authority the shard belongs to MUST
-NOT make any assertions during the period of validity of the shard's signatures
-that would fall between subject-name A and subject-name B inclusive that are not
-contained within the shard (see {{runtime-consistency-checking}}).
+sort before A or after B.
 
 ## Zone body {#cbor-zone}
 
@@ -1524,6 +1520,19 @@ servers. A simplified version of the protocol for client access is described in
 {{protocol-client}}, and a simplified version of the protocol for publication by
 authorities is described in {{protocol-publish}}.
 
+## Bootstrapping
+
+At startup, a server performing recursive lookup MUST have access to at least
+one of each of these three assertion types: a self-signed delegation assertion
+of the root zone, a redirection assertion containing the name of an
+authoritative root name server, and an ip4 or ip6 assertion of the root name
+server mentioned in the redirection assertion. These assertions must be obtained
+through a secure out of band mechanism. For a caching server, it is sufficient
+to have a connection to a recursive resolver which does the lookup on its
+behalf.
+
+[Authors note] TODO CFE: which entries to register in superordinate zone
+
 ## Message processing {#protocol-processing}
 
 Once a transport is established, any server may validly send a message with
@@ -1922,7 +1931,7 @@ signature, provided the signature is verifiable.
 As signature lifetime is used to manage assertion lifetime, and key rotation
 strategies may be used both for revocation as well as operational flexibility
 purposes, RAINS presents a much more dynamic key management environment than
-that presented by DNSSEC. 
+that presented by DNSSEC.
 
 ### Key Phase and Key Rotation
 
@@ -1932,7 +1941,7 @@ example, given two key phases and a key validity interval of one day, a phase 0
 key would be valid from 00:00 on day 0 to 00:00 on day 1, and a phase 1 key
 valid from 12:00 on day 0 to 12:00 on day 1. When the phase 0 key expires, it
 would be replaced by a new phase 0 valid from 00:00 on day 1 to 00:00 on day 2,
-and so on. 
+and so on.
 
 Since the end time of the validity of a signature on an assertion is the maximum
 of the validity of the signatures on each of the delegations in the delegation
@@ -1941,7 +1950,6 @@ cost of requiring one valid signatures per key phase on at least all delegation
 assertions. Key rotation schedules are a matter of authority operational policy,
 but key validity intervals should be longer the closer in the delegation chain
 an assertion is to the root.
-
 
 ### Next Key Assertions
 
@@ -1959,7 +1967,7 @@ superordinate issues periodic queries for nextkey assertions from its
 subordinate zone, or the subordinate pushes these assertions to an intermediate
 service designated to receive them. When the superordinate receives a nextkey,
 and it decides it wants to delegate to the new key, it creates and signs a
-delegation assertion. 
+delegation assertion.
 
 This process is not mandatory: the superordinate is free to ignore the request,
 or to use a different time range, depending on its policy and/or the status of
@@ -2126,9 +2134,7 @@ concentration, with indirection that makes tracing difficult.]
 Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Ted Hardie, Joe
 Hildebrand, Tobias Klausmann, Steve Matsumoto, Adrian Perrig, Raphael Reischuk,
 Andrew Sullivan, and Suzanne Woolf for the discussions leading to the design of
-this protocol. Thanks especially to Stephen Shirley for detailed feedback, and
-to Christian Fehlmann for extensive implementation experience which has informed
-the further development of the protocol.
+this protocol. Thanks especially to Stephen Shirley for detailed feedback.
 
 --- back
 
