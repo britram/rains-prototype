@@ -1139,9 +1139,10 @@ UTF-8 encoded string.
 A delegation (5) object contains a public key used to generate signatures on
 assertions in a named zone, and by which a delegation of a name within a zone to
 a subordinate zone may be verified. It is represented as an N-element array. The
-second element is a signature algorithm identifier as in {{cbor-signature}}.
-Additional elements are as defined in {{cbor-signature}} for the given algorithm
-identifier and keyspace.
+second element is a signature algorithm identifier as in {{cbor-signature}}. The
+third element is a key phase as in {{cbor-signature}}. Additional elements are
+as defined in {{cbor-signature}} for the given algorithm identifier and RAINS
+delegation chain keyspace.
 
 A nameset (6) object contains an expression defining which names are allowed
 and which names are disallowed in a given zone. It is represented as a two-
@@ -1336,7 +1337,7 @@ values in Assertions, Shards, Zones, and Messages, as well as of public key
 values in delegation objects.
 
 RAINS signatures have five common elements: the algorithm identifier, a keyspace
-identifier, a keyphase identifier, a valid-since timestamp, and a valid-until
+identifier, a key phase, a valid-since timestamp, and a valid-until
 timestamp. Signatures are represented as an array of these five values followed
 by additional elements containing the signature data itself, according to the
 algorithm identifier.
@@ -1369,7 +1370,7 @@ unsigned integer matching a signature's key phase to the delegation key phase.
 Multiple keys may be valid for a delegation at a given point in time, in order
 to support seamless rollover of keys, but only one per key phase and algorithm
 may be valid at once. The third element of delegation objects and signatures is
-the key phase. 
+the key phase.
 
 Valid-since and valid-until timestamps are represented as CBOR integers
 counting seconds since the UNIX epoch UTC, identified with tag value 1 and
@@ -2105,9 +2106,8 @@ This document specifies a new, experimental protocol for Internet name
 resolution, with mandatory integrity protection for assertions about names
 built into the information model, and confidentiality for query information
 protected on a hop-by-hop basis. See especially {{signatures-in-assertions}},
-{{integrity-and-confidentiality-protection}}, {{cbor-signature}}, 
-{{cbor-certinfo}}, and {{secret-key-management}} for security-relevant 
-details.
+{{integrity-and-confidentiality-protection}}, {{cbor-signature}},
+{{cbor-certinfo}}, and {{secret-key-management}} for security-relevant details.
 
 With respect to the resistance of the protocol itself to various attacks, we
 consider a few potential attacks against RAINS servers and RAINS clients in the
