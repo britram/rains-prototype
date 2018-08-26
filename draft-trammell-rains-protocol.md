@@ -431,6 +431,8 @@ elements:
 - Qualified-Subject: the name about which the query is made. The subject name
   in a query must be fully-qualified.
 - Types: a set of assertion types the querier is interested in.
+- Key phases: the key phases of the delegation assertions the querier is
+  interested in.
 - Valid-Until: an optional client-generated timestamp for the query after which
   it expires and should not be answered.
 - Query Token: a client-generated token for the query, which can be used in the
@@ -664,13 +666,14 @@ and notification maps is given in the symbol table below:
 | 6    | context        | Context of an assertion, shard, zone or query |
 | 7    | objects        | Objects of an assertion                       |
 | 8    | query-name     | Fully qualified name for a query              |
-| 10   | query-types    | Acceptable object types for query             |
+| 10   | query-types    | Acceptable object types for a query           |
 | 11   | shard-range    | Lexical range of Assertions in Shard          |
 | 12   | query-expires  | Absolute timestamp for query expiration       |
 | 13   | query-opts     | Set of query options requested                |
 | 14   | hash-type      | Hash function used in an update query         |
 | 15   | hash-value     | Value of a hashed assertion, shard or zone    |
 | 16   | nuquery-type   | Object type in non-existence update query     |
+| 17   | key-phases     | All requested key phases of a query           |
 | 21   | note-type      | Notification type                             |
 | 22   | note-data      | Additional notification data                  |
 | 23   | content        | Content of a message, shard, or zone          |
@@ -851,7 +854,7 @@ containing the name of the context for which the Zone is valid.
 
 A Query body is a map. Queries MUST contain the query-name (8),
 context (6), query-types (10), and query-expires (12) keys. Queries MAY contain
-the query-opts (13) keys.
+the query-opts (13), and the key-phases (17) keys.
 
 The value of the query-name (8) key is a UTF-8 encoded string containing the
 name for which the query is issued and MUST end with a '.' (the root zone).
@@ -866,6 +869,11 @@ All values in the query-type array are treated at equal priority: [2,3] means
 the querier is equally interested in both IPv4 and IPv6 addresses for the
 query-name. An empty query-types array indicates that objects of any type are
 acceptable in answers to the query.
+
+The value of the key-phases (17) key is an array of integers representing all
+key phases (see {{cbor-signature}}) expected in delegation assertion answers to
+the query. The value of the key-phases (17) key MUST NOT be empty when the query
+asks for delegation assertion(s). Otherwise, it MUST be empty.
 
 The value of the query-expires (12) key, is a CBOR integer counting seconds
 since the UNIX epoch UTC, identified with tag value 1 and encoded as in section
