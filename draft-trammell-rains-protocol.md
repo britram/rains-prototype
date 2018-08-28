@@ -1697,6 +1697,37 @@ MUST sign and serve the assertions of the three above mentioned types. This
 information is necessary for a recursive resolver to determine in a recursive
 lookup where to ask for a more specific answer and to validate the response.
 
+## Inconsistencies
+
+For RAINS to work in a highly dynamic environment, some time-bounded
+inconsistencies are allowed to occur. On the one hand, an authority wants to
+prove nonexistence of a name for a duration of time to make caching possible to
+reduce query latency and reduce load on its naming servers. On the other hand,
+an authority wants to add the name of a new delegation as quickly as possible
+and also allow its customers to make changes available quickly. Assuming an
+authority resigns sections every x seconds, then any inconcistency can occur at
+most x seconds. At the point in time a section is signed, its content MUST
+represent the state of the zone at that point in time. The following
+inconsistencies are allowed during a bounded amount of time thereafter:
+
+Cause of inconsistencies and how sections are affected:
+Creation of an Assertion
+Changed value of an assertion
+Deletion of an assertion
+One of the above might trigger a change in the bloom filter or shard range ->
+inconsistency between them as, as well with a previously valid assertion in case
+of a revocation.
+
+Possible friction:
+- Assertion and a section proving nonexistence such as a Shard, Bloom Filter or
+  Zone:
+- Changes in range
+- neg vs neg on changes.
+
+Note that most assertions are consistent between each other as the union of them
+is considered to be the valid state. However, there are few exceptions mentioned
+in {{runtime-consistency-checking}}.
+
 ## Message processing {#protocol-processing}
 
 Once a transport is established, any server may validly send a message with
