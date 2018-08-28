@@ -1697,7 +1697,7 @@ MUST sign and serve the assertions of the three above mentioned types. This
 information is necessary for a recursive resolver to determine in a recursive
 lookup where to ask for a more specific answer and to validate the response.
 
-## Inconsistencies
+## Allowed Inconsistencies
 
 For RAINS to work in a highly dynamic environment, some time-bounded
 inconsistencies are allowed to occur. On the one hand, an authority wants to
@@ -1707,22 +1707,30 @@ an authority wants to add the name of a new delegation as quickly as possible
 and also allow its customers to make changes available quickly. Assuming an
 authority resigns sections every x seconds, then any inconcistency can occur at
 most x seconds. At the point in time a section is signed, its content MUST
-represent the state of the zone at that point in time. The following
-inconsistencies are allowed during a bounded amount of time thereafter:
+represent the state of the zone at that point in time. The following actions
+result in allowed inconsistencies:
 
-Cause of inconsistencies and how sections are affected:
-Creation of an Assertion
-Changed value of an assertion
-Deletion of an assertion
-One of the above might trigger a change in the bloom filter or shard range ->
-inconsistency between them as, as well with a previously valid assertion in case
-of a revocation.
+- Creation of a new assertion: Shards and bloom filters in range, and zones
+  signed before this assertion was created and which are still valid, prove that
+  this assertion is nonexistent, although it does now.
+- Changed object value of an assertion: Shards in range and zones signed before
+  this assertion was created and which are still valid, prove that this
+  assertion is nonexistent, althoug it does now.
+- Expiration of an assertion: Shards and bloom filters in range, and zones
+  signed before this assertion has expired and which are still valid, prove that
+  this assertion exists, although it does not anymore.
+- Revocation of an assertion: Same inconsistencies as for expiration of an
+  assertion with the addition, that the assertion itself might still be cached
+  and served although it has been revoked.
 
-Possible friction:
-- Assertion and a section proving nonexistence such as a Shard, Bloom Filter or
-  Zone:
-- Changes in range
-- neg vs neg on changes.
+Two sections for proving nonexistence (shard, bloom filter or zone) which have
+an overlapping range and validity time where in between the signing of the two
+sections any of the above mentioned actions leading to inconsistencies happend,
+become inconsistent as well. One of them has the old view, while the newer one
+has the updated view about the assertion. Note that there is no inconsistency
+between a bloom filter and any other section proving nonexistence if only the
+object value of the assertion has changed (a bloom filter does not store this
+information).
 
 Note that most assertions are consistent between each other as the union of them
 is considered to be the valid state. However, there are few exceptions mentioned
