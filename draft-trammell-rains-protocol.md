@@ -1870,15 +1870,16 @@ On receipt of an assertion update query, a server:
 - determines whether it has expired by checking the query-expires value. If so,
   it drops the query silently. If not, it:
 - determines whether it is the authoritative server of the queried name. If so,
-  it checks if the hashed assertion is still the assertion currently valid with
-  the highest validUntil time for the given name, context, type and object
-  value. In that case it returns a 200 notfication message. Otherwise, if there
-  is at least one assertion for the same name, type and object value which is
-  already valid and its validUntil time is higher, the assertion with the
-  highest validUntil value is returned. In case the assertion has been revoked
-  in the meantime, either a 210 notification message or a section proofing
-  nonexistence is returned. The 210 notification message MUST only be returned
-  if no such section exists. If it is not the authoritative server, it:
+  - it checks if the hashed assertion is still the assertion currently valid
+    with the highest validUntil time for the given name, context, type and
+    object value. In that case it returns a 200 notfication message. If not, it:
+  - determines whether there is at least one assertion for the same name, type
+    and object value which is already valid and its validUntil time is higher.
+    If so, the assertion with the highest validUntil value is returned. If not:
+  - the assertion must have been revoked in the meantime and either a 210
+    notification message or a section proofing nonexistence is returned. The 210
+    notification message MUST only be returned if no such section exists.
+  If not, it:
 - determines whether it has other non-authoritative servers it can forward the
   query to, according to its configuration and policy. If so, it prepares to
   forward the query to those servers, noting the reply for the received query
@@ -1913,13 +1914,15 @@ On receipt of an nonexistence update query, a server:
 - determines whether it has expired by checking the query-expires value. If so,
   it drops the query silently. If not, it:
 - determines whether it is the authoritative server of the queried name. If so,
-  it checks if it has a valid assertion for the queried context, subject-name
-  and type. In this case it returns the assertion. Otherwise, if it has a
-  already valid zone, bloom filter, or shard in the range of the queried
-  fully-qualified name in a matching context with a higher validUntil value, the
-  section with the highest validUntil value is returned. Otherwise, the shard,
-  bloom filter, or zone is still the most recent one and a 200 notification
-  message is returned. If it is not the authoritative server, it:
+  - it checks if it has a valid assertion for the queried context, subject-name
+    and type. In this case it returns the assertion. If not, it:
+  - determines whether it has an already valid zone, bloom filter, or shard in
+    the range of the queried fully-qualified name, in a matching context, and
+    with a higher validUntil value. If so, the section with the highest
+    validUntil value is returned. If not, it:
+  - knows that the received shard, bloom filter, or zone is still the most
+    recent one and a 200 notification message is returned.
+  If not, it:
 - determines whether it has other non-authoritative servers it can forward the
   query to, according to its configuration and policy. If so, it prepares to
   forward the query to those servers, noting the reply for the received query
