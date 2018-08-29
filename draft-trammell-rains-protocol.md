@@ -1064,6 +1064,7 @@ query, as in {{tabqopts}}.
 | 10   | Suppress nonexistence update query                             |
 | 11   | Enforce nonexistence update query on negative cache hit        |
 | 12   | Request notification on negative cache hit                     |
+| 13   | Bloom filter not accepted                                      |
 
 Options 1-5 specify performance/privacy tradeoffs. Each server is free to
 determine how to minimize each performance metric requested; however, servers
@@ -1097,6 +1098,12 @@ to date. Option 11 sends a nonexistence update query to the naming server in
 case there is a negative cache hit. Option 12 requests a notification response
 before the server forwards the query if there is a negative cache hit. This is
 especially useful with option 11 to get feedback early, e.g. to correct a typo.
+
+Option 13 states if a bloom filter is accepted as a nonexistence proof. As bloom
+filters have false positives, a client has the possibility to request a shard or
+zone to be certain with this option. Depending on the servers' configurations,
+a false positive check can be done at the naming server, an intermediate
+server or at the client.
 
 ## Assertion Update Query body {#cbor-auquery}
 
