@@ -1273,6 +1273,7 @@ contain the token (2) and note-type (21) keys and MAY contain the note-data
 | 100  | Connection heartbeat                                           |
 | 200  | The hashed section in an update query is still fine            |
 | 210  | The hashed assertion has been revoked and is no longer valid   |
+| 211  | Section proving nonexistence is being updated                  |
 | 399  | Capability hash not understood                                 |
 | 400  | Bad message received                                           |
 | 403  | Inconsistent message received                                  |
@@ -1826,29 +1827,43 @@ client:
 
 On receipt of a query, a server:
 
-- determines whether it has expired by checking the query-expires value. If so,
-  it drops the query silently. If not, it:
-- determines whether it has a stored assertion, shard, bloom filter, and/or zone
-  message section which answers the query. If so, it prepares to return the most
-  specific such section (i.e., if it has both a shard and an assertion that
-  would answer the query, it returns the assertion) with the signature of the
-  longest remaining validity to the peer that issued the query. If not, it:
-- checks to see whether the query specifies option 4 (cached answers only). If
-  so, and if option 5 (expired assertions acceptable) is also specified, it then
-  checks to see if it has any cached sections that answer the query on which
-  signatures are expired; otherwise, processing stops, and the server returns a
-  504 No Assertion Available notification, as if the query had instantly
-  expired. If the query does not specify option 4, delegation proceeds, and the
-  server:
-- determines whether it has other non-authoritative servers it can forward the
-  query to, according to its configuration and policy, and in compliance with
-  any query options (see {{cbor-query}}). If so, it prepares to forward the
-  query to those servers, noting the reply for the received query depends on
-  the replies for the forwarded query. If not, it:
-- determines the responsible authority servers for the zone containing the
-  query name in the query for the context requested, and forwards the query to
-  those authority servers, noting the reply for the received query depends on
-  the reply for the forwarded query.
+1. determines whether it has expired by checking the query-expires value. If so,
+   it drops the query silently. If not, it:
+2. determines whether it has at least one stored assertion answering the query.
+   If so, it returns the assertion(s) with the longest validUntil value that is
+   already valid. If not, it:
+3. checks whether the query specifies option 9-12. If so, it:
+   - determines whether the chosen option is in compliance with the server's
+     configuration and policy. If so, and:
+     - option 9 is set it continues with step 4.
+     - option 10 or 11 is set, it checks whether it has a cached section to
+       proof nonexistence. If so:
+       - and option 10 is set, it returns the section with the shortest size or
+         the signature of the longest remaining validity to the peer that issued
+         the query depending on the server's policy. [EDIOR's NOTE] Add a query option for this decision?
+       - and option 11 is set, it determines if option 12 is set. If so:
+         - It first sends a 211 notification back to the client before continuing
+           with step 4. If not, it:
+         - continues with step 4.
+     If not, the server overwrites the query's option according to its
+     configuration and policy and processes it as above with the adapted option.
+   If not, it:
+4. checks to see whether the query specifies option 4 (cached answers only). If
+   so, and if option 5 (expired assertions acceptable) is also specified, it
+   then checks to see if it has any cached sections that answer the query on
+   which signatures are expired; otherwise, processing stops, and the server
+   returns a 504 No Assertion Available notification, as if the query had
+   instantly expired. If the query does not specify option 4, delegation
+   proceeds, and the server:
+5. determines whether it has other non-authoritative servers it can forward the
+   query to, according to its configuration and policy, and in compliance with
+   any query options (see {{cbor-query}}). If so, it prepares to forward the
+   query to those servers, noting the reply for the received query depends on
+   the replies for the forwarded query. If not, it:
+6. determines the responsible authority servers for the zone containing the
+   query name in the query for the context requested, and forwards the query to
+   those authority servers, noting the reply for the received query depends on
+   the reply for the forwarded query.
 
 If query delegation fails to return an answer within the maximum of the
 valid-until time in the received query and a configured maximum timeout for a
