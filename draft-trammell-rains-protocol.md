@@ -1060,6 +1060,10 @@ query, as in {{tabqopts}}.
 | 6    | Enable query token tracing                                     |
 | 7    | Disable verification delegation (client protocol only)         |
 | 8    | Suppress proactive caching of future assertions                |
+| 9    | Enforce recursive lookup on assertion cache miss               |
+| 10   | Suppress nonexistence update query                             |
+| 11   | Enforce nonexistence update query on negative cache hit        |
+| 12   | Request notification on negative cache hit                     |
 
 Options 1-5 specify performance/privacy tradeoffs. Each server is free to
 determine how to minimize each performance metric requested; however, servers
@@ -1081,6 +1085,18 @@ with untrusted query services.
 Option 8 specifies that a querier's interest in a query is strictly ephemeral,
 and that future assertions related to this query SHOULD NOT be proactively
 pushed to the querier.
+
+Options 9-12 specify a client's preference in the server's mode of operation. A
+server is free to decide if it wants to follow the client's preference according
+to its configuration and policy. E.g. if a server determines it is used in a
+DDoS attack against a naming server, it stops forwarding queries to this server
+and only serve cached entries. Option 9 prevents the server to make a negative
+cache lookup and instead directly does a recursive lookup. Option 10 directly
+returns the section in a negative cache hit without checking if it is still up
+to date. Option 11 sends a nonexistence update query to the naming server in
+case there is a negative cache hit. Option 12 requests a notification response
+before the server forwards the query if there is a negative cache hit. This is
+especially useful with option 11 to get feedback early, e.g. to correct a typo.
 
 ## Assertion Update Query body {#cbor-auquery}
 
