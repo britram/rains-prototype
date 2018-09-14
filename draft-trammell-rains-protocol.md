@@ -185,14 +185,14 @@ In addition, the following terms are used in this document as defined:
   is valid. See {{context-in-assertions}} and {{context-in-queries}}.
 - Shard: A group of assertions common to a zone and valid at a given point in
   time, with common signatures, which must be lexicographically complete for
-  purposes of proving nonexistence of an assertion. See
-  {{shards-bloom-filters-zones}}.
-- Pshard: A bit string encoding a group of assertions common to a zone,
-  valid at a given point in time and with common signatures. Its purpose is to
-  probabilistically prove nonexistence of an assertion. See {{bloom-filter}}
+  purposes of proving nonexistence of an assertion. See {{shards-and-pshards}}.
+- Pshard: A bit string encoding a group of assertions common to a zone, valid at
+  a given point in time and with common signatures. Its purpose is to
+  probabilistically prove nonexistence of an assertion. See
+  {{shards-and-pshards}}
 - Zone: A group of all assertions valid at a given point in time, with common
   signatures, for a given level of delegation and context within the namespace.
-  See {{shards-bloom-filters-zones}}.
+  See {{zone}}.
 - Assertion Update Query: An expression of interest about the current validity
   status of an unexpired assertion one already has.
 - Nonexistence Update Query: An expression of interest about the current
@@ -978,12 +978,12 @@ Signatures on the Zone are to be verified against the appropriate key for the
 Zone in the given context, as described in {{signatures-in-assertions}}.
 
 The value of the content (23) key is an array of Shard bodies as defined in
-{{cbor-shard}}, Pshard bodies as defined in {{cbor-bloomfilter}} and/or
-Assertion bodies as defined in {{cbor-assertion}}. Assertions, Pshards and
-Shards in the content array MUST be sorted. Assertions are sorted before Bloom
-Filters, which in turn are sorted before Shards. Groups of the same section type
-are sorted according to {{cbor-assertion-sorting}},
-{{cbor-bloom-filter-sorting}}, and {{cbor-shard-sorting}}.
+{{cbor-shard}}, Pshard bodies as defined in {{cbor-pshard}} and/or Assertion
+bodies as defined in {{cbor-assertion}}. Assertions, Pshards and Shards in the
+content array MUST be sorted. Assertions are sorted before Pshards, which in
+turn are sorted before Shards. Groups of the same section type are sorted
+according to {{cbor-assertion-sorting}}, {{cbor-pshard-sorting}}, and
+{{cbor-shard-sorting}}.
 
 The value of the subject-zone (4) key is a UTF-8 encoded string containing the
 name of the Zone which MUST end with '.' (the root zone).
@@ -1038,13 +1038,10 @@ query, as in {{tabqopts}}.
 | 6    | Enable query token tracing                                     |
 | 7    | Disable verification delegation (client protocol only)         |
 | 8    | Suppress proactive caching of future assertions                |
-| 9    | Enforce recursive lookup on assertion cache miss               |
-| 10   | Suppress nonexistence update query                             |
-| 11   | Enforce nonexistence update query on negative cache hit        |
-| 12   | Request notification on negative cache hit                     |
-| 13   | Pshard not accepted                                      |
+| 9    | Maximize freshness of result                                   |
+| 10   | Pshard not accepted                                            |
 
-Options 1-5 specify performance/privacy tradeoffs. Each server is free to
+Options 1-5 and 9 specify performance/privacy tradeoffs. Each server is free to
 determine how to minimize each performance metric requested; however, servers
 MUST NOT generate queries to other servers if "no information leakage" is
 specified, and servers MUST NOT return expired assertions unless "expired
@@ -1077,11 +1074,11 @@ case there is a negative cache hit. Option 12 requests a notification response
 before the server forwards the query if there is a negative cache hit. This is
 especially useful with option 11 to get feedback early, e.g. to correct a typo.
 
-Option 13 states if a Pshard is accepted as a nonexistence proof. As bloom
-filters have false positives, a client has the possibility to request a shard or
-zone to be certain with this option. Depending on the servers' configurations,
-a false positive check can be done at the naming server, an intermediate
-server or at the client.
+Option 10 states if a Pshard is accepted as a nonexistence proof. As pshards
+have false positives, a client has the possibility to request a shard or zone to
+be certain with this option. Depending on the servers' configurations, a false
+positive check can be done at the naming server, an intermediate server or at
+the client.
 
 ## Assertion Update Query body {#cbor-auquery}
 
@@ -1095,7 +1092,7 @@ fully-qualified name for which the update query is issued and MUST end with a
 
 The value of the hash-type (14) key is an integer specifying a hash function
 identifier used to generate the hash-value of the assertion, as in
-{{tabuqhash}}.
+{{tabhash}}.
 
 The value of the hash-value (15) key is the hash of the assertion for which an
 update is requested. The hash is generated over a byte stream representing the
@@ -1114,14 +1111,6 @@ The value of the query-opts (13) key, if present, is an array of integers in
 priority order of the querier's preferences in tradeoffs in answering the
 assertion update query, as in {{tabqopts}}. Only query option codes 1, 2, 3, 6,
 7, 8 are allowed.
-
-{: #tabuqhash title="Update Query Hash Function Codes"}
-
-| Code | Name      | Notes                                  |
-|-----:|-----------|----------------------------------------|
-| 1    | sha-256   | Value contains SHA-256 hash (32 bytes) |
-| 2    | sha-512   | Value contains SHA-512 hash (64 bytes) |
-| 3    | sha-384   | Value contains SHA-384 hash (48 bytes) |
 
 ## Nonexistence Update Query body {#cbor-nuquery}
 
