@@ -1832,20 +1832,20 @@ On receipt of a query, a server:
 2. determines whether it has at least one stored assertion answering the query.
    If so, it returns the assertion(s) with the longest validUntil value that is
    already valid. If not, it:
-3. checks whether the query specifies option 9-12. If so, it:
+3. checks whether the query specifies option 1 and/or 9. If so, it:
    - determines whether the chosen option is in compliance with the server's
      configuration and policy. If so, and:
-     - option 9 is set it continues with step 4.
-     - option 10 or 11 is set, it checks whether it has a cached section to
+     - option 9 is set and option 1 is not, it continues with step 4.
+     - option 1 is set, it checks whether it has a cached section to
        proof nonexistence. If so:
-       - and option 10 is set, it returns the section with the shortest size or
-         the signature of the longest remaining validity to the peer that issued
-         the query depending on the server's policy. [EDIOR's NOTE] Add a query option for this decision?
-       - and option 11 is set, it determines if option 12 is set. If so:
-         - It first sends a 211 notification back to the client before continuing
-           with step 4. If not, it:
-         - continues with step 4.
-     If not, the server overwrites the query's option according to its
+       - and option 9 is not set, it returns the section with the shortest size
+         or the signature of the longest remaining validity to the peer that
+         issued the query depending on the server's policy. [EDIOR's NOTE] Add a
+         query option for this decision?
+       - and option 9 is set, it might send a 211 notification back to the
+         client, depending on the server's configuration. Independent of the
+         previous decision it then continues with step 4. 
+     If not, the server overwrites the query's option according to its 
      configuration and policy and processes it as above with the adapted option.
    If not, it:
 4. checks to see whether the query specifies option 4 (cached answers only). If
