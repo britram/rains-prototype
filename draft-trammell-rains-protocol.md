@@ -387,15 +387,29 @@ The signature protects all the information in an assertion as well as its own
 algorithm identifier, keyspace identifier, key phase, valid-since, and
 valid-until values; it does not protect other signatures on the assertion.
 
-### Shards, Pshards, and Zones {#shards-bloom-filters-zones}
+### Semantic of nonexistence proofs
 
-Assertions may also be grouped and signed as a group. A shard is a sorted set of
-assertions within the same zone and context, protected by one or more signatures
-over all assertions within the shard. Shards have an exclusive lexicographic
-range, and contain all assertions for names within a zone within that range.
-This lexicographic completeness leads to the property that given a subject and
-an authenticated shard, it can be shown that either an assertion with a given
-name, type and object value exists within the shard or does not exist at all.
+Shards, pshards and zones can all be used to prove nonexistence during their
+validity. But to allow change to happen frequently and to have a dynamic system,
+an assertion might be created, altered, expired or revoked during the validity
+period of a shard, pshard or zone, leading to an inconsistency. Thus, a section
+proving nonexistence only captures the state at the point in time when it was
+signed. To make sure that the content of a shard, pshard or zone is still
+accurate, a nonexistence update query {{nonexistence-update-query}} must be sent
+to the server having authority over that name.
+
+### Shards and Probabilistic Shards (Pshards) {#shards-and-pshards}
+
+A shard is exclusively used to prove non-existence of a name and type in a given
+context and range. It allows zone authorities with many names to make
+nonexistence proofs when their zone's content is too large to fit in a message,
+see {{protocol-limits}}. A shard is a sorted set of assertions within the same
+zone and context, protected by one or more signatures over all assertions within
+the shard. Shards have an exclusive lexicographic range, and contain all
+assertions for names within a zone within that range. This lexicographic
+completeness leads to the property that given a subject and an authenticated
+shard, it can be shown that either an assertion with a given name, type and
+object value exists within the shard or does not exist at all.
 
 A shard has the following information elements:
 
@@ -410,21 +424,21 @@ A shard has the following information elements:
   shard; see {{signatures-in-assertions}}.
 
 For efficiency's sake, information elements within a shard common to all
-assertions (zone, context, signature) within the shard may be omitted from the
-assertions themselves.
+assertions (zone, context) within the shard must be omitted from the assertions
+themselves. Signatures on contained assertions may be omitted.
 
 A pshard represents a space-efficient probabilistic data structure stored as a
-bit string. It is used to prove membership of an element in a set. The set could
-either be the entire zone or an exclusive lexicographic range of that zone (like
-the range of a shard). All assertions within the same zone and context, and
-whose names are within the range are elements of the set. A pshard is protected
-by one or more signatures. A membership query to the pshard responds either with
-'an assertion with a given name and type might be part of the set' or 'an
-assertion with a given name and type is definitely not part of the set'. The
-second response can be used to proof nonexistence of an assertion with a given
-name and type. There is a tradeoff between the size of the bit string,
-membership query time, and the false positive error rate. The zone authority can
-determine how to weight them.
+bit string to proof nonexistence. The data structure is used to prove membership
+of an element in a set. The set could either be the entire zone or an exclusive
+lexicographic range of that zone (like the range of a shard). All assertions
+within the same zone and context, and whose names are within the range are
+elements of the set. A pshard is protected by one or more signatures. A
+membership query to the pshard responds either with 'an assertion with a given
+name and type might be part of the set' or 'an assertion with a given name and
+type is definitely not part of the set'. The second response can be used to
+proof nonexistence of an assertion with a given name and type. There is a
+tradeoff between the size of the bit string, membership query time, and the
+false positive error rate. The zone authority can determine how to weight them.
 
 A pshard has the following information elements:
 
@@ -445,8 +459,12 @@ The Types supported for each pshard are:
   configurable amount of hash functions from a specified hash family to generate
   a bit string encoding all contained assertions.
 
-A zone is the entire set of shards and assertions subject to a given
-authority within a given context.
+# Zone
+
+A zone is the entire set of shards, pshards, and assertions subject to a given
+authority within a given context. The majority of zones will be tiny. Thus, a
+zone can be used for both positive and negative answers as it contains all
+information about the zone while still being small. 
 
 A zone has the following information elements:
 
@@ -459,25 +477,9 @@ A zone has the following information elements:
   zone; see {{signatures-in-assertions}}.
 
 For efficiency's sake, information elements within a zone common to all
-assertions, shards and pshards (zone, context, signature) within the zone
-may be omitted from the assertions, shards and pshards themselves.
-
-A pshard can only be used as a negative answer. A shard should only be
-used as a proof of nonexistence in a query response. A zone can be used for both
-positive and negative answers as the contained information conceptually belongs
-together.
-
-### Semantic of nonexistence proofs
-
-Shards, pshards and zones can all be used to prove nonexistence during
-their validity. But to allow change to happen frequently and to have a dynamic
-system, an assertion might be created, altered, expired or revoked during the
-validity period of a shard, pshard or zone, leading to an inconsistency.
-Thus, a section proving nonexistence only captures the state at the point in
-time when it was signed. To make sure that the content of a shard, pshard
-or zone is still accurate, a nonexistence update query
-{{nonexistence-update-query}} must be sent to the server having authority over
-that name.
+assertions, shards, and pshards (zone, context) within the zone must be omitted
+from the assertions, shards, and pshards themselves. Signatures on contained
+assertions, shards, and pshards may be omitted.
 
 ### Zone-Reflexive Assertions
 
@@ -722,29 +724,29 @@ and notification maps is given in the symbol table below:
 
 {: #tabmkey title="CBOR Map Keys used in RAINS"}
 
-| Code | Name           | Description                                          |
-|-----:|----------------|------------------------------------------------      |
-| 0    | signatures     | Signatures on a message or section                   |
-| 1    | capabilities   | Capabilities of server sending message               |
-| 2    | token          | Token for referring to a data item                   |
-| 3    | subject-name   | Subject name in an assertion, shard or zone          |
-| 4    | subject-zone   | Zone name in an assertion, shard or zone             |
-| 5    | subject-addr   | Subject address in address assertion                 |
-| 6    | context        | Context of an assertion, shard, zone or query        |
-| 7    | objects        | Objects of an assertion                              |
-| 8    | query-name     | Fully qualified name for a query                     |
-| 10   | query-types    | Acceptable object types for a query                  |
-| 11   | range          | Lexical range of Assertions in Shard or Pshard       |
-| 12   | query-expires  | Absolute timestamp for query expiration              |
-| 13   | query-opts     | Set of query options requested                       |
-| 14   | hash-type      | Hash function used in an update query                |
-| 15   | hash-value     | Value of a hashed assertion, shard or zone           |
-| 16   | nuquery-type   | Object type in nonexistence update query             |
-| 17   | key-phases     | All requested key phases of a query                  |
-| 18   | data-structure | Data structure of a pshard                           |
-| 21   | note-type      | Notification type                                    |
-| 22   | note-data      | Additional notification data                         |
-| 23   | content        | Content of a message, shard, or zone                 |
+| Code | Name           | Description                                           |
+|-----:|----------------|------------------------------------------------       |
+| 0    | signatures     | Signatures on a message or section                    |
+| 1    | capabilities   | Capabilities of server sending message                |
+| 2    | token          | Token for referring to a data item                    |
+| 3    | subject-name   | Subject name in an assertion, shard, pshard or zone   |
+| 4    | subject-zone   | Zone name in an assertion, shard, pshard or zone      |
+| 5    | subject-addr   | Subject address in address assertion                  |
+| 6    | context        | Context of an assertion, shard, pshard, zone or query |
+| 7    | objects        | Objects of an assertion                               |
+| 8    | query-name     | Fully qualified name for a query                      |
+| 10   | query-types    | Acceptable object types for a query                   |
+| 11   | range          | Lexical range of Assertions in shard or pshard        |
+| 12   | query-expires  | Absolute timestamp for query expiration               |
+| 13   | query-opts     | Set of query options requested                        |
+| 14   | hash-type      | Hash function used in an update query                 |
+| 15   | hash-value     | Value of a hashed assertion, shard, pshard or zone    |
+| 16   | nuquery-type   | Object type in nonexistence update query              |
+| 17   | key-phases     | All requested key phases of a query                   |
+| 18   | data-structure | Data structure of a pshard                            |
+| 21   | note-type      | Notification type                                     |
+| 22   | note-data      | Additional notification data                          |
+| 23   | content        | Content of a message, shard, pshard or zone           |
 
 ## Message {#cbor-message}
 
@@ -1244,7 +1246,7 @@ contain the token (2) and note-type (21) keys and MAY contain the note-data
 | 100  | Connection heartbeat                                           |
 | 200  | The hashed section in an update query is still fine            |
 | 210  | The hashed assertion has been revoked and is no longer valid   |
-| 211  | Section proving nonexistence is being updated                  |
+| 211  | More specific information may follow                           |
 | 399  | Capability hash not understood                                 |
 | 400  | Bad message received                                           |
 | 403  | Inconsistent message received                                  |
