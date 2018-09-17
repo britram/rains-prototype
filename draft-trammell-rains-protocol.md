@@ -1477,30 +1477,50 @@ type of the data structure, encoded as an integer in the following table:
 |------:|--------------|-----------------------------------------|
 | 1     | bloom-filter | A bloom filter data structure           |
 
-A bloom-filter (1) data structure is represented as a four-element array. The
-second element is an integer specifying a family of hash function(s) identifier,
-as in {{tabhash}}. The third element is an integer determining the number of
-hash functions used in the bloom filter from the specified family of hash
-functions. The fourth element is a bit string representing the bloom filter
-itself as defined in {{cbor-bloom-filter-bit-string}}
+A bloom-filter (1) data structure is represented as a five-element array. The
+second element is an array of integers specifying a family of hash function(s)
+identifier, as in {{tabhash}}. The third element is an integer determining the
+number of hash functions used in the bloom filter from the specified family of
+hash functions. The fourth element is an integer specifying the mode of
+operation identifier, as in {{tabbfopmode}} The fifth element is a bit string
+representing the bloom filter itself as defined in
+{{cbor-bloom-filter-bit-string}}
+
+{: #tabbfopmode title="Bloom filter mode of operations"}
+
+| Code  | Name                  | Description                                           |
+|------:|-----------------------|-------------------------------------------------------|
+| 0     | standard              | Provided hash functions are used                      |
+| 1     | Kirsch-Mitzenmacher-1 | Kirsch-Mitzenmacher optimization with 1 hash function |
+| 2     | Kirsch-Mitzenmacher-2 | Kirsch-Mitzenmacher optimization with 2 hash function |
+
+For code 0, the number of provided hash function identifiers must be equal to
+the number of hash functions used in the bloom filter. The results of the hash
+functions are taken modulo the size of the bloom filter to determine which
+position to set or check in the filter.
+
+For code 1 and 2, instead of using k different hash functions to calculate the
+bit string of the bloom filter, it is sufficient to use one or two and then
+apply the Kirsch-Mitzenmacher-Optimization {{BETTER-BLOOM-FILTER}}. If only one
+hash function is used, then its calculated hash value is split in half. The
+first part corresponds to the first hash function in the optimization and the
+second part to the second one. The following formula is used to obtain the
+position which will be set to or checked for a 1 according to the ith hash
+function:
+
+pos = (hash1 + hash2*i) modulo bit-string-size
 
 ### Bloom Filter Bit String {#cbor-bloom-filter-bit-string}
 
 The bit string of an empty bloom filter is all zeros. To add an assertion,
 first, the assertion's fully-qualified name, context and code of its type are
-concatenated separated by a space. This value is then hashed a specified amount
-of time according to the given hash family. Each of these hash values is taken
-modulo the length of the bit string and the resulting position in the bit string
-is set to 1.
+concatenated separated by a space. This value is then hashed a certain amount of
+times with the provided hash functions depending on the mode of operation and
+the corresponding position(s) in the filter are set to one, see {{tabbfopmode}}.
 
-Instead of using k different hash functions to calculate the bit string of the
-bloom filter, it is sufficient to use just one and then apply the
-Kirsch-Mitzenmacher-Optimization {{BETTER-BLOOM-FILTER}} where the calculated
-hash value is split in half. The first part corresponds to the first hash
-function in the optimization and the second part to the second one. Thus, the
-following formula is used to obtain the position which will be set to 1
-according to the ith hash function:
-pos = (hash1 + hash2*i) modulo bit-string-size
+To check wether an assertion is not part of the bloom filter, the same process
+is repeated for the assertion in question. If any of the obtained filter
+position(s) is zero, then this assertion is certainly not contained.
 
 ## Tokens in queries and messages {#cbor-tokens}
 
