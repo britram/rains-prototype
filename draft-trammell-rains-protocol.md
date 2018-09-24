@@ -1083,8 +1083,8 @@ the client.
 ## Assertion Update Query body {#cbor-auquery}
 
 An Assertion Update Query body is a map. Assertion Update Queries MUST contain
-the query-name (8), hash-type (14), hash-value (15), query-expires (12) and
-token (2) keys. Assertion Update Queries MAY contain the query-opts (13) keys.
+the query-name (8), hash-type (14), hash-value (15), and query-expires (12)
+keys. Assertion Update Queries MAY contain the query-opts (13) keys.
 
 The value of the query-name (8) key is a UTF-8 encoded string containing the
 fully-qualified name for which the update query is issued and MUST end with a
@@ -1104,9 +1104,6 @@ since the UNIX epoch UTC, identified with tag value 1 and encoded as in section
 2.4.1 of {{RFC7049}}. After the query-expires time, the update query will have
 been considered not answered by the original issuer.
 
-The value of the token (2) key is a 16-byte array which MUST be part of the
-response. See {{cbor-tokens}} for details.
-
 The value of the query-opts (13) key, if present, is an array of integers in
 priority order of the querier's preferences in tradeoffs in answering the
 assertion update query, as in {{tabqopts}}. Only query option codes 1, 2, 3, 6,
@@ -1116,8 +1113,8 @@ assertion update query, as in {{tabqopts}}. Only query option codes 1, 2, 3, 6,
 
 A Nonexistence Update Query body is a map. Nonexistence Update Queries MUST
 contain the query-name (8), context (6), nuquery-type (16), hash-type (14),
-hash-value (15), query-expires (12) and token (2) keys. Nonexistence Update
-Queries MAY contain the query-opts (13) keys.
+hash-value (15), and query-expires (12) keys. Nonexistence Update Queries MAY
+contain the query-opts (13) keys.
 
 The value of the query-name (8) key is a UTF-8 encoded string containing the
 fully-qualified name for which the update query is issued and MUST end with a '.' (the root
@@ -1143,9 +1140,6 @@ The value of the query-expires (12) key, is a CBOR integer counting seconds
 since the UNIX epoch UTC, identified with tag value 1 and encoded as in section
 2.4.1 of {{RFC7049}}. After the query-expires time, the update query will have
 been considered not answered by the original issuer.
-
-The value of the token (2) key is a 16-byte array which MUST be part of the
-response. See {{cbor-tokens}} for details.
 
 The value of the query-opts (13) key, if present, is an array of integers in
 priority order of the querier's preferences in tradeoffs in answering the
@@ -1529,14 +1523,14 @@ content is a 16-byte array, and is used to link Messages to the Queries they
 respond to, and Notifications to the Messages they respond to. Tokens MUST be
 treated as opaque values by RAINS servers.
 
-A Message sent in response to a Query MUST contain the token of the Message
-containing the Query. Otherwise, the Message MUST contain a token selected by
-the server originating it, so that future Notifications can be linked to the
-Message causing it. Likewise, a Notification sent in response to a Message MUST
-contain the token from the Message causing it (where the new Message contains a
-fresh token selected by the server). This allows sending multiple Notifications
-within one Message and the receiving server to respond to a Message containing
-Notifications (e.g. when it is malformed).
+A Message sent in response to a Query (normal and update) MUST contain the token
+of the Message containing the Query. Otherwise, the Message MUST contain a token
+selected by the server originating it, so that future Notifications can be
+linked to the Message causing it. Likewise, a Notification sent in response to a
+Message MUST contain the token from the Message causing it (where the new
+Message contains a fresh token selected by the server). This allows sending
+multiple Notifications within one Message and the receiving server to respond to
+a Message containing Notifications (e.g. when it is malformed).
 
 Since tokens are used to link queries to replies, and to link notifications to
 messages, regardless of the sender or recipient of a message, they MUST be
@@ -1912,13 +1906,15 @@ On receipt of an assertion update query, a server:
 - determines whether it is the authoritative server of the queried name. If so,
   - it checks if the hashed assertion is still the assertion currently valid
     with the highest validUntil time for the given name, context, type and
-    object value. In that case it returns a 200 notfication message. If not, it:
+    object value. In that case it returns a 200 notification message which
+    contains the hash value of the assertion. If not, it:
   - determines whether there is at least one assertion for the same name, type
     and object value which is already valid and its validUntil time is higher.
     If so, the assertion with the highest validUntil value is returned. If not:
   - the assertion must have been revoked in the meantime and either a 210
-    notification message or a section proofing nonexistence is returned. The 210
-    notification message MUST only be returned if no such section exists.
+    notification message containing the hash value of the assertion or a section
+    proofing nonexistence is returned. If such a section exists it MUST be
+    returned.
   If not, it:
 - determines whether it has other non-authoritative servers it can forward the
   query to, according to its configuration and policy. If so, it prepares to
@@ -1961,7 +1957,8 @@ On receipt of an nonexistence update query, a server:
     with a higher validUntil value. If so, the section with the highest
     validUntil value is returned. If not, it:
   - knows that the received shard, pshard, or zone is still the most
-    recent one and a 200 notification message is returned.
+    recent one and a 200 notification message containing the hash value of the
+    section is returned.
   If not, it:
 - determines whether it has other non-authoritative servers it can forward the
   query to, according to its configuration and policy. If so, it prepares to
