@@ -741,7 +741,6 @@ and notification maps is given in the symbol table below:
 | 13   | query-opts     | Set of query options requested                        |
 | 14   | hash-type      | Hash function used in an update query                 |
 | 15   | hash-value     | Value of a hashed assertion, shard, pshard or zone    |
-| 16   | nuquery-type   | Object type in nonexistence update query              |
 | 17   | key-phases     | All requested key phases of a query                   |
 | 18   | data-structure | Data structure of a pshard                            |
 | 21   | note-type      | Notification type                                     |
@@ -1112,7 +1111,7 @@ assertion update query, as in {{tabqopts}}. Only query option codes 1, 2, 3, 6,
 ## Nonexistence Update Query body {#cbor-nuquery}
 
 A Nonexistence Update Query body is a map. Nonexistence Update Queries MUST
-contain the query-name (8), context (6), nuquery-type (16), hash-type (14),
+contain the query-name (8), context (6), query-types (10), hash-type (14),
 hash-value (15), and query-expires (12) keys. Nonexistence Update Queries MAY
 contain the query-opts (13) keys.
 
@@ -1124,8 +1123,12 @@ The value of the context (6) key is a UTF-8 encoded string containing the name
 of the context to which an update query pertains. A zero-length string indicates
 that assertions will be accepted in any context.
 
-The value of the nuquery-type (16) key is an integer encoding the type of
-objects (as in {{cbor-object}}) acceptable in answers to the update query.
+The value of the query-types (10) key is an array of integers encoding the
+type(s) of objects (as in {{cbor-object}}) acceptable in answers to the update
+query. All values in the query-type array are treated at equal priority: [2,3]
+means the querier is equally interested in both IPv4 and IPv6 addresses for the
+query-name. An empty query-types array indicates that objects of any type are
+acceptable in answers to the query.
 
 The value of the hash-type (14) key is an integer specifying a hash function
 identifier used to generate the hash-value of the assertion, as in
