@@ -28,39 +28,14 @@ author:
     email: fehlmannch@gmail.com
 
 normative:
-    I-D.trammell-inip-pins:
-    RFC0793:
-    RFC1918:
-    RFC2119:
-    RFC2782:
-    RFC3629:
-    RFC4193:
-    RFC4727:
-    RFC5246:
-    RFC5280:
-    RFC7049:
     FIPS-186-3:
       author:
         -
           ins: NIST
       title: Digital Signature Standard FIPS 186-3
       date: June 2009
-    RFC8032:
 
 informative:
-    RFC1035:
-    RFC4291:
-    RFC4632:
-    RFC5226:
-    RFC5905:
-    RFC6605:
-    RFC6698:
-    RFC7231:
-    RFC7624:
-    RFC7696:
-    RFC7858:
-    RFC7871:
-    I-D.thomson-postel-was-wrong:
     XEP0115:
       title: XEP-0115 Entity Capababilities
       author:
@@ -103,6 +78,22 @@ informative:
         -
           ins: Michael Mitzenmacher
       date: 2008-05-15
+    I-D.ietf-dprive-dns-over-tls:
+    I-D.ietf-dprive-dnsodtls:
+    LUCID:
+      target: https://www.ietf.org/proceedings/92/slides/slides-92-lucid-0.pdf
+      title: LUCID problem (slides, IETF 92 LUCID BoF)
+      author:
+        -
+          ins: A. Freytag
+        -
+          ins: A. Sullivan
+    IAB-UNICODE7:
+      target: https://www.iab.org/documents/correspondence-reports-documents/2015-2/iab-statement-on-identifiers-and-unicode-7-0-0/
+      title: IAB Statement on Identifiers and Unicode 7.0.0      
+      author:
+        -
+          ins: IAB
 
 --- abstract
 
@@ -153,11 +144,11 @@ defined and implemented:
 - Sets of valid characters and rules for valid names are defined on a per-zone
   basis, and can be verified at runtime.
 - Reverse lookups are done using a completely separate tree, supporting
-  delegations of any prefix length, in accordance with CIDR {{RFC4632}} and
-  the IPv6 addressing architecture {{RFC4291}}.
+  delegations of any prefix length, in accordance with CIDR {{?RFC4632}} and
+  the IPv6 addressing architecture {{?RFC4291}}.
 
 Instead of using a custom binary framing as DNS, RAINS uses Concise Binary
-Object Representation {{RFC7049}}, partially in an effort to make
+Object Representation {{!RFC7049}}, partially in an effort to make
 implementations easier to verify and less likely to contain potentially
 dangerous parser bugs {{PARSER-BUGS}}. As with DNS, CBOR messages can be carried
 atop any number of substrate protocols. RAINS is presently defined to use TLS
@@ -173,7 +164,7 @@ and discussed at https://github.com/britram/rains-prototype/issues.
 # Terminology
 
 The terms MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY, when they appear in
-all-capitals, are to be interpreted as defined in {{RFC2119}}.
+all-capitals, are to be interpreted as defined in {{!RFC2119}}.
 
 In addition, the following terms are used in this document as defined:
 
@@ -222,7 +213,6 @@ In addition, the following terms are used in this document as defined:
   Servers to retrieve assertions on behalf of applications that wish to connect
   to named services in the Internet.
 
-
 # An Ideal Internet Naming Service {#pins}
 
 We begin by returning to first principles, to determine the dimensions of the
@@ -235,12 +225,12 @@ subsections outline the space more generally. It is, of course, informed by
 decades of experience with the DNS, but identifies a few key gaps which we then
 aim to address directly with the design of RAINS.
 
-{{pins-query-interface}} and {{pins-authority-interface}} define the set of operations 
-a naming service should provide for queriers and authorities, {{pins-properties}} 
-defines a set of desirable properties of the provision of this service, 
-and {{pins-observations}} examines implications of these properties.
+{{pins-interfaces}} defines the set of operations a naming service should
+provide for queriers and authorities, {{pins-properties}} defines a set of
+desirable properties of the provision of this service, and {{pins-observations}}
+examines implications of these properties.
 
-## Query Interface {#query-interface}
+## Interfaces {#pins-interfaces}
 
 At its core, a naming service must provide a few basic functions for queriers,
 associating a Subject of a query with information about that subject. The
@@ -278,8 +268,6 @@ given a name identifying it.
   with that name. Most of the other RRTYPES in the DNS protocol implement these
   sort of mappings.
 
-## Authority Interface {#authority-interface}
-
 The query interface is not the only interface to the naming service: the
 interface a naming service presents to an Authority allows updates to the set
 of Assertions and Delegations in that Authority's namespace. Updates consist
@@ -291,14 +279,14 @@ possible.
 ## Properties {#pins-properties}
 
 The following properties are desirable in a naming service providing the
-functions in {{query-interface}} and {{authority-interface}}.
+functions in {{pins-interfaces}}.
 
 ### Meaningfulness 
 
 A naming service must provide the ability to name objects that its human users
 find more meaningful than the objects themselves.
 
-### Distinguishability
+### Distinguishability {#pins-distinguishability}
 
 A naming service must make it possible to guarantee that two different names
 are easily distinguishable from each other by its human users.
@@ -332,7 +320,7 @@ authority for the root of the namespace tree may be special, though; see
 
 In the DNS protocol as deployed, unitary authority is approximated by the
 entity identified by the SOA RRTYPE. The existence of registrars, which use
-the Extensible Provisioning Protocol (EPP) {{RFC5730}} to modify entries in
+the Extensible Provisioning Protocol (EPP) {{?RFC5730}} to modify entries in
 the zones under the authority of a top-level domain registry, complicates this
 somewhat.
 
@@ -373,7 +361,7 @@ Given a Delegation from a superordinate to a subordinate Authority, a querier
 can verify that the superordinate Authority authorized the
 Delegation.
 
-Authenticity of delegation in DNS is provided by DNSSEC {{RFC4033}}.
+Authenticity of delegation in DNS is provided by DNSSEC {{?RFC4033}}.
 
 ### Authenticity of Response
 
@@ -435,7 +423,7 @@ These forms of inconsistency are implicit, not explicit, in the current DNS. We
 note that while DNS can be deployed to allow essentially unlimited kinds of
 inconsistency in its responses, there is no protocol support for a query to
 express the kind of consistency it desires, or for a response to explicitly note
-that it is inconsistent. {{RFC7871}} does allow a querier to note that it would
+that it is inconsistent. {{?RFC7871}} does allow a querier to note that it would
 specifically like the view of the state of the namespace offered to a certain
 part of the network, and as such can be seen as inchoate support for this
 property.
@@ -481,7 +469,7 @@ significantly impact total bandwidth demand for an application.
 It should be costly for an adversary to monitor the infrastructure in order to
 link specific queries to specific queriers.
 
-DNS over TLS {{RFC7858}} and DNS over DTLS {{RFC8094}} provide this property
+DNS over TLS {{?RFC7858}} and DNS over DTLS {{?RFC8094}} provide this property
 between a querier and a recursive resolver; mixing by the recursive helps with
 mitigating upstream linkability.
 
@@ -521,7 +509,7 @@ that might inform future work.
 
 ### Delegation and redirection are separate operations
 
-Any system which can provide the authenticity properties in {{authenticity}}
+Any system which can provide the authenticity properties enumerated above
 is freed from one of the design characteristics of the present domain name
 system: the requirement to bind a zone of authority to a specific set of
 authoritative servers. Since the authenticity of delegation must be a
@@ -539,7 +527,7 @@ meaningfulness property (see {{meaningfulness}}) for the majority of speakers
 of human languages. However, as noted by the Internet Architecture Board (see
 {{IAB-UNICODE7}}) and discussed at the Locale-free Unicode Identifiers (LUCID)
 BoF at IETF 92 in Dallas in March 2015 (see {{LUCID}}), it is not in the
-general case sufficient for distinguishability (see {{distinguishability}}).
+general case sufficient for distinguishability (see {{pins-distinguishability}}).
 An ideal naming service may therefore have to supplement Unicode by providing
 runtime support for disambiguation of queries and assertions where the results
 may be indistinguishable.
@@ -628,7 +616,7 @@ The Types supported for each assertion are:
 - Zone-Nameset: an expression of the set of names allowed within a zone; e.g.
   Unicode scripts or codepages in which names in the zone may be issued. This
   allows a zone to set policy on names in support of the distinguishability
-  property in {{I-D.trammell-inip-pins}} that can be checked by RAINS servers at
+  property ({{pins-distinguishability}}) that can be checked by RAINS servers at
   runtime. An assertion about a Subject within a Zone whose name is not allowed
   by a valid signed Zone-Nameset expression is taken to be invalid, even if it
   has a valid signature.
@@ -672,7 +660,7 @@ declared authority as follows:
   with a '.'.
 
 Assertion context is the mechanism by which RAINS provides explicit
-inconsistency (see section 5.3.2 of {{I-D.trammell-inip-pins}}). Some
+inconsistency ({{explicit-inconsistency}). Some
 examples illustrate how context works:
 
 - For the common split-DNS case, an enterprise could place names for machines on
@@ -867,7 +855,7 @@ context will be accepted.
 Query contexts can also be used to provide additional information to RAINS
 servers about the query. For example, context can provide a method for explicit
 selection of a CDN server not based on either the client's or the resolver's
-address (see {{RFC7871}}). Here, the CDN creates a context for each of its
+address (see {{?RFC7871}}). Here, the CDN creates a context for each of its
 content zones, and an external service selects appropriate contexts for the
 client based not just on client source address but passive and active
 measurement of performance. Queries for names at which content resides can then
@@ -1031,14 +1019,14 @@ chain used to verify it.
 
 Each local context may have a root address space zone (0/0), but these root
 address spaces may only delegate addresses that are reserved for local use
-{{RFC1918}} {{RFC4193}}. Local context assertions for other addresses are
+{{!RFC1918}} {{!RFC4193}}. Local context assertions for other addresses are
 invalid.
 
 # CBOR Data Model {#cbor}
 
 The RAINS data model is a relatively straightforward mapping of the
 information model in {{information-model}} to the Concise Binary Object
-Representation (CBOR) {{RFC7049}}, with an outer message type providing a
+Representation (CBOR) {{!RFC7049}}, with an outer message type providing a
 mechanism for future capabilities-based versioning and recognition of a
 message as a RAINS message.
 
@@ -1159,7 +1147,7 @@ Assertion, whether actually present or not. The signatures on the Assertion are
 to be verified against the appropriate key for the Zone containing the Assertion
 in the given context, as described in {{signatures-in-assertions}}.
 
-The value of the subject-name (3) key is a UTF-8 encoded {{RFC3629}} string
+The value of the subject-name (3) key is a UTF-8 encoded {{!RFC3629}} string
 containing the name of the subject of the assertion. The subject name MAY
 contain dot(s) '.'. The subject name never contains the zone in which the
 subject name is registered; the fully-qualified name is obtained by joining the
@@ -1345,7 +1333,7 @@ assertions will be accepted in any context.
 
 The value of the query-types (10) key is an array of integers encoding the
 type(s) of objects (as in {{cbor-object}}) acceptable in answers to the query.
-All values in the query-type array are treated at equal priority: [2,3] means
+All values in the query-type array are treated at equal priority: \[2,3] means
 the querier is equally interested in both IPv4 and IPv6 addresses for the
 query-name. An empty query-types array indicates that objects of any type are
 acceptable in answers to the query.
@@ -1357,7 +1345,7 @@ asks for delegation assertion(s). Otherwise, it MUST be empty.
 
 The value of the query-expires (12) key, is a CBOR integer counting seconds
 since the UNIX epoch UTC, identified with tag value 1 and encoded as in section
-2.4.1 of {{RFC7049}}. After the query-expires time, the query will have been
+2.4.1 of {{!RFC7049}}. After the query-expires time, the query will have been
 considered not answered by the original issuer.
 
 The value of the query-opts (13) key, if present, is an array of integers in
@@ -1439,7 +1427,7 @@ is not hashed). The format is defined by the hash-type.
 
 The value of the query-expires (12) key, is a CBOR integer counting seconds
 since the UNIX epoch UTC, identified with tag value 1 and encoded as in section
-2.4.1 of {{RFC7049}}. After the query-expires time, the update query will have
+2.4.1 of {{!RFC7049}}. After the query-expires time, the update query will have
 been considered not answered by the original issuer.
 
 The value of the query-opts (13) key, if present, is an array of integers in
@@ -1464,14 +1452,14 @@ that assertions will be accepted in any context.
 
 The value of the query-types (10) key is an array of integers encoding the
 type(s) of objects (as in {{cbor-object}}) acceptable in answers to the update
-query. All values in the query-type array are treated at equal priority: [2,3]
+query. All values in the query-type array are treated at equal priority: \[2,3]
 means the querier is equally interested in both IPv4 and IPv6 addresses for the
 query-name. An empty query-types array indicates that objects of any type are
 acceptable in answers to the query.
 
 The value of the hash-type (14) key is an integer specifying a hash function
 identifier used to generate the hash-value of the assertion, as in
-{{tabuqhash}}.
+{{tabhash}}.
 
 The value of the hash-value (15) key is the hash of the assertion for which an
 update is requested. The hash is generated over a byte stream representing the
@@ -1480,7 +1468,7 @@ is not hashed). The format is defined by the hash-type.
 
 The value of the query-expires (12) key, is a CBOR integer counting seconds
 since the UNIX epoch UTC, identified with tag value 1 and encoded as in section
-2.4.1 of {{RFC7049}}. After the query-expires time, the update query will have
+2.4.1 of {{!RFC7049}}. After the query-expires time, the update query will have
 been considered not answered by the original issuer.
 
 The value of the query-opts (13) key, if present, is an array of integers in
@@ -1539,14 +1527,14 @@ Queries can only pertain to a single context. See
 
 The value of the query-types (10) key is an array of integers encoding the
 type(s) of objects (as in {{cbor-object}}) acceptable in answers to the query.
-All values in the query-type array are treated at equal priority: [4,5] means
+All values in the query-type array are treated at equal priority: \[4,5] means
 the querier is equally interested in both redirection and delegation for the
 subject-addr. An empty query-types array indicates that objects of any type are
 acceptable in answers to the query.
 
 The value of the query-expires (12) key is a CBOR integer
 counting seconds since the UNIX epoch UTC, identified with tag value 1 and
-encoded as in section 2.4.1 of {{RFC7049}}. After the query-expires time, the
+encoded as in section 2.4.1 of {{!RFC7049}}. After the query-expires time, the
 query will have been considered not answered by the original issuer.
 
 The value of the query-opts (13) key, if present, is an array of integers in
@@ -1582,7 +1570,7 @@ contain the token (2) and note-type (21) keys and MAY contain the note-data
 | 504  | No assertion available                                         |
 
 Note that the status codes are chosen to be mnemonically similar to status
-codes for HTTP {{RFC7231}}. Details of the meaning of each status code are
+codes for HTTP {{?RFC7231}}. Details of the meaning of each status code are
 given in {{protocol-def}}.
 
 The value of the token (2) key is a 16-byte array, which
@@ -1655,7 +1643,7 @@ use the bound certificate or a certificate signed by a bound authority. It is
 represented as an five-element array, as defined in {{cbor-certinfo}}.
 
 A service-info (8) object gives information about a named service. Services
-are named as in {{RFC2782}}. It is represented as a four-element array. The
+are named as in {{!RFC2782}}. It is represented as a four-element array. The
 second element is a fully-qualified name of a host providing the named service
 as a UTF-8 string. The third element is a transport port number as a positive
 integer in the range 0-65535. The fourth element is a priority as a positive
@@ -1711,7 +1699,7 @@ cryptographic protocol used to connect, as defined in {{tabcertproto}}. The
 protocol family defines the format of certificate data to be hashed. The third
 element is the certificate usage specifier as in {{tabcertusage}}, describing
 the constraint imposed by the assertion. These are defined to be compatible with
-Certificate Usages in the TLSA RRTYPE for DANE {{RFC6698}}. The fourth element
+Certificate Usages in the TLSA RRTYPE for DANE {{?RFC6698}}. The fourth element
 is the hash algorithm identifier, defining the hash algorithm used to generate
 the certificate data, as in {{tabhash}}. The fifth item is the data itself,
 whose format is defined by the protocol family and hash algorithm.
@@ -1721,13 +1709,13 @@ whose format is defined by the protocol family and hash algorithm.
 | Code | Name     | Protocol family                            | Certificate format |
 |-----:|----------|--------------------------------------------|--------------------|
 |    0 | unspec   | Unspecified                                | Unspecified        |
-|    1 | tls      | Transport Layer Security (TLS) {{RFC5246}} | {{RFC5280}}        |
+|    1 | tls      | Transport Layer Security (TLS) {{!RFC8446}} | {{!RFC5280}}        |
 
 Protocol family 0 leaves the protocol family unspecified; client validation
 and usage of cert-info assertions, and the protocol used to connect, are up to
 the client, and no information is stored in RAINS. Protocol family 1 specifies
-Transport Layer Security version 1.2 {{RFC5246}} or a subsequent version,
-secured with PKIX {{RFC5280}} certificates.
+Transport Layer Security version 1.3 {{!RFC8446}} or a subsequent version,
+secured with PKIX {{!RFC5280}} certificates.
 
 {: #tabcertusage title="Certificate information usage values"}
 
@@ -1756,9 +1744,9 @@ on a connection attempt.
 Code 0 is used to store full certificates in RAINS assertions, while other
 codes are used to store hashes for verification.
 
-For example, in a cert-info object with values [ 7, 1, 3, 3, (data) ], the
+For example, in a cert-info object with values \[ 7, 1, 3, 3, (data) ], the
 data would be a 48 SHA-384 hash of the ASN.1 DER-encoded X.509v3 certificate
-(see Section 4.1 of {{RFC5280}}) to be presented by the endpoint on a
+(see Section 4.1 of {{?RFC5280}}) to be presented by the endpoint on a
 connection attempt with TLS version 1.2 or later.
 
 ### Name expression format {#cbor-nameset}
@@ -1796,11 +1784,11 @@ of the second character class or range from the first.
 
 For example, the nameset expression:
 
-[[:ublk0400:]&&[:lower:][:digit:]]+
+\[\[:ublk0400:]&&\[:lower:]\[:digit:]]+
 
 matches any name made up of one or more lowercase Cyrillic letters and digits. The same expression can be implemented with a range instead of a character class:
 
-[\u0400-\u04ff&&[:lower:][:digit:]]+
+\[\u0400-\u04ff&&\[:lower:]\[:digit:]]+
 
 ## Data structures {#cbor-data-structure}
 
@@ -1887,7 +1875,7 @@ received, in which case it MUST use the same token.
 ## Signatures, delegation keys, and RAINS infrastructure keys {#cbor-signature}
 
 RAINS supports multiple signature algorithms and hash functions for signing
-assertions for cryptographic algorithm agility {{RFC7696}}. A RAINS signature
+assertions for cryptographic algorithm agility {{?RFC7696}}. A RAINS signature
 algorithm identifier specifies the signature algorithm; a hash function for
 generating the HMAC and the format of the encodings of the signature
 values in Assertions, Shards, Zones, and Messages, as well as of public key
@@ -1931,10 +1919,10 @@ the key phase.
 
 Valid-since and valid-until timestamps are represented as CBOR integers
 counting seconds since the UNIX epoch UTC, identified with tag value 1 and
-encoded as in section 2.4.1 of {{RFC7049}}. A signature MUST have a
+encoded as in section 2.4.1 of {{!RFC7049}}. A signature MUST have a
 valid-until timestamp. If a signature has no specified valid-since time (i.e.,
 is valid from the beginning of time until its valid-until timestamp), the
-valid-since time MAY be null (as in Table 2 in Section 2.3 of {{RFC7049}}).
+valid-since time MAY be null (as in Table 2 in Section 2.3 of {{!RFC7049}}).
 
 A signature in RAINS is generated over a byte stream representing the message in
 a canonical signing format. The signing process is defined as follows:
@@ -1954,24 +1942,24 @@ the signature according to the algorithm selected.
 ### EdDSA signature and public key format {#eddsa-format}
 
 EdDSA public keys consist of a single value, a 32-byte bit string generated as
-in Section 5.1.5 of {{RFC8032}} for Ed25519, and a 57-byte bit string generated
-as in Section 5.2.5 of {{RFC8032}} for Ed448. The fourth element in a RAINS
+in Section 5.1.5 of {{!RFC8032}} for Ed25519, and a 57-byte bit string generated
+as in Section 5.2.5 of {{!RFC8032}} for Ed448. The fourth element in a RAINS
 delegation object is this bit string encoded as a CBOR byte array. RAINS
 delegation objects for Ed25519 keys with value k are therefore represented by
-the array [5, 1, phase, k]; and for Ed448 keys as [5, 2, phase, k].
+the array \[5, 1, phase, k]; and for Ed448 keys as \[5, 2, phase, k].
 
 Ed25519 and Ed448 signatures are are a combination of two non-negative integers,
-called "R" and "S" in sections 5.1.6 and 5.2.6, respectively, of {{RFC8032}}. An
+called "R" and "S" in sections 5.1.6 and 5.2.6, respectively, of {{!RFC8032}}. An
 Ed25519 signature is represented as a 64-byte array containing the concatenation
 of R and S, and an Ed448 signature is represented as a 114-byte array containing
 the concatenation of R and S. RAINS signatures using Ed25519 are therefore the
-array [1, 0, phase, valid-since, valid-until, R|S]; using Ed448 the array [2, 0,
+array \[1, 0, phase, valid-since, valid-until, R|S]; using Ed448 the array \[2, 0,
 phase, valid-since, valid-until, R|S].
 
-Ed25519 keys are generated as in Section 5.1.5 of {{RFC8032}}, and Ed448 keys
-as in Section 5.2.5 of {{RFC8032}}.  Ed25519 signatures are generated from a
-normalized serialized CBOR object as in Section 5.1.6 of {{RFC8032}}, and
-Ed448 signatures as in section 5.2.6 of {{RFC8032}}.
+Ed25519 keys are generated as in Section 5.1.5 of {{!RFC8032}}, and Ed448 keys
+as in Section 5.2.5 of {{!RFC8032}}.  Ed25519 signatures are generated from a
+normalized serialized CBOR object as in Section 5.1.6 of {{!RFC8032}}, and
+Ed448 signatures as in section 5.2.6 of {{!RFC8032}}.
 
 RAINS Server and Client implementations MUST support Ed25519 signatures for
 delegation.
@@ -1983,7 +1971,7 @@ is a simple bit string that represents the uncompressed form of a curve point,
 concatenated together as "x | y". The fourth element in a RAINS delegation
 object is the Q bit string encoded as a CBOR byte array. RAINS delegation
 objects for ECDSA-256 public keys are therefore represented as the array 
-[5, 3, phase, Q]; and for ECDSA-384 public keys as [5, 4, phase, Q].
+\[5, 3, phase, Q]; and for ECDSA-384 public keys as \[5, 4, phase, Q].
 
 ECDSA signatures are a combination of two non-negative integers, called "r" and
 "s" in {{FIPS-186-3}}. A Signature using ECDSA is represented using a
@@ -1992,8 +1980,8 @@ represented as a byte array as described in Section C.2 of {{FIPS-186-3}}, and s
 represented as a byte array as described in Section C.2 of {{FIPS-186-3}}. For
 ECDSA-256 signatures, each integer MUST be represented as a 32-byte array. For
 ECDSA-384 signatures, each integer MUST be represented as a 48-byte array. RAINS
-signatures using ECDSA-256 are therefore the array [3, 0, phase, valid-since,
-valid-until, r|s]; and for ECDSA-384 the array [4, 0, phase, valid-since,
+signatures using ECDSA-256 are therefore the array \[3, 0, phase, valid-since,
+valid-until, r|s]; and for ECDSA-384 the array \[4, 0, phase, valid-since,
 valid-until, r|s].
 
 ECDSA-256 signatures and public keys use the P-256 curve as defined in {{FIPS-186-3}}.
@@ -2052,20 +2040,20 @@ named zone) or from external configuration values.
 # RAINS Protocol Definition {#protocol-def}
 
 As noted in {{cbor}}, RAINS is a message-exchange protocol that uses CBOR
-{{RFC7049}} as its framing. Since CBOR is self-framing -- a CBOR parser can
+{{!RFC7049}} as its framing. Since CBOR is self-framing -- a CBOR parser can
 determine when a CBOR object is complete at the point at which it has read its
 final byte -- RAINS requires no external framing. It can therefore run over
 any streaming, multistreaming, or message-oriented transport protocol. In
 order to protect query confidentiality, and support rapid deployment over a
 ubiquitously implemented transport, RAINS is defined in this document to run
-over persistent TLS 1.2 connections {{RFC5246}} over TCP {{RFC0793}} with
+over persistent TLS 1.3 connections {{!RFC8446}} over TCP {{!RFC0793}} with
 mutual authentication between servers, and authentication of servers by
 clients. The TLS certificates of RAINS server peers can be verified as
 specified in the cert-info assertions for those servers.
 
 RAINS servers MUST support this transport; future transports can be negotiated
-using the capabilities mechanism after bootstrapping using TLS 1.2. As RAINS
-is an experimental protocol, RAINS servers listen on port 1022 {{RFC4727}} for
+using the capabilities mechanism after bootstrapping using TLS 1.3. As RAINS
+is an experimental protocol, RAINS servers listen on port 1022 {{!RFC4727}} for
 connections from other RAINS servers and clients. RAINS servers should strive
 to keep connections open to peer servers, unless it is clear that no future
 messages will be exchanged with those peers, or in the face of resource
@@ -2196,8 +2184,8 @@ On receipt of a query, a server:
        proof nonexistence. If so:
        - and option 9 is not set, it returns the section with the shortest size
          or the signature of the longest remaining validity to the peer that
-         issued the query depending on the server's policy. [EDIOR's NOTE] Add a
-         query option for this decision?
+         issued the query depending on the server's policy. \[EDITOR'S NOTE: Add a
+         query option for this decision?]
        - and option 9 is set, it might send a 211 notification back to the
          client, depending on the server's configuration. Independent of the
          previous decision it then continues with step 4. 
@@ -2377,12 +2365,12 @@ SHOULD send a message containing a type 100 Connection Heartbeat notification
 after a configured idle time without any messages containing other content
 being sent.
 
-In general, servers should follow the principles laid out in Sections 4.1 and
-4.2 of {{I-D.thomson-postel-was-wrong}}. A malformed message section, or a
-message section with any invalid (but not expired) signature, should be dropped
-and log. A malformed message section or invalid signature should not, however,
-result in other sections in the same message being dropped, except as explicitly
-noted above.
+In general, servers should follow the principles laid out in
+{{?I-D.iab-protocol-maintenance}}. A malformed message section, or a message
+section with any invalid (but not expired) signature, should be dropped and log.
+A malformed message section or invalid signature should not, however, result in
+other sections in the same message being dropped, except as explicitly noted
+above.
 
 ## Message Transmission
 
@@ -2458,7 +2446,7 @@ zone enumeration.
 On the other hand, confidentiality protection of query information is crucial.
 Linking naming queries to a specific user can be nearly as useful to build a
 profile of that user for surveillance purposes as full access to the clear
-text of that client's communications {{RFC7624}}. In this revision, RAINS uses
+text of that client's communications {{?RFC7624}}. In this revision, RAINS uses
 TLS to protect communications between servers and between servers and clients,
 with certificate information for RAINS infrastructure stored in RAINS itself.
 Together with hop-by-hop confidentiality protection, query options, proactive
@@ -2524,7 +2512,7 @@ these new signatures available when old ones are expiring.
 
 Since assertion lifetime management is based on a real-time clock expressed in
 UTC, RAINS servers MUST use a clock synchronization protocol such as NTP
-{{RFC5905}}.
+{{?RFC5905}}.
 
 RAINS servers MAY coalesce assertion lifetimes, e.g. using only the most recent
 valid-until time in their cache management. This implies that an assertion with
@@ -2635,7 +2623,7 @@ While DNSSEC and RAINS keys for equivalent ciphersuites are compatible with
 each other, there is no equivalent to query option 7 for gateways, since the
 RAINS signatures are generated over the RAINS byte stream for an assertion, not
 the DNS byte stream. Therefore, RAINS to DNS gateways must provide verification
-services for DNS clients. DNS over TLS {{RFC7858}} SHOULD be used between the
+services for DNS clients. DNS over TLS {{?RFC7858}} SHOULD be used between the
 DNS client and gateway to ensure confidentiality and integrity for queries and
 answers.
 
@@ -2707,7 +2695,7 @@ https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml.
 
 RAINS servers currently listen for connections from other servers on Port
 1022. Future revisions of this document may specify a different port,
-registered with IANA via Expert Review {{RFC5226}}.
+registered with IANA via Expert Review {{?RFC5226}}.
 
 The symbol table in this document in {{cbor-symtab}}, the notification code
 table in {{cbor-notification}}, and the signature algorithm table in 
