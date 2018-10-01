@@ -167,8 +167,8 @@ over persistent TCP connections (see {{protocol-def}}).
 
 The source of this document is available in the repository
 https://github.com/britram/rains-prototype, and a rendered working copy is
-available at https://britram.github.io/rains-prototype. Open issues can be seen and discussed at 
-https://github.com/britram/rains-prototype/issues. 
+available at https://britram.github.io/rains-prototype. Open issues can be seen
+and discussed at https://github.com/britram/rains-prototype/issues. 
 
 # Terminology
 
