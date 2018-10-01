@@ -110,8 +110,7 @@ This document defines an alternate protocol for Internet name resolution,
 designed as a prototype to facilitate conversation about the evolution or
 replacement of the Domain Name System protocol. It attempts to answer the
 question: "how would we design DNS knowing what we do now," on the
-background of the properties of an ideal naming service described in
-{{I-D.trammell-inip-pins}}.
+background of a set of properties of an idealized Internet naming service.
 
 --- middle
 
@@ -125,7 +124,7 @@ protocol, and was developed as a name resolution system for the SCION
 ("Scalability, Control, and Isolation on Next-Generation Networks") future
 Internet architecture {{SCION}}. It attempts to answer the question: "how would
 we design the DNS knowing what we do now," on the background of the properties
-of an ideal naming service described in {{I-D.trammell-inip-pins}}.
+of an ideal naming service defined in {{pins}}.
 
 Its architecture ({{architecture}}) and information model
 ({{information-model}}) are largely compatible with the existing Domain Name
@@ -160,9 +159,16 @@ defined and implemented:
 Instead of using a custom binary framing as DNS, RAINS uses Concise Binary
 Object Representation {{RFC7049}}, partially in an effort to make
 implementations easier to verify and less likely to contain potentially
-dangerous parser bugs {{PARSER-BUGS}}. Like DNS, CBOR messages can be carried
-atop any number of substrate protocols; RAINS is presently defined to use TLS
+dangerous parser bugs {{PARSER-BUGS}}. As with DNS, CBOR messages can be carried
+atop any number of substrate protocols. RAINS is presently defined to use TLS
 over persistent TCP connections (see {{protocol-def}}).
+
+## About This Document
+
+The source of this document is available in the repository
+https://github.com/britram/rains-prototype, and a rendered working copy is
+available at https://britram.github.io/rains-prototype. Open issues can be seen and discussed at 
+https://github.com/britram/rains-prototype/issues. 
 
 # Terminology
 
@@ -171,28 +177,29 @@ all-capitals, are to be interpreted as defined in {{RFC2119}}.
 
 In addition, the following terms are used in this document as defined:
 
-- Authority: An entity which may make assertions about names in a zone, by
-  virtue of holding a secret key which can generate signatures verifiable using
-  a public key associated with a delegation to the zone.
-- Assertion: A mapping between a name and object(s) of the same type describing
-  the name, signed by an authority for the zone containing the subject name. See
-  {{assertion}}.
-- Subject: The name to which an assertion pertains.
-- Object: A type/value pair of information about a name within an assertion.
+- Subject: A name or address about which Assertions can be made.
+- Object: A type/value pair of information about a name within an Assertion.
+- Assertion: A mapping between a Subject and an Object, signed by the Authority
+  for the namespace containing that Subject. See {{assertion}}.
+- Authority: An entity that has the right to determine which Assertions exist
+  within its Zone
+- Delegation: An Assertion that an Authority has given the right to make
+  assertions about the Assertions within the part of a namespace identified by a
+  Subject to a subordinate Authority, by virtue of holding a secret key which
+  can generate signatures verifiable using a public key associated with a
+  delegation to the Zone.
+- Zone: A portion of a namespace rooted at a given point in the namespace
+  hierarchy. A Zone contains all the Assertions about Subjects tha exist within
+  its part of the namespace. 
 - Query: An expression of interest in certain types of objects pertaining to a
-  subject name in one or more contexts. See {{query}}.
-- Context: Additional information about the scope in which an assertion or query
+  Subject name in one or more contexts. See {{query}}.
+- Context: Additional information about the scope in which an Assertion or Query
   is valid. See {{context-in-assertions}} and {{context-in-queries}}.
 - Shard: A group of assertions common to a zone and valid at a given point in
-  time, with common signatures, which must be lexicographically complete for
-  purposes of proving nonexistence of an assertion. See {{shards-and-pshards}}.
-- Pshard: A bit string encoding a group of assertions common to a zone, valid at
-  a given point in time and with common signatures. Its purpose is to
-  probabilistically prove nonexistence of an assertion. See
-  {{shards-and-pshards}}
-- Zone: A group of all assertions valid at a given point in time, with common
-  signatures, for a given level of delegation and context within the namespace.
-  See {{zone}}.
+  time, scoped to a lexicographic range of Subject names with in the Zone, for
+  purposes of proving non-existence of an Assertion. Shards may be encoded to
+  provide either absolute proof or probabalistic assurance of non-existence. See
+  {{shards-and-p-shards}}.
 - Assertion Update Query: An expression of interest about the current validity
   status of an unexpired assertion one already has.
 - Nonexistence Update Query: An expression of interest about the current
@@ -214,6 +221,338 @@ In addition, the following terms are used in this document as defined:
 - RAINS Client: A client that uses the Query Service of one or more RAINS
   Servers to retrieve assertions on behalf of applications that wish to connect
   to named services in the Internet.
+
+
+# An Ideal Internet Naming Service {#pins}
+
+We begin by returning to first principles, to determine the dimensions of the
+design space of desirable properties of an Internet-scale naming service. We
+recognize that the choices made in the evolution of the DNS since its initial
+design are only one path through the design space of Internet-scale naming
+services. Many other naming services have been proposed, though none has been
+remotely as successful for general-purpose use in the Internet. The following
+subsections outline the space more generally. It is, of course, informed by
+decades of experience with the DNS, but identifies a few key gaps which we then
+aim to address directly with the design of RAINS.
+
+{{pins-query-interface}} and {{pins-authority-interface}} define the set of operations 
+a naming service should provide for queriers and authorities, {{pins-properties}} 
+defines a set of desirable properties of the provision of this service, 
+and {{pins-observations}} examines implications of these properties.
+
+## Query Interface {#query-interface}
+
+At its core, a naming service must provide a few basic functions for queriers,
+associating a Subject of a query with information about that subject. The
+information available from a naming service is that which is necessary for a
+querier to establish a connection with some other entity in the Internet,
+given a name identifying it.
+
+- Name to Address: given a Subject name, the naming service returns a set of
+  addresses associated with that name, if such an association exists, where the
+  association is determined by the authority for that name. Names may be
+  associated with addresses in one or more address families (e.g. IP version 4,
+  IP version 6). A querier may specify which address families it is interested
+  in receiving addresses for, and the naming system treats all address families
+  equally. This mapping is implemented in the DNS protocol via the A and AAAA
+  RRTYPES.
+
+- Address to Name: given an Subject address, the naming service returns a set of
+  names associated with that address, if such an association exists, where the
+  association is determined by the authority for that address. This mapping is
+  implemented in the DNS protocol via the PTR RRTYPE. IPv4 mappings exist within
+  the in-addr.arpa. zone, and IPv6 mappings in the ip6.arpa. zone. These
+  mappings imply a limited set of boundaries on which delegations may be made
+  (octet boundaries for IPv4, nybble boundaries for IPv6).
+
+- Name to Name: given a Subject name, the naming service returns a set of object
+  names associated with that name, if such an association exists, where the
+  association is determined by the authority for the subject name. This mapping
+  is implemented in the DNS protocol via the CNAME RRTYPE. CNAME does not allow
+  the association of multiple object names with a single subject, and CNAME may
+  not combine with other RRTYPEs (e.g. NS, MX) arbitrarily.
+
+- Name to Auxiliary Information: given a Subject name, the naming service
+  returns other auxiliary information associated with that name that is useful
+  for establishing communication over the Internet with the entities associated
+  with that name. Most of the other RRTYPES in the DNS protocol implement these
+  sort of mappings.
+
+## Authority Interface {#authority-interface}
+
+The query interface is not the only interface to the naming service: the
+interface a naming service presents to an Authority allows updates to the set
+of Assertions and Delegations in that Authority's namespace. Updates consist
+of additions of, changes to, and deletions of Assertions and Delegations. In
+the present DNS, this interface consists of the publication of a new zone file
+with an incremented version number, but other authority interfaces are
+possible.
+
+## Properties {#pins-properties}
+
+The following properties are desirable in a naming service providing the
+functions in {{query-interface}} and {{authority-interface}}.
+
+### Meaningfulness 
+
+A naming service must provide the ability to name objects that its human users
+find more meaningful than the objects themselves.
+
+### Distinguishability
+
+A naming service must make it possible to guarantee that two different names
+are easily distinguishable from each other by its human users.
+
+### Minimal Structure
+
+A naming service should impose as little structure on the names it supports as
+practical in order to be universally applicable. Naming services that impose a
+given organizational structure on the names expressible using the service will
+not translate well to societies where that organizational structure is not
+prevalent.
+
+### Federation of Authority
+
+An Authority can delegate some part of its namespace to some other subordinate
+Authority. This property allows the naming service to scale to the size of the
+Internet, and leads to a tree-structured namespace, where each Delegation is
+itself identified with a Subject at a given level in the namespace.
+
+In the DNS protocol, this federation of authority is implemented through
+delegation using the NS RRTYPE, redirecting queries to subordinate authorities
+recursively to the final authority. When DNSSEC is used, the DS RRTYPE is used
+to verify this delegation.
+
+### Uniqueness of Authority
+
+For a given Subject, there is a single Authority that has the right to
+determine the Assertions and/or Delegations for that subject. The unitary
+authority for the root of the namespace tree may be special, though; see
+{{consensus-on-root-of-authority}}.
+
+In the DNS protocol as deployed, unitary authority is approximated by the
+entity identified by the SOA RRTYPE. The existence of registrars, which use
+the Extensible Provisioning Protocol (EPP) {{RFC5730}} to modify entries in
+the zones under the authority of a top-level domain registry, complicates this
+somewhat.
+
+### Transparency of Authority
+
+A querier can determine the identity of the Authority for a given Assertion.
+An Authority cannot delegate its rights or responsibilities with respect to a
+subject without that Delegation being exposed to the querier.
+
+In DNS, the authoritative name server(s) to which a query is delegated via the
+NS RRTYPE are known. However, we note that in the case of authorities which
+delegate the ability to write to the zone to other entities (i.e., the
+registry-registrar relationship), the current DNS provides no facility for a
+querier to understand on whose behalf an authoritative assertion is being
+made; this information is instead available via WHOIS. To our knowledge, no
+present DNS name servers use WHOIS information retrieved out of band to make
+policy decisions.
+
+### Revocability of Authority
+
+An ideal naming service allows the revocation and replacement of an authority
+at any level in the namespace, and supports the revocation and replacement of
+authorities with minimal operational disruption.
+
+The current DNS allows the replacement of any level of delegation except the
+root through changes to the appropriate NS and DS records. Authority
+revocation in this case is as consistent as any other change to the DNS. 
+
+### Consensus on Root of Authority
+
+Authority at the top level of the namespace tree is delegated according to a
+process such that there is universal agreement throughout the Internet as to
+the subordinates of those Delegations.
+
+### Authenticity of Delegation
+
+Given a Delegation from a superordinate to a subordinate Authority, a querier
+can verify that the superordinate Authority authorized the
+Delegation.
+
+Authenticity of delegation in DNS is provided by DNSSEC {{RFC4033}}.
+
+### Authenticity of Response
+
+The authenticity of every answer is verifiable by the querier. The
+querier can confirm that the Assertion returned in the answer is
+correct according to the Authority for the Subject of the query.
+
+Authenticity of response in DNS is provided by DNSSEC.
+
+### Authenticity of Negative Response
+
+Some queries will yield no answer, because no such Assertion exists. In
+this case, the querier can confirm that the Authority for the
+Subject of the query asserts this lack of Assertion.
+
+Authenticity of negative response in DNS is provided by DNSSEC.
+
+### Dynamic Consistency
+
+Consistency in a naming service is important. The naming service should
+provide the most globally consistent view possible of the set of Assertions
+that exist at a given point in time, within the limits of latency and
+bandwidth tradeoffs.
+
+When an Authority makes changes to an Assertion, every query for a given
+Subject returns either the new valid result or a previously valid result,
+with known and/or predictable bounds on "how previously". Given that additions
+of, changes to, and deletions of Asseretion may have different operational
+causes, different bounds may apply to different operations.
+
+The time-to-live (TTL) on a resource record in DNS provides a mechanism for
+expiring old resource records. We note that this mechanism makes additions to
+the system propagate faster than changes and deletions, which may not be a
+desirable property. However, as no context information is explicitly available
+in DNS, the DNS cannot be said to be dynamically consistent, as different
+implicitly inconsistent views of an Assertion may be persistent.
+
+### Explicit Inconsistency
+
+Some techniques require giving different answers to different queries, even in
+the absence of changes: the stable state of the namespace is not globally
+consistent. This inconsistency should be explicit: a querier can know that an
+answer might be dependent on its identity, network location, or other factors.
+
+One example of such desirable inconsistency is the common practice of "split
+horizon" DNS, where an organization makes internal names available on its own
+network, but only the names of externally-visible subjects available to the
+Internet at large. 
+
+Another is the common practice of DNS-based content distribution, in which an
+authoritative name server gives different answers for the same query depending
+on the network location from which the query was received, or depending on the
+subnet in which the end client originating a query is located (via the EDNS
+Client Subnet extension {RFC7871}}). Such
+inconsistency based on client identity or network address may increase query
+linkability (see {{query-linkability}}).
+
+These forms of inconsistency are implicit, not explicit, in the current DNS. We
+note that while DNS can be deployed to allow essentially unlimited kinds of
+inconsistency in its responses, there is no protocol support for a query to
+express the kind of consistency it desires, or for a response to explicitly note
+that it is inconsistent. {{RFC7871}} does allow a querier to note that it would
+specifically like the view of the state of the namespace offered to a certain
+part of the network, and as such can be seen as inchoate support for this
+property.
+
+### Global Invariance
+
+An Assertion which is not intended to be explicitly inconsistent by the
+Authority issuing it must return the same result for every Query for it,
+regardless of the identity or location of the querier.
+
+This property is not provided by DNS, as it depends on the robust support on
+the Explicit Inconsistency property above. Examples of global invariance
+failures include geofencing and DNS-based censorship ordered by a local
+jurisdiction.
+
+### Availability
+
+The naming service as a whole is resilient to failures of individual
+nodes providing the naming service, as well as to failures of links among
+them. Intentional prevention of successful, authenticated query by an
+adversary should be as hard as practical.
+
+The DNS protocol was designed to be highly available through the use of
+secondary nameservers. Operational practices (e.g. anycast deployment) also
+increase the availability of DNS as currently deployed.
+
+### Lookup Latency
+
+The time for the entire process of looking up a name and other necessary
+associated data from the point of view of the querier, amortized over all
+queries for all connections, should not significantly impact connection setup
+or resumption latency.
+
+### Bandwidth Efficiency
+
+The bandwidth cost for looking up a name and other associated data necessary
+for establishing communication with a given Subject, from the point of view of
+the querier, amortized over all queries for all connections, should not
+significantly impact total bandwidth demand for an application.
+
+### Query Linkability
+
+It should be costly for an adversary to monitor the infrastructure in order to
+link specific queries to specific queriers.
+
+DNS over TLS {{RFC7858}} and DNS over DTLS {{RFC8094}} provide this property
+between a querier and a recursive resolver; mixing by the recursive helps with
+mitigating upstream linkability.
+
+### Explicit Tradeoff
+
+A querier should be able to indicate the desire for a benefit with respect to
+one performance property by accepting a tradeoff in another, including:
+
+- Reduced latency for reduced dynamic consistency
+- Increased dynamic consistency for increased latency
+- Reduced request linkability for increased latency and/or reduced dynamic consistency
+- Reduced aggregate bandwidth use for increased latency and/or reduced dynamic consistency
+
+There is no support for explicit tradeoffs in performance properties available
+to clients in the present DNS.
+
+### Trust in Infrastructure
+
+A querier should not need to trust any entity other than the authority as to the
+correctness of association information provided by the naming service.
+Specifically, the querier should not need to trust any intermediary of
+infrastructure between itself and the authority, other than that under its own
+control.
+
+DNS provides this property with DNSSEC. However, the lack of mandatory DNSSEC,
+and the lack of a viable transition strategy to mandatory DNSSEC (see
+{{?I-D.trammell-optional-security-not}}), means that trust in infrastructure
+will remain necessary for DNS even with large scale DNSSEC deployment.
+
+## Observations {#pins-observations}
+
+On a cursory examination, many of the properties of our ideal name service can
+be met, or could be met, by the present DNS protocol or extensions thereto. We
+note that there are further possibilities for the future evolution of naming
+services meeting these properties. This section contains random observations
+that might inform future work.
+
+### Delegation and redirection are separate operations
+
+Any system which can provide the authenticity properties in {{authenticity}}
+is freed from one of the design characteristics of the present domain name
+system: the requirement to bind a zone of authority to a specific set of
+authoritative servers. Since the authenticity of delegation must be a
+protected by a chain of signatures back to the root of authority, the location
+within the infrastructure where an authoritative mapping "lives" is no longer
+bound to a specific name server. While the present design of DNS does have its
+own scalability advantages, this implication allows a much larger design space
+to be explored for future name service work, as a Delegation need not always
+be implemented via redirection to another name server.
+
+### Unicode alone may not be sufficient for distinguishable names
+
+Allowing names to be encoded in Unicode goes a long way toward meeting the
+meaningfulness property (see {{meaningfulness}}) for the majority of speakers
+of human languages. However, as noted by the Internet Architecture Board (see
+{{IAB-UNICODE7}}) and discussed at the Locale-free Unicode Identifiers (LUCID)
+BoF at IETF 92 in Dallas in March 2015 (see {{LUCID}}), it is not in the
+general case sufficient for distinguishability (see {{distinguishability}}).
+An ideal naming service may therefore have to supplement Unicode by providing
+runtime support for disambiguation of queries and assertions where the results
+may be indistinguishable.
+
+### Implicit inconsistency makes global invariance challenging to verify
+
+DNS does not provide a generalized form of explicit inconsistency, so efforts to
+verify global invariance, or rather, to discover Assertions for which global
+invariance does not hold, are necessarily effort-intensive and dynamic. For
+example, the Open Observatory of Network Interference performs DNS consistency
+checking from multiple volunteer vantage points for a set of targeted (i.e.,
+likely to be globally variant) domain names; see
+https://ooni.torproject.org/nettest/dns-consistency/.
 
 # Architecture
 
@@ -389,16 +728,16 @@ valid-until values; it does not protect other signatures on the assertion.
 
 ### Semantic of nonexistence proofs
 
-Shards, pshards and zones can all be used to prove nonexistence during their
+Shards, P-Shards and zones can all be used to prove nonexistence during their
 validity. But to allow change to happen frequently and to have a dynamic system,
 an assertion might be created, altered, expired or revoked during the validity
-period of a shard, pshard or zone, leading to an inconsistency. Thus, a section
+period of a shard, P-Shard or zone, leading to an inconsistency. Thus, a section
 proving nonexistence only captures the state at the point in time when it was
-signed. To make sure that the content of a shard, pshard or zone is still
+signed. To make sure that the content of a shard, P-Shard or zone is still
 accurate, a nonexistence update query {{nonexistence-update-query}} must be sent
 to the server having authority over that name.
 
-### Shards and Probabilistic Shards (Pshards) {#shards-and-pshards}
+### Shards and Probabilistic Shards (P-Shards) {#shards-and-p-shards}
 
 A shard is exclusively used to prove non-existence of a name and type in a given
 context and range. It allows zone authorities with many names to make
@@ -427,33 +766,33 @@ For efficiency's sake, information elements within a shard common to all
 assertions (zone, context) within the shard must be omitted from the assertions
 themselves. Signatures on contained assertions may be omitted.
 
-A pshard represents a space-efficient probabilistic data structure stored as a
+A P-Shard represents a space-efficient probabilistic data structure stored as a
 bit string to proof nonexistence. The data structure is used to prove membership
 of an element in a set. The set could either be the entire zone or an exclusive
 lexicographic range of that zone (like the range of a shard). All assertions
 within the same zone and context, and whose names are within the range are
-elements of the set. A pshard is protected by one or more signatures. A
-membership query to the pshard responds either with 'an assertion with a given
+elements of the set. A P-Shard is protected by one or more signatures. A
+membership query to the P-Shard responds either with 'an assertion with a given
 name and type might be part of the set' or 'an assertion with a given name and
 type is definitely not part of the set'. The second response can be used to
 proof nonexistence of an assertion with a given name and type. There is a
 tradeoff between the size of the bit string, membership query time, and the
 false positive error rate. The zone authority can determine how to weight them.
 
-A pshard has the following information elements:
+A P-Shard has the following information elements:
 
-- Context: name of the context in which the assertions in the pshard are valid;
+- Context: name of the context in which the assertions in the P-Shard are valid;
   see {{context-in-assertions}}.
 - Zone: name of the zone in which the assertions are made.
 - Range: an exclusive lexicographic range within which the contained assertions'
   names must be.
-- Type: the type of the probabilistic data structure contained in the pshard.
+- Type: the type of the probabilistic data structure contained in the P-Shard.
 - Data structure: meta data about the data structure of the indicated type and a
   bit string representing the data structure itself.
 - Signatures: one or more signatures generated by the authority for the
   shard; see {{signatures-in-assertions}}.
 
-The Types supported for each pshard are:
+The Types supported for each P-Shard are:
 
 - Bloom filter: A space-efficient probabilistic data structure using a
   configurable amount of hash functions from a specified hash family to generate
@@ -461,7 +800,7 @@ The Types supported for each pshard are:
 
 # Zone
 
-A zone is the entire set of shards, pshards, and assertions subject to a given
+A zone is the entire set of shards, P-Shards, and assertions subject to a given
 authority within a given context. The majority of zones will be tiny. Thus, a
 zone can be used for both positive and negative answers as it contains all
 information about the zone while still being small. 
@@ -471,15 +810,15 @@ A zone has the following information elements:
 - Context: name of the context in which the assertions in the zone are valid;
   see {{context-in-assertions}} above.
 - Zone: name of the zone.
-- Content: a set of assertions, pshards and/or shards sharing the context
+- Content: a set of assertions, P-Shards and/or shards sharing the context
   and zone.
 - Signatures: one or more signatures generated by the authority for the
   zone; see {{signatures-in-assertions}}.
 
 For efficiency's sake, information elements within a zone common to all
-assertions, shards, and pshards (zone, context) within the zone must be omitted
-from the assertions, shards, and pshards themselves. Signatures on contained
-assertions, shards, and pshards may be omitted.
+assertions, shards, and P-Shards (zone, context) within the zone must be omitted
+from the assertions, shards, and P-Shards themselves. Signatures on contained
+assertions, shards, and P-Shards may be omitted.
 
 ### Zone-Reflexive Assertions
 
@@ -703,7 +1042,7 @@ Representation (CBOR) {{RFC7049}}, with an outer message type providing a
 mechanism for future capabilities-based versioning and recognition of a
 message as a RAINS message.
 
-Messages, assertions, shards, pshards, zones, queries, and notifications
+Messages, assertions, shards, P-Shards, zones, queries, and notifications
 are each represented as a CBOR map of integer keys to values, which allows each
 of these types to be extended in the future, as well as the addition of non-
 standard, application-specific information to RAINS messages and data items. A
@@ -729,23 +1068,23 @@ and notification maps is given in the symbol table below:
 | 0    | signatures     | Signatures on a message or section                    |
 | 1    | capabilities   | Capabilities of server sending message                |
 | 2    | token          | Token for referring to a data item                    |
-| 3    | subject-name   | Subject name in an assertion, shard, pshard or zone   |
-| 4    | subject-zone   | Zone name in an assertion, shard, pshard or zone      |
+| 3    | subject-name   | Subject name in an assertion, shard, P-Shard or zone   |
+| 4    | subject-zone   | Zone name in an assertion, shard, P-Shard or zone      |
 | 5    | subject-addr   | Subject address in address assertion                  |
-| 6    | context        | Context of an assertion, shard, pshard, zone or query |
+| 6    | context        | Context of an assertion, shard, P-Shard, zone or query |
 | 7    | objects        | Objects of an assertion                               |
 | 8    | query-name     | Fully qualified name for a query                      |
 | 10   | query-types    | Acceptable object types for a query                   |
-| 11   | range          | Lexical range of Assertions in shard or pshard        |
+| 11   | range          | Lexical range of Assertions in shard or P-Shard        |
 | 12   | query-expires  | Absolute timestamp for query expiration               |
 | 13   | query-opts     | Set of query options requested                        |
 | 14   | hash-type      | Hash function used in an update query                 |
-| 15   | hash-value     | Value of a hashed assertion, shard, pshard or zone    |
+| 15   | hash-value     | Value of a hashed assertion, shard, P-Shard or zone    |
 | 17   | key-phases     | All requested key phases of a query                   |
-| 18   | data-structure | Data structure of a pshard                            |
+| 18   | data-structure | Data structure of a P-Shard                            |
 | 21   | note-type      | Notification type                                     |
 | 22   | note-data      | Additional notification data                          |
-| 23   | content        | Content of a message, shard, pshard or zone           |
+| 23   | content        | Content of a message, shard, P-Shard or zone           |
 
 ## Message {#cbor-message}
 
@@ -788,7 +1127,7 @@ section body, a CBOR map defined as in the subsections
 | -4   | revquery     | Address Query (see {{cbor-revquery}})             |
 | 5    | auquery      | Assertion update query (see {{cbor-auquery}})     |
 | 6    | nuquery      | Nonexistence update query (see {{cbor-nuquery}})  |
-| 7    | pshard       | Pshard (see {{cbor-pshard}})                      |
+| 7    | P-Shard       | P-Shard (see {{cbor-P-Shard}})                      |
 | 23   | notification | Notification (see {{cbor-notification}})          |
 
 ## Assertion body {#cbor-assertion}
@@ -908,62 +1247,62 @@ ascending order. That means, they are sorted by the following elements in the
 mentioned order: zone name, context, range begin, range end, content, signature
 meta data.
 
-## Pshard body {#cbor-pshard}
+## P-Shard body {#cbor-P-Shard}
 
-A Pshard body is a map. The keys present in the map depend on whether the Pshard
+A P-Shard body is a map. The keys present in the map depend on whether the P-Shard
 is contained in a Message or in a Zone.
 
-Pshards contained in a Message's content value are "bare Pshards". Since they
+P-Shards contained in a Message's content value are "bare P-Shards". Since they
 cannot inherit any values from their contained Zone, they MUST contain the
 signatures (0), subject-zone (4), context (6), range (11), and data-structure
 (18) keys.
 
-Pshards within a Zone are "contained Pshards", and can inherit values from their
-containing Zone. A contained Pshards MUST contain the the range(11) and
+P-Shards within a Zone are "contained P-Shards", and can inherit values from their
+containing Zone. A contained P-Shards MUST contain the the range(11) and
 data-structure (18) keys. The subject-zone (4) and context (6) keys MUST NOT be
 present. They are assumed to have the same value as the corresponding values in
 the containing Zone for signature generation and signature verification
 purposes; see {{cbor-signature}}.
 
-A contained Pshard SHOULD contain the signatures (0) key, since an unsigned
-contained Pshard cannot be used by a RAINS server to answer a query for
+A contained P-Shard SHOULD contain the signatures (0) key, since an unsigned
+contained P-Shard cannot be used by a RAINS server to answer a query for
 nonexistence; it must be returned in a signed Zone.
 
 The value of the signatures (0) key, if present, is an array of one or more
 Signatures as defined in {{cbor-signature}}. If not present, the containing Zone
-MUST be signed. Signatures on a contained Pshard are generated as if the
-inherited subject-zone and context values are present in the Pshard,
-whether actually present or not. The signatures on the Pshard are to be
-verified against the appropriate key for the Zone containing the Pshard in
+MUST be signed. Signatures on a contained P-Shard are generated as if the
+inherited subject-zone and context values are present in the P-Shard,
+whether actually present or not. The signatures on the P-Shard are to be
+verified against the appropriate key for the Zone containing the P-Shard in
 the given context, as described in {{signatures-in-assertions}}.
 
 The value of the subject-zone (4) key, if present, is a UTF-8 encoded string
-containing the name of the zone in which the Assertions in the Pshard is
+containing the name of the zone in which the Assertions in the P-Shard is
 made and MUST end with '.' (the root zone). If not present, the zone of the
 assertion is inherited from the containing Zone.
 
 The value of the context (6) key, if present, is a UTF-8 encoded string
-containing the name of the context in which the Assertions in the Pshard
+containing the name of the context in which the Assertions in the P-Shard
 are valid. Both the authority-part and the context-part MUST end with a '.'.  If
 not present, the context of the assertion is inherited from the containing Zone.
 
 The value of the range (11) key MUST be a two element array of strings or nulls
 (subject-name A, subject-name B). A must lexicographically sort before B, but
-neither subject name need be present in the Pshard's contents. If A is
-null, the Pshard begins at the beginning of the zone. If B is null, the
-Pshard ends at the end of the zone. The Pshard MUST NOT contain any
+neither subject name need be present in the P-Shard's contents. If A is
+null, the P-Shard begins at the beginning of the zone. If B is null, the
+P-Shard ends at the end of the zone. The P-Shard MUST NOT contain any
 assertions whose subject names sort before A or after B.
 
 The value of the data-structure (18) key is an array of elements, as defined in
 {{cbor-data-structure}}.
 
-Pshards are lexicographically complete within the range described in the
-range value: a subject-name and type within the range of a Pshard giving a
+P-Shards are lexicographically complete within the range described in the
+range value: a subject-name and type within the range of a P-Shard giving a
 negative answer is asserted to not exist.
 
-### Sorting Pshard {#cbor-pshard-sorting}
+### Sorting P-Shard {#cbor-P-Shard-sorting}
 
-Pshards are sorted lexicographically by their cbor encoded byte string in
+P-Shards are sorted lexicographically by their cbor encoded byte string in
 ascending order. That means, they are sorted by the following elements in the
 mentioned order: zone name, context, range begin, range end, hash family, number
 of hash functions, filter, signature meta data.
@@ -977,11 +1316,11 @@ Signatures on the Zone are to be verified against the appropriate key for the
 Zone in the given context, as described in {{signatures-in-assertions}}.
 
 The value of the content (23) key is an array of Shard bodies as defined in
-{{cbor-shard}}, Pshard bodies as defined in {{cbor-pshard}} and/or Assertion
-bodies as defined in {{cbor-assertion}}. Assertions, Pshards and Shards in the
-content array MUST be sorted. Assertions are sorted before Pshards, which in
+{{cbor-shard}}, P-Shard bodies as defined in {{cbor-P-Shard}} and/or Assertion
+bodies as defined in {{cbor-assertion}}. Assertions, P-Shards and Shards in the
+content array MUST be sorted. Assertions are sorted before P-Shards, which in
 turn are sorted before Shards. Groups of the same section type are sorted
-according to {{cbor-assertion-sorting}}, {{cbor-pshard-sorting}}, and
+according to {{cbor-assertion-sorting}}, {{cbor-P-Shard-sorting}}, and
 {{cbor-shard-sorting}}.
 
 The value of the subject-zone (4) key is a UTF-8 encoded string containing the
@@ -1038,7 +1377,7 @@ query, as in {{tabqopts}}.
 | 7    | Disable verification delegation (client protocol only)         |
 | 8    | Suppress proactive caching of future assertions                |
 | 9    | Maximize freshness of result                                   |
-| 10   | Pshard not accepted                                            |
+| 10   | P-Shard not accepted                                            |
 
 Options 1-5 and 9 specify performance/privacy tradeoffs. Each server is free to
 determine how to minimize each performance metric requested; however, servers
@@ -1073,7 +1412,7 @@ case there is a negative cache hit. Option 12 requests a notification response
 before the server forwards the query if there is a negative cache hit. This is
 especially useful with option 11 to get feedback early, e.g. to correct a typo.
 
-Option 10 states if a Pshard is accepted as a nonexistence proof. As pshards
+Option 10 states if a P-Shard is accepted as a nonexistence proof. As P-Shards
 have false positives, a client has the possibility to request a shard or zone to
 be certain with this option. Depending on the servers' configurations, a false
 positive check can be done at the naming server, an intermediate server or at
@@ -1768,26 +2107,26 @@ most x seconds. At the point in time a section is signed, its content MUST
 represent the state of the zone at that point in time. The following actions
 result in allowed inconsistencies:
 
-- Creation of a new assertion: Shards and pshards in range, and zones
+- Creation of a new assertion: Shards and P-Shards in range, and zones
   signed before this assertion was created and which are still valid, prove that
   this assertion is nonexistent, although it does now.
 - Changed object value of an assertion: Shards in range and zones signed before
   this assertion was created and which are still valid, prove that this
   assertion is nonexistent, althoug it does now.
-- Expiration of an assertion: Shards and pshards in range, and zones
+- Expiration of an assertion: Shards and P-Shards in range, and zones
   signed before this assertion has expired and which are still valid, prove that
   this assertion exists, although it does not anymore.
 - Revocation of an assertion: Same inconsistencies as for expiration of an
   assertion with the addition, that the assertion itself might still be cached
   and served although it has been revoked.
 
-Two sections for proving nonexistence (shard, pshard or zone) which have
+Two sections for proving nonexistence (shard, P-Shard or zone) which have
 an overlapping range and validity time where in between the signing of the two
 sections any of the above mentioned actions leading to inconsistencies happend,
 become inconsistent as well. One of them has the old view, while the newer one
 has the updated view about the assertion. Note that there is no inconsistency
-between a pshard and any other section proving nonexistence if only the
-object value of the assertion has changed (a pshard does not store this
+between a P-Shard and any other section proving nonexistence if only the
+object value of the assertion has changed (a P-Shard does not store this
 information).
 
 Note that most assertions are consistent between each other as the union of them
@@ -1823,7 +2162,7 @@ If the server or client can parse the message, it:
   or client returns a 400 Bad Message notification to its peer, and ceases
   processing of the message.
 
-On receipt of an assertion, shard, pshard, or zone message section, a
+On receipt of an assertion, shard, P-Shard, or zone message section, a
 server:
 
 - verifies its consistency (see {{runtime-consistency-checking}}). If the
@@ -1834,7 +2173,7 @@ server:
 - determines whether it is likely to answer a future query, according to its
   configuration, policy, and query history; if so, it caches the section.
 
-On receipt of an assertion, shard, pshard or zone message section, a
+On receipt of an assertion, shard, P-Shard or zone message section, a
 client:
 
 - determines whether it answers an outstanding query; if so, it considers the
@@ -1955,11 +2294,11 @@ On receipt of an nonexistence update query, a server:
 - determines whether it is the authoritative server of the queried name. If so,
   - it checks if it has a valid assertion for the queried context, subject-name
     and type. In this case it returns the assertion. If not, it:
-  - determines whether it has an already valid zone, pshard, or shard in
+  - determines whether it has an already valid zone, P-Shard, or shard in
     the range of the queried fully-qualified name, in a matching context, and
     with a higher validUntil value. If so, the section with the highest
     validUntil value is returned. If not, it:
-  - knows that the received shard, pshard, or zone is still the most
+  - knows that the received shard, P-Shard, or zone is still the most
     recent one and a 200 notification message containing the hash value of the
     section is returned.
   If not, it:
@@ -2415,89 +2754,9 @@ concentration, with indirection that makes tracing difficult.]
 
 Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Ted Hardie, Joe
 Hildebrand, Tobias Klausmann, Steve Matsumoto, Adrian Perrig, Raphael Reischuk,
-Andrew Sullivan, and Suzanne Woolf for the discussions leading to the design of
-this protocol. Thanks especially to Stephen Shirley for detailed feedback.
+Wendy Seltzer, Andrew Sullivan, and Suzanne Woolf for the discussions leading to
+the design of this protocol, and the definition of an ideal naming service on
+which it is based. Thanks especially to Stephen Shirley for detailed feedback.
 
 --- back
 
-# Directions for future experimentation
-
-The following features were suggested during the design of RAINS, but have
-been left out of the current revision of the specification to allow additional
-experimentation with them before they are completely specified.
-
-## Revocation based on hash chains {#hash-chain-rev}
-
-RAINS assertions are scoped in temporal validity by the lifetimes on their
-signatures. This is operationally equivalent to TTL in the current DNS. An
-assertion which becomes invalid can simply not be renewed by its authority.
-However, very dynamic infrastructures may require impractical numbers of
-signatures, and could benefit from longer validity times. Allowing an assertion
-to be revoked would make this possible. This entails adding a field to every
-signature:
-
-- Revocation-Token: an optional revocation token for this signature, which 
-  allows a signature to be replaced or removed before the end of its validity.
-  Revocation tokens are generally based on hash chains, meaning that a
-  signature with a revocation token "down" the chain from a given token
-  supercedes it. The format and mechanism used by the revocation token is
-  determined by the alogrithm used. 
-
-Hash-chain based revocation allows a signature (and the Assertion, Shard, or
-Zone it protects) to be replaced before it expires. To use hash-chain based
-revocation, a signing entity generates a hash chain from a known seed using
-the hash function specified by the signature algorithm in use, and places the
-Nth value derived therefrom in the hash chain revocation token on a signature.
-When used, this token appears as a byte array after the signature data in the
-signature array.
-
-A revocation can be issued by generating a new section and signing it,
-revealing the N-1st value from the hash chain in the revocation token. To
-allow a recipient of a revoked section to verify the revocation, the following
-restrictions on what can replace what apply:
-
-- An Assertion can only be replaced by another Assertion with the same 
-  Subject within the same Context and Zone, containing an Objects array 
-  of the same length containing the same types of Objects. To delete Object 
-  values, those values can be replaced with Null in the replacing Assertion.
-- A Shard can only be replaced by another Shard with an identical range key,
-  within the same Context and Zone.
-- A Zone can only be replaced by another Zone with an identical name within 
-  the same Context.
-
-Four codepoints have been reserved to support experimentation with this
-mechanism, as shown in {{tabsigrev}}. 
-
-{: #tabsigrev title="Defined signature algorithms"}
-
-| Code | Signatures | Hash/HMAC | Format               | Revocation |
-|-----:|------------|-----------|----------------------|------------|
-| 24   | ed25519    | sha-512   | See {{eddsa-format}} | hash-chain |
-| 25   | ed448      | shake256  | See {{eddsa-format}} | hash-chain |
-| 26   | ecdsa-256  | sha-256   | See {{ecdsa-format}} | hash-chain |
-| 27   | ecdsa-384  | sha-384   | See {{ecdsa-format}} | hash-chain |
-
-The main open question for experimentation is how to ensure that a revocation
-is properly propagated through a RAINS infrastructure; this may require
-protocol changes to work reliably.
-
-To support this experiment, a server must additionally evaluate an assertion
-it receives to determine whether it replaces any information presently in its
-cache. If so, it discards the old information, and caches the new section.
-
-# Open Questions and Issues
-
-- A method for clients to discover local oracles needs to be specified.
-- Consider making negative answers less expensive by allowing a hash of a
-  shard with a negative answer proof to be sent back, and checked with a "no
-  hashed negative answers" query option. This would increase complexity
-  somewhat, because it would require the (re-)addition of an Answer section,
-  which could contain such a beast.
-- Consider adding semantics to note-data for automated reaction to an error.
-  Specifically, notification codes 400, 403, and 413 could use additional data.
-- Do we really need 504 No Assertion Available? We know (at the client) when the
-  query timed out.
-- Revocation is hard; it might be made more tractable (and allow some
-  operational control) by designing a revocation mechanism that can *only*
-  revoke delegations)
-  
