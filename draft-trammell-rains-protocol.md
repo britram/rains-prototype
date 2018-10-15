@@ -191,10 +191,6 @@ In addition, the following terms are used in this document as defined:
   purposes of proving non-existence of an Assertion. Shards may be encoded to
   provide either absolute proof or probabalistic assurance of non-existence. See
   {{shards-and-p-shards}}.
-- Assertion Update Query: An expression of interest about the current validity
-  status of an unexpired assertion one already has.
-- Nonexistence Update Query: An expression of interest about the current
-  validity status of an unexpired shard or zone one already has.
 - RAINS Message: Unit of exchange in the RAINS protocol, containing assertions,
   shards, zones, queries, and notifications. See {{cbor-message}}.
 - Notification: A RAINS-internal message section carrying information about the
@@ -542,7 +538,10 @@ checking from multiple volunteer vantage points for a set of targeted (i.e.,
 likely to be globally variant) domain names; see
 https://ooni.torproject.org/nettest/dns-consistency/.
 
-# Architecture
+# RAINS Protocol Architecture
+
+\[EDITOR'S NOTE: text here following from the PINS section, on how RAINS is
+different from DNS]
 
 The RAINS architecture is simple, and resembles the architecture of DNS. A
 RAINS Server is an entity that provides transient and/or permanent storage for
@@ -566,19 +565,363 @@ queries and assertions. RAINS Clients use a subset variant of the RAINS Protocol
 (called the RAINS Client Protocol) to interact with RAINS Servers providing
 query services on their behalf.
 
-# Information Model
+\[EDITOR'S NOTE: text on the authority's view of the system here: continuous
+signing, etc]
 
-The RAINS Protocol is based on an information model built around two kinds of
-information: Assertions and Queries. An Assertion contains some information
-about a name or address, and a Query contains a request for information about a
-name or address. The information model in this section omits information
-elements required by the resolution mechanism itself; these are defined in more
-detail in {{cbor}} and {{protocol-def}}.
+\[EDITOR'S NOTE: text on the client's view of the system here: include
+operational bootstrapping?]
+
+\[EDITOR'S NOTE: introduce the protocol here, and point out the primacy of the
+information/data model]
+
+# Information and Data Model
+
+The RAINS Protocol is based on an information model containing three primary
+kinds of objects: Assertions, Queries, and Notifications. An Assertion contains
+some information about a name or address, and a Query contains a request for
+information about a name or address. Queries are answered with Assertions.
+Notifications provide information about the operation of the protocol itself.
+The protocol exchanges RAINS Messages, which act as envelopes containing
+Assertions, Queries, and Notifications. RAINS Messages also provide for
+capabilities-based versioning of the protocol, and for recognition of a chunk of
+CBOR-encoded binary data at rest to be recognized as a RAINS message.
+
+The RAINS data model is a relatively straightforward mapping of the information
+model to the Concise Binary Object Representation (CBOR) {{!RFC7049}}, such that
+Assertions are split into four subtypes of assertion depending on their scope
+and purpose: singular Assertions and Zones for positive proof of the existence of
+an association between a name and an object, Shards and P-Shards for negative
+proof. Messages, singular Assertions, Shards, P-Shards, Zones, Queries, and Notifications
+are each represented as a CBOR map of integer keys to values, which allows each
+of these types to be extended in the future, as well as the addition of non-
+standard, application-specific information to RAINS messages and data items. A
+common registry of map keys is given in {{tabmkey}}. RAINS implementations MUST
+ignore any data objects associated with map keys they do not understand. Integer
+map keys in the range -22 to +23 are reserved for the use of future versions or
+extensions to the RAINS protocol, due to the efficiency of representation of
+these values in CBOR.
+
+Message contents, signatures and object values are implemented as type-
+prefixed CBOR arrays with fixed meanings of each array element; the structure
+of these lower-level elements can therefore not be extended. Message section
+types are given in {{tabsection}}, object types in {{tabobj}}, and signature
+algorithms in {{tabsig}}.
+
+{: #tabmkey title="CBOR Map Keys used in RAINS"}
+
+| Code | Name           | Description                                            |
+|-----:|----------------|------------------------------------------------        |
+| 0    | signatures     | Signatures on a message or section                     |
+| 1    | capabilities   | Capabilities of server sending message                 |
+| 2    | token          | Token for referring to a data item                     |
+| 3    | subject-name   | Subject name in an Assertion, Shard, P-Shard or Zone   |
+| 4    | subject-zone   | Zone name in an Assertion, Shard, P-Shard or Zone      |
+| 5    | subject-addr   | Subject address in address assertion                   |
+| 6    | context        | Context of an Assertion, Shard, P-Shard, Zone or Query |
+| 7    | objects        | Objects of an Assertion                                |
+| 8    | query-name     | Fully qualified name for a Query                       |
+| 10   | query-types    | Acceptable object types for a Query                    |
+| 11   | range          | Lexical range of Assertions in Shard or P-Shard        |
+| 12   | query-expires  | Absolute timestamp for query expiration                |
+| 13   | query-opts     | Set of query options requested                         |
+| 14   | hash-type      | Hash function used in an update query                  |
+| 15   | hash-value     | Value of a hashed Assertion, Shard, P-Shard or Zone    |
+| 17   | key-phases     | All requested key phases of a Query                    |
+| 18   | data-structure | Data structure of a P-Shard                            |
+| 21   | note-type      | Notification type                                      |
+| 22   | note-data      | Additional notification data                           |
+| 23   | content        | Content of a message, shard, P-Shard or zone           |
+
+The information model is designed to be representation-independent, and can be
+rendered using alternate structured-data representations that support the
+concepts of maps and arrays. For example, YAML or JSON could be used to
+represent RAINS messages and data structures for debugging purposes. However,
+signatures over messages and assertions need a single canonical representation
+of the object to be signed as a bitstream. For RAINS, this is the CBOR
+representation canonicalized as in {{c14n}}; therefore alternate
+representations are always secondary to the CBOR data model. An alternate
+representation designed for textual manipulation of RAINS data is described in
+{{zonefiles}}.
+
+The following subsections describe the information and data model of a RAINS
+message from the top down.
+
+## Messages
+
+A Message is a self-contained unit of exchange in the RAINS protocol. Messages
+have some content (the Assertions, Queries, and/or Notifications carried by the
+Message) tagged with a token (see {{token}}). They may also carry information
+about peer capabilities, and an optional signature.
+
+More concretely, a Message is represented as a CBOR map with the CBOR tag value
+15309736, which identifies the map as a RAINS message. This map MUST contain a
+token key (2) and a content key (23), and MAY contain a capabilities key (1) a
+signatures key (0).
+
+The value of the content key is an array of zero or more Message Sections, as
+defined in {{message-sections}}
+
+The value of the token key is an opaque 16-byte octet array used to link
+Messages, Queries, and Notifications; see {{tokens}} for details.
+
+The value of the signatures key, when present, is an array of Signatures over
+the entire Message, generated as in {{signatures}}, and to be verified against
+an infrastructure key (see {{obj-infrakey}}) for the RAINS Server originating
+the message.
+
+A Message map MAY contain a capabilities (1) key, whose value is described in
+{{cbor-capabilities}}.
+
+A Message map MUST contain a token (2) key, whose value is a 16-byte array.
+See {{tokens}} for details.
+
+A Message map MUST contain a content (23) key, whose value is an array of
+Message Sections; a Message Section is either an Assertion, Shard, Zone, Query,
+or Notification.
+
+### Message Section structure {#message-sections}
+
+Each Message Section in the Message's content value is a two-element array.
+The first element in the array is the message section type, encoded as an
+integer as in {{tabsection}}. The second element in the array is a message
+section body, a CBOR map defined as in the subsections
+{{assertions}}, {{queries}}, and {{notifications}}
+
+{: #tabsection title="Message Section Type Codes"}
+
+| Code | Name         | Description                                       |
+|-----:|--------------|---------------------------------------------------|
+| 1    | assertion    | Singular Assertion (see {{singular-assertions}})  |
+| -1   | revassertion | Address Assertion (see {{revassert}})             |
+| 2    | shard        | Shard (see {{shards}})                            |
+| 3    | zone         | Zone (see {{zones}})                              |
+| 4    | query        | Query (see {{queries}})                           |
+| -4   | revquery     | Address Query (see {{revquery}})                  |
+| 5    | p-shard      | P-Shard (see {{p-shards}})                        |
+| 6    | auquery      | Assertion update query (see {{auquery}})          |
+| 7    | nuquery      | Nonexistence update query (see {{nuquery}})       |
+| 23   | notification | Notification (see {{cbor-notification}})          |
+
+## Assertions {#assertions}
+
+Information about names in RAINS is carried by Assertions. An Assertion is a
+statement about a mapping from a subject name to one or several object values of
+the same type, signed by some authority for the namespace containing the
+assertion, with a temporal validity determined by the lifetime of the
+signature(s) on the Assertion.
+
+The subject of an Assertion is identified by a name in three parts:
+
+- the subject zone name, identifying the namespace within which the subject is
+  contained;
+- the subject name, identifying the name of the subject within that zone; and
+- the subject context, as in {{assertion-context}}, identifying the context for
+  purposes of explicit inconsistency.
+
+The types of objects that can be associated with a subject are of several types,
+described in {{obj-types}}.
+
+There are four kinds of assertions, distinguished by their scope (how many
+subjects are covered by a single Assertion) and their utility (whether the
+assertion can be used for positive proof of a subject-object association, for
+negative proof of the lack of such an association, or both):
+
+- Singular Assertions contain a set of objects associated with a single given
+  subject name in a given zone in a given context. The signature on a Singular
+  Assertion can be used to prove the existance of an association between the
+  subject name and the objects within the Assertion. Singular assertions are
+  described in detail in {{singular-assertions}}.
+- Zones contain Assertions for every object associated with every subject name
+  within a given zone in a given context. The signature on a Zone can be used to
+  prove both the existence of an association between a subject name and an
+  object of a given type, as well as the absence of such an association. Zones
+  are described in detail in {{zones}}.
+- Shards contain Assertions for every object associated with every subject name
+  in a given lexicographic range of subject names within a given zone in a given
+  context. The signature on a Shard can be used to prove the nonexistance of an
+  object of a given type for a name within its range. Shards are described in
+  detail in {{shards}}.
+- P-Shards (or Probabalistic Shards) contain a data structure that can be used
+  to demonstrate, within predictable bounds of false-negative probability, the
+  non-existence of an object of a given type for a name within a lexicographic
+  range of subjet names within a given zone in a given context. They allow an
+  efficiency-accuracy tradeoff for negative proofs. P-Shards are described in
+  detail in {{p-shards}}
+
+\[EDITOR'S NOTE: fix this up, give it context: Assertions are sorted
+lexicographically by their cbor encoded byte string in ascending order. That
+means, they are sorted by the following elements in the mentioned order: fully
+qualified name, context, type, object value(s), signature meta data.]
+ 
+### Singular Assertions {#singular-assertions}
+
+\[EDITOR'S NOTE: fix this section up]
+
+An Assertion body is a map. The keys present in this map depend on whether the
+Assertion is contained in a Message, Shard or Zone.
+
+Assertions contained in a Message's content value are "bare Assertions". Since
+they cannot inherit any values from their containers, they MUST contain the
+signatures (0), subject-name (3), subject-zone (4), context (6), and objects (7)
+keys.
+
+Assertions within a Shard or Zone are "contained Assertions", and can inherit
+values from their containers. A contained Assertion MUST contain the subject-
+name (3) and objects (7) keys. The subject-zone (4) and context (6) keys MUST
+NOT be present. They are assumed to have the same value as the corresponding
+values in the containing Shard or Zone for signature generation and signature
+verification purposes; see {{cbor-signature}}.
+
+A contained Assertion SHOULD contain the signatures (0) key, since an unsigned
+contained Assertion cannot be used by a RAINS server to answer a query; it
+must be returned in a signed Shard or Zone.
+
+The value of the signatures (0) key, if present, is an array of one or more
+Signatures as defined in {{cbor-signature}}. If not present, the containing
+Shard or Zone MUST be signed. Signatures on a contained Assertion are generated
+as if the inherited subject-zone and context values are present in the
+Assertion, whether actually present or not. The signatures on the Assertion are
+to be verified against the appropriate key for the Zone containing the Assertion
+in the given context, as described in {{signatures-in-assertions}}.
+
+The value of the subject-name (3) key is a UTF-8 encoded {{!RFC3629}} string
+containing the name of the subject of the assertion. The subject name MAY
+contain dot(s) '.'. The subject name never contains the zone in which the
+subject name is registered; the fully-qualified name is obtained by joining the
+subject-name to the subject-zone with a '.' character. The subject-name must be
+valid according to the nameset expression for the zone, if any.
+
+The value of the subject-zone (4) key, if present, is a UTF-8 encoded string
+containing the name of the zone in which the assertion is made and MUST end with
+'.' (the root zone). If not present, the zone of the assertion is inherited from
+the containing Shard or Zone.
+
+The value of the context (6) key, if present, is a UTF-8 encoded string
+containing the name of the context in which the assertion is valid. Both the
+authority-part and the context-part MUST end with a '.'. If not present, the
+context of the assertion is inherited from the containing Shard or Zone.
+
+The value of the objects (7) key is an array of objects, as defined in
+{{cbor-object}}.
+
+### Zones {#zones}
+
+### Shards {#shards}
+
+### P-Shards {#p-shards}
+
+### Dynamic Assertion Validity {#assertion-dynamics}
+
+## Object Types {#obj-types}
+
+### Infrastructure Key {#obj-infrakey}
+
+
+## Queries
+
+## Context in Queries {#query-context}
+
+## Notifications
+
+## Signatures
+
+### Canonicalization {#c14n}
+
+## Tokens {#tokens}
+
+Messages and notifications contain an opaque token (2) key, whose
+content is a 16-byte array, and is used to link Messages to the Queries they
+respond to, and Notifications to the Messages they respond to. Tokens MUST be
+treated as opaque values by RAINS servers.
+
+A Message sent in response to a Query (normal and update) MUST contain the token
+of the Message containing the Query. Otherwise, the Message MUST contain a token
+selected by the server originating it, so that future Notifications can be
+linked to the Message causing it. Likewise, a Notification sent in response to a
+Message MUST contain the token from the Message causing it (where the new
+Message contains a fresh token selected by the server). This allows sending
+multiple Notifications within one Message and the receiving server to respond to
+a Message containing Notifications (e.g. when it is malformed).
+
+Since tokens are used to link queries to replies, and to link notifications to
+messages, regardless of the sender or recipient of a message, they MUST be
+chosen by servers to be hard to guess; e.g. generated by a cryptographic random
+number generator.
+
+When a server creates a new query to forward to another server in response to
+a query it received, it MUST NOT use the same token on the delegated query
+as on the received query, unless option 6 Enable Tracing is present in the
+received, in which case it MUST use the same token.
+
+
+## Context in Assertions {#assertion-context}
+
+Assertion contexts are used to provide explicit inconsistency, while allowing
+Assertions themselves to be globally valid regardless of the query to which they
+are given in reply. Explicit inconsistency is the simultaneous validity of
+multiple sets of Assertions for a single subject name at a given point in time.
+Explicit inconsistency is implemented by using the context to select an
+alternate chain of signatures to use to verify the validity of an Assertion, as
+follows:
+
+- The global context is identified by the special context name '.'. Assertions
+  in the global context are signed by the authority for the subject name. For
+  example, assertions about the name 'ethz.ch.' in the global context are only
+  valid if signed by the relevant authority which is either 'ethz.ch.', 'ch.',
+  or '.' depending on the value of the subject name of the assertion.
+- A local context is associated with a given authority. The local context's name
+  is divided into an  authority-part and a context-part by a context marker
+  ('cx--'). The authority-part directly identifies the authority whose key was
+  used to sign the assertion; assertions within a local context are only valid
+  if signed by the identified authority. Authorities have complete control over
+  how the contexts under their namespaces are arranged, and over the names
+  within those contexts. Both the authority-part and the context-part must end
+  with a '.'.
+
+Some examples illustrate how context works:
+
+- For the common split-DNS case, an enterprise could place names for machines on
+  its local networks within a separate context. E.g., a workstation could be
+  named 'simplon.cab.inf.ethz.ch.' within the context
+  'staff-workstations.cx--inf.ethz.ch.' Assertions about this name would be
+  signed by the authority for 'inf.ethz.ch.'. Here, the context serves simply as
+  a marker, without enabling an alternate signature chain: note that the name
+  'simplon.cab.inf.ethz.ch' could at the same time be validly signed in the
+  global context by the authority over that name to allow external users access
+  this workstation. The local context simply marks this assertion as internal.
+  This allows a client making requests of local names to know they are local,
+  and for local resolvers to manage visibility of assertions outside the
+  enterprise: explicit context makes accidental leakage of both queries and
+  assertions easier to detect and avoid.
+- Contexts make captive-portal interactions more explicit: a captive portal
+  resolver could respond to a query for a common website (e.g. www.google.ch)
+  with a signed response directed at the captive portal, but within a context
+  identifying the location as well as the ISP (e.g.
+  sihlquai.zurich.ch.cx--starbucks.access.some-isp.net.). This response will be
+  signed by the authority for 'starbucks.access.some-isp.net.'. This signature
+  achieves two things: first, the client knows the result for www.google.ch is
+  not globally valid; second, it can present the user with some indication as to
+  the identity of the captive portal it is connected to.
+
+Further examples showing how context can be used in queries as well are given
+in {{context-in-queries}} below.
+
+Developing conventions for assertion contexts for different situations will
+require implementation and deployment experience, and is a subject for future
+work.
+
+## Context in Queries {#query-context}
+
+# Zone File Format {#zonefiles}
+
+\[EDITOR'S NOTE: derive this from the zonefile parser]
+
+
+
+
 
 ## Assertion
-
-An Assertion is a signed statement about a mapping from a subject name to one or
-several object values of the same type, and consists of the following elements:
+, and consists of the following elements:
 
 - Context: name of the context in which the assertion is valid;
   see {{context-in-assertions}} below.
@@ -640,58 +983,6 @@ For a given {subject, type} tuple, multiple assertions can be valid at a given
 point in time; the union of the object values of all of these assertions is
 considered to be the set of valid values at that point in time.
 
-### Context in Assertions
-
-Assertion contexts are used to determine the validity of the signature by the
-declared authority as follows:
-
-- The global context is identified by the special context name '.'. Assertions
-  in the global context are signed by the authority for the subject name. For
-  example, assertions about the name 'ethz.ch.' in the global context are only
-  valid if signed by the relevant authority which is either 'ethz.ch.', 'ch.',
-  or '.' depending on the value of the subject name of the assertion.
-- A local context is associated with a given authority. The authority-part and
-  the context-part of a local context name are divided by a context marker
-  ('cx--'). The authority-part directly identifies the authority whose key was
-  used to sign the assertion; assertions within a local context are only valid
-  if signed by the identified authority. Authorities have complete control over
-  how the contexts under their namespaces are arranged, and over the names
-  within those contexts. Both the authority-part and the context-part must end
-  with a '.'.
-
-Assertion context is the mechanism by which RAINS provides explicit
-inconsistency ({{explicit-inconsistency}). Some
-examples illustrate how context works:
-
-- For the common split-DNS case, an enterprise could place names for machines on
-  its local networks within a separate context. E.g., a workstation could be
-  named 'simplon.cab.inf.ethz.ch.' within the context
-  'staff-workstations.cx--inf.ethz.ch.' Assertions about this name would be
-  signed by the authority for 'inf.ethz.ch.'. Here, the context serves simply as
-  a marker, without enabling an alternate signature chain: note that the name
-  'simplon.cab.inf.ethz.ch' could at the same time be validly signed in the
-  global context by the authority over that name to allow external users access
-  this workstation. The local context simply marks this assertion as internal.
-  This allows a client making requests of local names to know they are local,
-  and for local resolvers to manage visibility of assertions outside the
-  enterprise: explicit context makes accidental leakage of both queries and
-  assertions easier to detect and avoid.
-- Contexts make captive-portal interactions more explicit: a captive portal
-  resolver could respond to a query for a common website (e.g. www.google.ch)
-  with a signed response directed at the captive portal, but within a context
-  identifying the location as well as the ISP (e.g.
-  sihlquai.zurich.ch.cx--starbucks.access.some-isp.net.). This response will be
-  signed by the authority for 'starbucks.access.some-isp.net.'. This signature
-  achieves two things: first, the client knows the result for www.google.ch is
-  not globally valid; second, it can present the user with some indication as to
-  the identity of the captive portal it is connected to.
-
-Further examples showing how context can be used in queries as well are given
-in {{context-in-queries}} below.
-
-Developing conventions for assertion contexts for different situations will
-require implementation and deployment experience, and is a subject for future
-work.
 
 ### Signatures in Assertions
 
@@ -1024,155 +1315,18 @@ invalid.
 
 # CBOR Data Model {#cbor}
 
-The RAINS data model is a relatively straightforward mapping of the
-information model in {{information-model}} to the Concise Binary Object
-Representation (CBOR) {{!RFC7049}}, with an outer message type providing a
-mechanism for future capabilities-based versioning and recognition of a
-message as a RAINS message.
-
-Messages, assertions, shards, P-Shards, zones, queries, and notifications
-are each represented as a CBOR map of integer keys to values, which allows each
-of these types to be extended in the future, as well as the addition of non-
-standard, application-specific information to RAINS messages and data items. A
-common registry of map keys is given in {{tabmkey}}. RAINS implementations MUST
-ignore map keys they do not understand. Integer map keys in the range -22 to +23
-are reserved for the use of future versions or extensions to the RAINS protocol.
-
-Message contents, signatures and object values are implemented as type-
-prefixed CBOR arrays with fixed meanings of each array element; the structure
-of these lower-level elements can therefore not be extended. Message section
-types are given in {{tabsection}}, object types in {{tabobj}}, and signature
-algorithms in {{tabsig}}.
+\[EDITOR'S NOTE: frontmatter moved, delete me]
 
 ## Symbol Table {#cbor-symtab}
 
-The meaning of each of the integer keys in message, zone, shard, assertion,
-and notification maps is given in the symbol table below:
-
-{: #tabmkey title="CBOR Map Keys used in RAINS"}
-
-| Code | Name           | Description                                           |
-|-----:|----------------|------------------------------------------------       |
-| 0    | signatures     | Signatures on a message or section                    |
-| 1    | capabilities   | Capabilities of server sending message                |
-| 2    | token          | Token for referring to a data item                    |
-| 3    | subject-name   | Subject name in an assertion, shard, P-Shard or zone   |
-| 4    | subject-zone   | Zone name in an assertion, shard, P-Shard or zone      |
-| 5    | subject-addr   | Subject address in address assertion                  |
-| 6    | context        | Context of an assertion, shard, P-Shard, zone or query |
-| 7    | objects        | Objects of an assertion                               |
-| 8    | query-name     | Fully qualified name for a query                      |
-| 10   | query-types    | Acceptable object types for a query                   |
-| 11   | range          | Lexical range of Assertions in shard or P-Shard        |
-| 12   | query-expires  | Absolute timestamp for query expiration               |
-| 13   | query-opts     | Set of query options requested                        |
-| 14   | hash-type      | Hash function used in an update query                 |
-| 15   | hash-value     | Value of a hashed assertion, shard, P-Shard or zone    |
-| 17   | key-phases     | All requested key phases of a query                   |
-| 18   | data-structure | Data structure of a P-Shard                            |
-| 21   | note-type      | Notification type                                     |
-| 22   | note-data      | Additional notification data                          |
-| 23   | content        | Content of a message, shard, P-Shard or zone           |
+\[EDITOR'S NOTE: content moved, delete me]
 
 ## Message {#cbor-message}
 
-All interactions in RAINS take place in an outer envelope called a Message,
-which is a CBOR map tagged with the RAINS Message tag (hex 0xE99BA8, decimal
-15309736).
-
-A Message map MAY contain a signatures (0) key, whose value is an array of
-Signatures over the entire message as defined in {{cbor-signature}}, to be
-verified against the infrastructure key for the RAINS Server originating the
-message.
-
-A Message map MAY contain a capabilities (1) key, whose value is described in
-{{cbor-capabilities}}.
-
-A Message map MUST contain a token (2) key, whose value is a 16-byte array.
-See {{cbor-tokens}} for details.
-
-A Message map MUST contain a content (23) key, whose value is an array of
-Message Sections; a Message Section is either an Assertion, Shard, Zone, Query,
-or Notification.
-
-## Message Section header
-
-Each Message Section in the Message's content value MUST be a two-element array.
-The first element in the array is the message section type, encoded as an
-integer as in {{tabsection}}. The second element in the array is a message
-section body, a CBOR map defined as in the subsections
-{{cbor-assertion}}-{{cbor-notification}}
-
-{: #tabsection title="Message Section Type Codes"}
-
-| Code | Name         | Description                                       |
-|-----:|--------------|---------------------------------------------------|
-| 1    | assertion    | Assertion (see {{cbor-assertion}})                |
-| -1   | revassertion | Address Assertion (see {{cbor-revassert}})        |
-| 2    | shard        | Shard (see {{cbor-shard}})                        |
-| 3    | zone         | Zone (see {{cbor-zone}})                          |
-| 4    | query        | Query (see {{cbor-query}})                        |
-| -4   | revquery     | Address Query (see {{cbor-revquery}})             |
-| 5    | auquery      | Assertion update query (see {{cbor-auquery}})     |
-| 6    | nuquery      | Nonexistence update query (see {{cbor-nuquery}})  |
-| 7    | P-Shard       | P-Shard (see {{cbor-P-Shard}})                      |
-| 23   | notification | Notification (see {{cbor-notification}})          |
+\[EDITOR'S NOTE: content moved, delete me]
 
 ## Assertion body {#cbor-assertion}
 
-An Assertion body is a map. The keys present in this map depend on whether the
-Assertion is contained in a Message, Shard or Zone.
-
-Assertions contained in a Message's content value are "bare Assertions". Since
-they cannot inherit any values from their containers, they MUST contain the
-signatures (0), subject-name (3), subject-zone (4), context (6), and objects (7)
-keys.
-
-Assertions within a Shard or Zone are "contained Assertions", and can inherit
-values from their containers. A contained Assertion MUST contain the subject-
-name (3) and objects (7) keys. The subject-zone (4) and context (6) keys MUST
-NOT be present. They are assumed to have the same value as the corresponding
-values in the containing Shard or Zone for signature generation and signature
-verification purposes; see {{cbor-signature}}.
-
-A contained Assertion SHOULD contain the signatures (0) key, since an unsigned
-contained Assertion cannot be used by a RAINS server to answer a query; it
-must be returned in a signed Shard or Zone.
-
-The value of the signatures (0) key, if present, is an array of one or more
-Signatures as defined in {{cbor-signature}}. If not present, the containing
-Shard or Zone MUST be signed. Signatures on a contained Assertion are generated
-as if the inherited subject-zone and context values are present in the
-Assertion, whether actually present or not. The signatures on the Assertion are
-to be verified against the appropriate key for the Zone containing the Assertion
-in the given context, as described in {{signatures-in-assertions}}.
-
-The value of the subject-name (3) key is a UTF-8 encoded {{!RFC3629}} string
-containing the name of the subject of the assertion. The subject name MAY
-contain dot(s) '.'. The subject name never contains the zone in which the
-subject name is registered; the fully-qualified name is obtained by joining the
-subject-name to the subject-zone with a '.' character. The subject-name must be
-valid according to the nameset expression for the zone, if any.
-
-The value of the subject-zone (4) key, if present, is a UTF-8 encoded string
-containing the name of the zone in which the assertion is made and MUST end with
-'.' (the root zone). If not present, the zone of the assertion is inherited from
-the containing Shard or Zone.
-
-The value of the context (6) key, if present, is a UTF-8 encoded string
-containing the name of the context in which the assertion is valid. Both the
-authority-part and the context-part MUST end with a '.'. If not present, the
-context of the assertion is inherited from the containing Shard or Zone.
-
-The value of the objects (7) key is an array of objects, as defined in
-{{cbor-object}}.
-
-### Sorting Assertions {#cbor-assertion-sorting}
-
-Assertions are sorted lexicographically by their cbor encoded byte string in
-ascending order. That means, they are sorted by the following elements in the
-mentioned order: fully qualified name, context, type, object value(s), signature
-meta data.
 
 ## Shard body {#cbor-shard}
 
@@ -1373,7 +1527,7 @@ MUST NOT generate queries to other servers if "no information leakage" is
 specified, and servers MUST NOT return expired assertions unless "expired
 assertions acceptable" is specified.
 
-Option 6 specifies that a given token (see {{cbor-tokens}}) should be used on
+Option 6 specifies that a given token (see {{tokens}}) should be used on
 all queries resulting from a given query, allowing traceability through an
 entire RAINS infrastructure. It is meant for debugging purposes.
 
@@ -1575,7 +1729,7 @@ given in {{protocol-def}}.
 
 The value of the token (2) key is a 16-byte array, which
 MUST contain the token of the message or query to which the notification is a
-response. See {{cbor-tokens}}.
+response. See {{tokens}}.
 
 The value of the note-data (22) key, if present, is a UTF-8 encoded string
 with additional information about the notification, intended to be displayed
@@ -1846,31 +2000,6 @@ To check wether an assertion is not part of the bloom filter, the same process
 is repeated for the assertion in question. If any of the obtained filter
 position(s) is zero, then this assertion is certainly not contained.
 
-## Tokens in queries and messages {#cbor-tokens}
-
-Messages and notifications contain an opaque token (2) key, whose
-content is a 16-byte array, and is used to link Messages to the Queries they
-respond to, and Notifications to the Messages they respond to. Tokens MUST be
-treated as opaque values by RAINS servers.
-
-A Message sent in response to a Query (normal and update) MUST contain the token
-of the Message containing the Query. Otherwise, the Message MUST contain a token
-selected by the server originating it, so that future Notifications can be
-linked to the Message causing it. Likewise, a Notification sent in response to a
-Message MUST contain the token from the Message causing it (where the new
-Message contains a fresh token selected by the server). This allows sending
-multiple Notifications within one Message and the receiving server to respond to
-a Message containing Notifications (e.g. when it is malformed).
-
-Since tokens are used to link queries to replies, and to link notifications to
-messages, regardless of the sender or recipient of a message, they MUST be
-chosen by servers to be hard to guess; e.g. generated by a cryptographic random
-number generator.
-
-When a server creates a new query to forward to another server in response to
-a query it received, it MUST NOT use the same token on the delegated query
-as on the received query, unless option 6 Enable Tracing is present in the
-received, in which case it MUST use the same token.
 
 ## Signatures, delegation keys, and RAINS infrastructure keys {#cbor-signature}
 
@@ -2395,7 +2524,7 @@ the message only accepts messages smaller than the largest message it's
 successfully sent that peer, or cap messages to that peer to 65536 bytes in
 length.
 
-Since a bare assertion with a single Ed25519 signature requires on the order of
+Since a singular assertion with a single Ed25519 signature requires on the order of
 180 bytes, it is clear that many full zones won't fit into a single minimum
 maximum-size message. Authorities are therefore encouraged to publish zones
 grouped into shards that will fit into 65536-byte messages, to allow servers
