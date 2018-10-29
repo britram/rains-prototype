@@ -810,7 +810,54 @@ The value of the objects (7) key is an array of objects, as defined in
 
 ### Shards {#shards}
 
-\[EDITOR'S NOTE: work pointer]
+A Shard contain Singular Assertions for every object within a zone in a given
+context whose subject name falls within a specified lexicographic range. A Shard
+with a valid signature, within which a subject name should fall (i.e. appearing
+within that Shard's range), but within which there is no Singular Assertion for
+the specified subject name and object type, can therefore be taken as proof of a
+negative query result for that subject name. Shards are used exclusively for
+negative proof; the individual signatures on their contained Singular Assertions
+are used for positive proof of the existence of an assertion.
+
+A Shard is represented as a CBOR map. The keys present in this map depend on
+whether the Shard is contained in a Message or Zone.
+
+Shards contained in a Message's content value cannot inherit any values from a
+contained Zone, and therefore MUST contain the  signatures (0),
+subject-zone (4), context (6), range (11), and assertions (20) keys.
+
+Shards contained within a Zone's shards value inherit zone and context values
+from their containing Zone, and therefore  MUST contain the signatures (0),
+range(11), and assertions (20) keys. The subject-zone (4) and context (6) keys
+MUST NOT be present.
+
+The value of the signatures (0) key is an array of one or more Signatures as
+defined in {{signatures}}. If not present, the containing Zone MUST be signed.
+Signatures on a Shard contained within a Zone are generated as if the inherited
+subject-zone and context values are present in the Shard. The signatures on the
+Shard are to be verified against the appropriate key for the Zone containing the
+Shard in the given context.
+
+The value of the subject-zone (4) key, if present, is a UTF-8 encoded string
+containing the name of the zone in which the Assertions within the Shard is made
+and MUST end with '.' (the root zone). If not present, the zone of the assertion
+is inherited from the containing Zone.
+
+The value of the context (6) key, if present, is a UTF-8 encoded string
+containing the name of the context in which the Assertions within the Shard are
+valid. Both the authority-part and the context-part MUST end with a '.'. If not
+present, the context of the assertion is inherited from the containing Zone.
+
+The value of the range (11) key is a two element array of strings or nulls
+(subject-name A, subject-name B). A MUST lexicographically sort before B. If A
+is null, the shard begins at the beginning of the zone. If B is null, the shard
+ends at the end of the zone. The shard MUST NOT contain any assertions whose
+subject names are equal to or sort before A, or are equal to or sort after B.
+
+The value of the assertions (20) key is an array of Singular Assertions as
+defined in {{assertions}}. These Singular Assertions MUST be sorted within the
+in lexicographic order by subject name; the set of allowable Singular Assertions
+is restricted by the range, as above.
 
 ### Zones {#zones}
 
@@ -824,7 +871,7 @@ name.
 Organizing Assertions into Zones allows operators of zones with few subject
 names (e.g., used only for simple web hosting, as is the case with many zones in
 the current Internet naming system) to minimize signing and zone management
-overhead. 
+overhead.
 
 A Zone is represented as a CBOR map. Zones MUST contain the signatures (0),
 subject-zone (4), and context (6) keys, and MUST contain one of the
@@ -854,16 +901,178 @@ lexicographic order by shard range start. Within the assertions array, if
 present, the contained Singular Assertions MUST be sorted in lexicographic order
 by subject name.
 
-\[EDITOR'S NOTE bind p-shards to zones?]
+### Zone-Reflexive Assertions
 
-
-
-
-
+A zone may make an assertion about itself by using the string "@" as a subject
+name. This facility can be used for any assertion type, but is especially useful
+for self-signing root zones, and for a zone to make a subsequent key assertion
+about itself. If an assertion of a given type about a zone is available both in
+the zone itself and in the superordinate zone, the assertion in the
+superordinate zone will take precedence.
 
 ### P-Shards {#p-shards}
 
+\[EDITOR'S NOTE: fix up this section -- rework the representation to make the
+representation more parsimonious. Specifically, a P-Shard should have a content
+(23) key, that has a [datastructure spec, octetarray] structure. PShards cannot
+be contained within Zones, since that doesn't make sense; they're supplemental
+only].
+
+A P-Shard body is a map. The keys present in the map depend on whether the P-Shard
+is contained in a Message or in a Zone.
+
+P-Shards contained in a Message's content value are "bare P-Shards". Since they
+cannot inherit any values from their contained Zone, they MUST contain the
+signatures (0), subject-zone (4), context (6), range (11), and data-structure
+(18) keys.
+
+P-Shards within a Zone are "contained P-Shards", and can inherit values from their
+containing Zone. A contained P-Shards MUST contain the the range(11) and
+data-structure (18) keys. The subject-zone (4) and context (6) keys MUST NOT be
+present. They are assumed to have the same value as the corresponding values in
+the containing Zone for signature generation and signature verification
+purposes; see {{cbor-signature}}.
+
+A contained P-Shard SHOULD contain the signatures (0) key, since an unsigned
+contained P-Shard cannot be used by a RAINS server to answer a query for
+nonexistence; it must be returned in a signed Zone.
+
+The value of the signatures (0) key, if present, is an array of one or more
+Signatures as defined in {{cbor-signature}}. If not present, the containing Zone
+MUST be signed. Signatures on a contained P-Shard are generated as if the
+inherited subject-zone and context values are present in the P-Shard,
+whether actually present or not. The signatures on the P-Shard are to be
+verified against the appropriate key for the Zone containing the P-Shard in
+the given context, as described in {{signatures-in-assertions}}.
+
+The value of the subject-zone (4) key, if present, is a UTF-8 encoded string
+containing the name of the zone in which the Assertions in the P-Shard is
+made and MUST end with '.' (the root zone). If not present, the zone of the
+assertion is inherited from the containing Zone.
+
+The value of the context (6) key, if present, is a UTF-8 encoded string
+containing the name of the context in which the Assertions in the P-Shard
+are valid. Both the authority-part and the context-part MUST end with a '.'.  If
+not present, the context of the assertion is inherited from the containing Zone.
+
+The value of the range (11) key MUST be a two element array of strings or nulls
+(subject-name A, subject-name B). A must lexicographically sort before B, but
+neither subject name need be present in the P-Shard's contents. If A is
+null, the P-Shard begins at the beginning of the zone. If B is null, the
+P-Shard ends at the end of the zone. The P-Shard MUST NOT contain any
+assertions whose subject names sort before A or after B.
+
+The value of the data-structure (18) key is an array of elements, as defined in
+{{cbor-data-structure}}.
+
+P-Shards are lexicographically complete within the range described in the
+range value: a subject-name and type within the range of a P-Shard giving a
+negative answer is asserted to not exist.
+
+A P-Shard represents a space-efficient probabilistic data structure stored as a
+bit string to proof nonexistence. The data structure is used to prove membership
+of an element in a set. The set could either be the entire zone or an exclusive
+lexicographic range of that zone (like the range of a shard). All assertions
+within the same zone and context, and whose names are within the range are
+elements of the set. A P-Shard is protected by one or more signatures. A
+membership query to the P-Shard responds either with 'an assertion with a given
+name and type might be part of the set' or 'an assertion with a given name and
+type is definitely not part of the set'. The second response can be used to
+proof nonexistence of an assertion with a given name and type. There is a
+tradeoff between the size of the bit string, membership query time, and the
+false positive error rate. The zone authority can determine how to weight them.
+
+A P-Shard has the following information elements:
+
+- Context: name of the context in which the assertions in the P-Shard are valid;
+  see {{context-in-assertions}}.
+- Zone: name of the zone in which the assertions are made.
+- Range: an exclusive lexicographic range within which the contained assertions'
+  names must be.
+- Type: the type of the probabilistic data structure contained in the P-Shard.
+- Data structure: meta data about the data structure of the indicated type and a
+  bit string representing the data structure itself.
+- Signatures: one or more signatures generated by the authority for the
+  shard; see {{signatures-in-assertions}}.
+
+The Types supported for each P-Shard are:
+
+- Bloom filter: A space-efficient probabilistic data structure using a
+  configurable amount of hash functions from a specified hash family to generate
+  a bit string encoding all contained assertions.
+
+
+\[EDITOR'S NOTE, old Data Structures section below]
+
+
+A data structure is encoded as an arrays in CBOR, where the first element is the
+type of the data structure, encoded as an integer in the following table:
+
+{: #tabds title="Data structure type codes"}
+
+| Code  | Name         | Description                             |
+|------:|--------------|-----------------------------------------|
+| 1     | bloom-filter | A bloom filter data structure           |
+
+A bloom-filter (1) data structure is represented as a five-element array. The
+second element is an array of integers specifying a family of hash function(s)
+identifier, as in {{tabhash}}. The third element is an integer determining the
+number of hash functions used in the bloom filter from the specified family of
+hash functions. The fourth element is an integer specifying the mode of
+operation identifier, as in {{tabbfopmode}} The fifth element is a bit string
+representing the bloom filter itself as defined in
+{{cbor-bloom-filter-bit-string}}
+
+{: #tabbfopmode title="Bloom filter mode of operations"}
+
+| Code  | Name                  | Description                                           |
+|------:|-----------------------|-------------------------------------------------------|
+| 0     | standard              | Provided hash functions are used                      |
+| 1     | Kirsch-Mitzenmacher-1 | Kirsch-Mitzenmacher optimization with 1 hash function |
+| 2     | Kirsch-Mitzenmacher-2 | Kirsch-Mitzenmacher optimization with 2 hash function |
+
+For code 0, the number of provided hash function identifiers must be equal to
+the number of hash functions used in the bloom filter. The results of the hash
+functions are taken modulo the size of the bloom filter to determine which
+position to set or check in the filter.
+
+For code 1 and 2, instead of using k different hash functions to calculate the
+bit string of the bloom filter, it is sufficient to use one or two and then
+apply the Kirsch-Mitzenmacher-Optimization {{BETTER-BLOOM-FILTER}}. If only one
+hash function is used, then its calculated hash value is split in half. The
+first part corresponds to the first hash function in the optimization and the
+second part to the second one. The following formula is used to obtain the
+position which will be set to or checked for a 1 according to the ith hash
+function:
+
+pos = (hash1 + hash2*i) modulo bit-string-size
+
+\[EDITOR'S NOTE, old Bloom Filter Bit String section below]
+
+The bit string of an empty bloom filter is all zeros. To add an assertion,
+first, the assertion's fully-qualified name, context and code of its type are
+concatenated separated by a space. This value is then hashed a certain amount of
+times with the provided hash functions depending on the mode of operation and
+the corresponding position(s) in the filter are set to one, see {{tabbfopmode}}.
+
+To check wether an assertion is not part of the bloom filter, the same process
+is repeated for the assertion in question. If any of the obtained filter
+position(s) is zero, then this assertion is certainly not contained.
+
 ### Dynamic Assertion Validity {#assertion-dynamics}
+
+\[EDITOR'S NOTE: still TODO, copy from old organization, maybe integrate with the below]
+
+### Semantic of nonexistence proofs {#antiassertions}
+
+Shards, P-Shards and Zones can all be used to prove nonexistence during their
+validity. But to allow change to happen frequently and to have a dynamic system,
+an assertion might be created, altered, expired or revoked during the validity
+period of a shard, P-Shard or zone, leading to an inconsistency. Thus, a section
+proving nonexistence only captures the state at the point in time when it was
+signed. To make sure that the content of a shard, P-Shard or zone is still
+accurate, a nonexistence update query {{nonexistence-update-query}} must be sent
+to the server having authority over that name.
 
 ### Signatures in Assertions {#assertion-signatures}
  
@@ -944,11 +1153,265 @@ Developing conventions for assertion contexts for different situations will
 require implementation and deployment experience, and is a subject for future
 work.
 
-## Object Types {#obj-types}
+## Object Types and Encodings {#obj-types}
+
+Each Object associated with a given subject name in a Singular Assertion (see
+{{singular-assertions}}) is represented as a CBOR array, where the first element
+is the type of the object, encoded as an integer in the following table:
+
+{: #tabobj title="Object type codes"}
+
+| Code  | Name         | Description                             | Reference     |
+|------:|--------------|-----------------------------------------|---------------|
+| 1     | name         | name associated with subject            | {{#obj-name}} |
+| 2     | ip6-addr     | IPv6 address of subject                 | {{#obj-ip6}} |
+| 3     | ip4-addr     | IPv4 address of subject                 | {{#obj-ip4}} |
+| 4     | redirection  | name of zone authority server           | {{#obj-redir}} |
+| 5     | delegation   | public key for zone delgation           | {{#obj-deleg}} |
+| 6     | nameset      | name set expression for zone            | {{#obj-nameset}} | 
+| 7     | cert-info    | certificate information for name        | {{#obj-cert}} | 
+| 8     | service-info | service information for srvname         | {{#obj-srv}} | 
+| 9     | registrar    | registrar information                   | {{#obj-regr}} | 
+| 10    | registrant   | registrant information                  | {{#obj-regt}} | 
+| 11    | infrakey     | public key for RAINS infrastructure     | {{#obj-infrakey}} | 
+| 12    | extrakey     | external public key for subject         | {{#obj-extrakey}} | 
+| 13    | nextkey      | next public key for subject             | {{#obj-nextkey}} |
+
+Subsequent elements contain the object content, encoded as described in the
+respective subsection below.
+
+### Name Alias {#obj-name}
+
+A name (1) object contains a name associated with a name as an alias. It is
+represented as a three-element array. The second element is a fully-qualified
+name as a UTF-8 encoded string. The third type is an array of object type codes
+for which the alias is valid, with the same semantics as the query-types (9) key
+in queries (see {{queries}}).
+
+The name type is roughly equivalent to the DNS CNAME RRTYPE.
+
+### IPv6 Address {#obj-ip6}
+
+An ip6-addr (2) object contains an IPv6 address associated with a name. It is
+represented as a two element array. The second element is a byte array of
+length 16 containing an IPv6 address in network byte order.
+
+The ip6-addr type is roughly equivalent to the DNS AAAA RRTYPE.
+
+### IPv4 Address {#obj-ip4}
+
+An ip4-addr (3) object contains an IPv4 address associated with a name. It is
+represented as a two element array. The second element is a byte array of
+length 4 containing an IPv4 address in network byte order.
+
+The ip4-addr type is roughly equivalent to the DNS A RRTYPE.
+
+### Redirection {#obj-redir}
+
+A redirection (4) object contains the fully-qualified name of a RAINS authority
+server for a named zone. It is represented as a two-element array. The second
+element is a fully-qualified name of an RAINS authority server as a UTF-8
+encoded string.
+
+The redirection type is used to point to a "last-resort" server or server from
+which assertions about a zone can be retrieved; it therefore approximately
+replaces theD NS NS RRTYPE.
+
+### Delegation {#obj-deleg}
+
+A delegation (5) object contains a public key used to generate signatures on
+assertions in a named zone, and by which a delegation of a name within a zone to
+a subordinate zone may be verified. It is represented as an 4-element array. The
+second element is a signature algorithm identifier as in {{signatures}}. The
+third element is a key phase as in {{signatures}}. The fourth element is the
+public key, formatted  
+as defined in {{signatures}} for the given algorithm identifier and RAINS
+delegation chain keyspace.
+
+Delegations approximately replace the DNS DNSKEY RRTYPE.
+
+### Nameset {#obj-nameset}
+
+A nameset (6) object contains an expression defining which names are allowed
+and which names are disallowed in a given zone. It is represented as a two-
+element array. The second element is a nameset expression to be applied to
+each name element within the zone without an intervening delegation.
+
+The nameset expression is represented as a UTF-8 string encoding a modified
+POSIX Extended Regular Expression format (see POSIX.2) to be applied to each
+element of a name within the zone. A name containing an element that does not
+match the valid nameset expression for a zone is not valid within the zone, and
+the nameset assertion can be used to prove nonexistence.
+
+The POSIX character classes :alnum:, :alpha:, :ascii:, :digit:, :lower:, and
+:upper: are available in these regular expressions, where:
+
+- :lower: matches all codepoints within the Unicode general category "Letter, lowercase"
+- :upper: matches all codepoints within the Unicode general category "Letter, uppercase"
+- :alpha: matches all codepoints within the Unicode general category "Letter".
+- :digit: matches all codepoints within the Unicode general category "Number, decimal digit"
+- :alnum: is the union of :alpha: and :digit:
+- :ascii: matches all codepoints in the range 0x20-0x7f
+
+In addition, each Unicode block is available as a character class, with the
+syntax :ublkXXXX: where XXXX is a 4 or 5 digit, zero-prefixed hex encoding of
+the first codepoint in the block. For example, the Cyrillic block is available
+as :ublk0400:.
+
+Unicode escapes are supported in these regular expressions; the sequence \uXXXX
+where XXXX is a 4 or 5 digit, possibly zero-prefixed hex encoding of the
+codepoint, is substituted with that codepoint.
+
+Set operations (intersection and subtraction) are available on character
+classes. Two character class or range expressions in a bracket expression joined
+by the sequence && are equivalent to the intersection of the two character
+classes or ranges. Two character class or range expressions in a bracket
+expression joined by the sequence -- are equivalent to the subtraction of the
+second character class or range from the first.
+
+For example, the nameset expression:
+
+\[\[:ublk0400:]&&\[:lower:]\[:digit:]]+
+
+matches any name made up of one or more lowercase Cyrillic letters and digits.
+The same expression can be implemented with a range instead of a character
+class:
+
+\[\u0400-\u04ff&&\[:lower:]\[:digit:]]+
+
+Nameset expression support is experimental and subject to (radical) change in
+future revisions of this specification.
+
+### Certificate Information {#obj-cert}
+
+A cert-info (7) object contains an expression binding a certificate or
+certificate authority to a name, such that connections to the name must either
+use the bound certificate or a certificate signed by a bound authority. It is
+represented as an five-element array.
+
+The second element is the protocol family specifier, describing the
+cryptographic protocol used to connect, as defined in {{tabcertproto}}. The
+protocol family defines the format of certificate data to be hashed. The third
+element is the certificate usage specifier as in {{tabcertusage}}, describing
+the constraint imposed by the assertion. These are defined to be compatible with
+Certificate Usages in the TLSA RRTYPE for DANE {{?RFC6698}}. The fourth element
+is the hash algorithm identifier, defining the hash algorithm used to generate
+the certificate data, as in {{tabhash}}. The fifth item is the data itself,
+whose format is defined by the protocol family and hash algorithm.
+
+{: #tabcertproto title="Certificate information protocol families"}
+
+| Code | Name     | Protocol family                            | Certificate format |
+|-----:|----------|--------------------------------------------|--------------------|
+|    0 | unspec   | Unspecified                                | Unspecified        |
+|    1 | tls      | Transport Layer Security (TLS) {{!RFC8446}} | {{!RFC5280}}        |
+
+Protocol family 0 leaves the protocol family unspecified; client validation
+and usage of cert-info assertions, and the protocol used to connect, are up to
+the client, and no information is stored in RAINS. Protocol family 1 specifies
+Transport Layer Security version 1.3 {{!RFC8446}} or a subsequent version,
+secured with PKIX {{!RFC5280}} certificates.
+
+{: #tabcertusage title="Certificate information usage values"}
+
+| Code | Name | Certificate usage                |
+|-----:|------|----------------------------------|
+|    2 | ta   | Trust Anchor Certificate         |
+|    3 | ee   | End-Entity Certificate           |
+
+A trust anchor certificate constraint specifies a certificate that MUST appear
+as the trust anchor for the certificate presented by the subject of the
+assertion on a connection attempt. An end-entity certificate constraint
+specifies a certificate that MUST be presented by the subject of the assertion
+on a connection attempt.
+
+\[EDITOR'S NOTE: we use hash algorithm identifiers in certinfo, in pshards, and
+in update queries. factor this table out and make it clear that only
+cryptographically secure hashes are acceptable for certinfo.]
+
+{: #tabhash title="Hash algorithms"}
+
+| Code | Name       | Notes                                    |
+|-----:|------------|------------------------------------------|
+| 0    | full       | Data contains full certificate           |
+| 1    | sha-256    | Data contains SHA-256 hash (32 bytes)    |
+| 2    | sha-512    | Data contains SHA-512 hash (64 bytes)    |
+| 3    | sha-384    | Data contains SHA-384 hash (48 bytes)    |
+| 4    | fnv-64     | Data contains FNV-64 hash (64 bytes) (NOT FOR CERT-INFO) |
+| 5    | murmur3-64 | Data contains murmur3-64 hash (64 bytes)  (NOT FOR CERT-INFO)  |
+
+Code 0 is used to store full certificates in RAINS assertions, while other
+codes are used to store hashes for verification.
+
+For example, in a cert-info object with values \[ 7, 1, 3, 3, (data) ], the
+data would be a 48 SHA-384 hash of the ASN.1 DER-encoded X.509v3 certificate
+(see Section 4.1 of {{?RFC5280}}) to be presented by the endpoint on a
+connection attempt with TLS version 1.2 or later.
+
+The cert-info type replaces the TLSA DNS RRTYPE.
+
+### Service Information {#obj-srv}
+
+A service-info (8) object gives information about a named service. Services
+are named as in {{!RFC2782}}. It is represented as a four-element array. The
+second element is a fully-qualified name of a host providing the named service
+as a UTF-8 string. The third element is a transport port number as a positive
+integer in the range 0-65535. The fourth element is a priority as a positive
+integer, with lower numbers having higher priority.
+
+The service-info type replaces the DNS SRV RRTYPE.
+
+### Registrar Information {#obj-registrar}
+
+A registrar (9) object gives the name and other identifying information of the
+registrar (the organization which caused the name to be added to the namespace)
+for organization-level names. It is represented as a two element array. The
+second element is a UTF-8 string of maximum length 256 bytes containing
+identifying information chosen by the registrar according to the registry's
+policy.
+
+### Registrant Information {#obj-registrant}
+
+A registrant (10) object gives information about the registrant of an
+organization-level name. It is represented as a two element array. The second
+element is a UTF-8 string with a maximum length of 4096 bytes containing this
+information, with a format chosen by the registrant according to the registry's
+policy.
 
 ### Infrastructure Key {#obj-infrakey}
 
-## Queries
+An infrakey (11) object contains a public key used to generate signatures on
+messages by a named RAINS server, by which a RAINS message signature may be
+verified by a receiver. It is identical in structure to a delegation object,
+as defined in {{obj-deleg}}. Infrakey signatures are especially useful
+for clients which delegate verification to their query servers to authenticate
+the messages sent by the query server.
+
+### External Key {#obj-extrakey}
+
+An extrakey (12) object contains a public key used to generate signatures on
+assertions in a named zone outside of the normal delegation chain. It is
+represented as an 4-element array, where the second element is a signature
+algorithm identifier, and the third element is keyspace identifier, as in
+{{signatures}}. The fourth element is the public key, as defined in
+{{signatures}} for the given algorithm identifier. An extrakey may be
+matched with a public key obtained through other means for additional
+authentication of an assertion. 
+
+### Next Delegation Public Key {#obj-nextkey}
+
+\[EDITOR'S NOTE keyphase?]
+
+A nextkey (13) object contains the a public key that a zone owner would like its
+superordinate to delegate to in the future. It is represented as an 6-element
+array. The second element is a signature algorithm identifier as in
+{{signatures}}.  The third element is a key phase as in {{signatures}}. The
+fourth element is the public key, as defined in {{signatures}} for the given
+algorithm identifier. The fifth element is the requested-valid-since time, and
+the sixth element is the requested-valid-until time, formatted as for signatures
+as in {{signatures}}. See {{public-key-management}} for more.
+
+## Queries {#queries}
 
 ## Notifications
 
@@ -989,6 +1452,13 @@ received, in which case it MUST use the same token.
 \[EDITOR'S NOTE: derive this from the zonefile parser]
 
 
+
+
+
+
+
+
+
 # Old content below
 
 
@@ -1010,46 +1480,6 @@ received, in which case it MUST use the same token.
 
 The Types supported for each assertion are:
 
-- Delegation: the authority associated with the zone identified by the name
-  (roughly equivalent to the DNSSEC DS RRTYPE). The Object contains a public
-  key by which the authority can be identified.
-- Redirection: The name(s) of one or more RAINS servers providing authority
-  service for the authority associated with the zone (roughly equivalent to
-  the DNSSEC NS RRTYPE, but not always consulted directly during resolution).
-  The Object contains a set of names.
-- Address: one or more addresses associated with the name (replaces DNS A and
-  AAAA RTYPEs). The Object contains a set of Addresses. An Address is an
-  {address-family, value} tuple.
-- Service-Info: one or more layer 4 ports and hostnames associated with a
-  service name (replaces DNS SRV RRTYPE). The object contains a {hostname,
-  port-number, priority} tuple.
-- Name: one or more names associated with the name (roughly equivalent to DNS
-  CNAME). The Object contains a set of names.
-- Certificate: a certificate which must appear at a specified location in the
-  certificate chain presented on a connection attempt with the named entity
-  (roughly equivalent to DNS TLSA).
-- Zone-Nameset: an expression of the set of names allowed within a zone; e.g.
-  Unicode scripts or codepages in which names in the zone may be issued. This
-  allows a zone to set policy on names in support of the distinguishability
-  property ({{pins-distinguishability}}) that can be checked by RAINS servers at
-  runtime. An assertion about a Subject within a Zone whose name is not allowed
-  by a valid signed Zone-Nameset expression is taken to be invalid, even if it
-  has a valid signature.
-- Zone-Registrar: Information about the organization that caused a Subject name
-  to exist, for registrant-level names.
-- Zone-Registrant: Information about the organization responsible for a Subject
-  name, for registrant-level names.
-- Infrastructure Key: Information about public keys used for object security
-  within the RAINS infrastructure itself. The Object contains a public key by
-  which a named RAINS server can be identified.
-- External Key: Information about public keys used for additional signatures
-  on assertions. The external key is usually discovered outside RAINS, and can
-  be verified by comparison with the key stored in a RAINS assertion. The
-  Object contains an external public key.
-- Subsequent Key: Assertions about delegations are made by a zone's
-  superordinate. A zone may request that its superordinate delegate to a new
-  public key by publishing a subsequent key assertion (replacing the mechanism
-  implemented by CDS/CDNSKEY in DNS).
 
 For a given {subject, type} tuple, multiple assertions can be valid at a given
 point in time; the union of the object values of all of these assertions is
@@ -1057,89 +1487,16 @@ considered to be the set of valid values at that point in time.
 
 
 
-### Semantic of nonexistence proofs
 
-Shards, P-Shards and zones can all be used to prove nonexistence during their
-validity. But to allow change to happen frequently and to have a dynamic system,
-an assertion might be created, altered, expired or revoked during the validity
-period of a shard, P-Shard or zone, leading to an inconsistency. Thus, a section
-proving nonexistence only captures the state at the point in time when it was
-signed. To make sure that the content of a shard, P-Shard or zone is still
-accurate, a nonexistence update query {{nonexistence-update-query}} must be sent
-to the server having authority over that name.
 
 ### Shards and Probabilistic Shards (P-Shards) {#shards-and-p-shards}
 
-A shard is exclusively used to prove non-existence of a name and type in a given
-context and range. It allows zone authorities with many names to make
-nonexistence proofs when their zone's content is too large to fit in a message,
-see {{protocol-limits}}. A shard is a sorted set of assertions within the same
-zone and context, protected by one or more signatures over all assertions within
-the shard. Shards have an exclusive lexicographic range, and contain all
-assertions for names within a zone within that range. This lexicographic
-completeness leads to the property that given a subject and an authenticated
-shard, it can be shown that either an assertion with a given name, type and
-object value exists within the shard or does not exist at all.
 
-A shard has the following information elements:
-
-- Context: name of the context in which the assertions in the shard are valid;
-  see {{context-in-assertions}} above.
-- Zone: name of the zone in which the assertions are made.
-- Range: an exclusive lexicographic range within which the contained assertions'
-  names must be.
-- Content: a lexicographically sorted set of assertions sharing the context and
-  zone.
-- Signatures: one or more signatures generated by the authority for the
-  shard; see {{signatures-in-assertions}}.
-
-For efficiency's sake, information elements within a shard common to all
-assertions (zone, context) within the shard must be omitted from the assertions
-themselves. Signatures on contained assertions may be omitted.
-
-A P-Shard represents a space-efficient probabilistic data structure stored as a
-bit string to proof nonexistence. The data structure is used to prove membership
-of an element in a set. The set could either be the entire zone or an exclusive
-lexicographic range of that zone (like the range of a shard). All assertions
-within the same zone and context, and whose names are within the range are
-elements of the set. A P-Shard is protected by one or more signatures. A
-membership query to the P-Shard responds either with 'an assertion with a given
-name and type might be part of the set' or 'an assertion with a given name and
-type is definitely not part of the set'. The second response can be used to
-proof nonexistence of an assertion with a given name and type. There is a
-tradeoff between the size of the bit string, membership query time, and the
-false positive error rate. The zone authority can determine how to weight them.
-
-A P-Shard has the following information elements:
-
-- Context: name of the context in which the assertions in the P-Shard are valid;
-  see {{context-in-assertions}}.
-- Zone: name of the zone in which the assertions are made.
-- Range: an exclusive lexicographic range within which the contained assertions'
-  names must be.
-- Type: the type of the probabilistic data structure contained in the P-Shard.
-- Data structure: meta data about the data structure of the indicated type and a
-  bit string representing the data structure itself.
-- Signatures: one or more signatures generated by the authority for the
-  shard; see {{signatures-in-assertions}}.
-
-The Types supported for each P-Shard are:
-
-- Bloom filter: A space-efficient probabilistic data structure using a
-  configurable amount of hash functions from a specified hash family to generate
-  a bit string encoding all contained assertions.
 
 # Zone
 
 
-### Zone-Reflexive Assertions
 
-A zone may make an assertion about itself by using the string "@" as a subject
-name. This facility can be used for any assertion type, but is especially useful
-for self-signing root zones, and for a zone to make a subsequent key assertion
-about itself. If an assertion of a given type about a zone is available both in
-the zone itself and in the superordinate zone, the assertion in the
-superordinate zone will take precedence.
 
 ## Query
 
@@ -1360,60 +1717,12 @@ invalid.
 
 ## Assertion body {#cbor-assertion}
 
+\[EDITOR'S NOTE: content moved, delete me]
 
 ## Shard body {#cbor-shard}
 
-A Shard body is a map. The keys present in the map depend on whether the Shard
-is contained in a Message or in a Zone.
+\[EDITOR'S NOTE: content moved, delete me]
 
-Shards contained in a Message's content value are "bare Shards". Since they
-cannot inherit any values from their contained Zone, they MUST contain the
-content (23), signatures (0), subject-zone (4), context (6), and range
-(11) keys.
-
-Shards within a Zone are "contained Shards", and can inherit values from their
-containing Zone. A contained Shard MUST contain the range(11) and content (23)
-keys. The subject-zone (4) and context (6) keys MUST NOT be present. They are
-assumed to have the same value as the corresponding values in the containing
-Zone for signature generation and signature verification purposes; see
-{{cbor-signature}}.
-
-A contained Shard SHOULD contain the signatures (0) key, since an unsigned
-contained Shard cannot be used by a RAINS server to answer a query for
-nonexistence; it must be returned in a signed Zone.
-
-The value of the content (23) key is an array of Assertion bodies as defined in
-{{cbor-assertion}}. Assertions within a Shard MUST be sorted according to
-{{cbor-assertion-sorting}}.
-
-The value of the signatures (0) key, if present, is an array of one or more
-Signatures as defined in {{cbor-signature}}. If not present, the containing Zone
-MUST be signed. Signatures on a contained Shard are generated as if the
-inherited subject-zone and context values are present in the Shard, whether
-actually present or not. The signatures on the Shard are to be verified against
-the appropriate key for the Zone containing the Shard in the given context, as
-described in {{signatures-in-assertions}}.
-
-The value of the subject-zone (4) key, if present, is a UTF-8 encoded string
-containing the name of the zone in which the Assertions within the Shard is made
-and MUST end with '.' (the root zone). If not present, the zone of the assertion
-is inherited from the containing Zone.
-
-The value of the context (6) key, if present, is a UTF-8 encoded string
-containing the name of the context in which the Assertions within the Shard are
-valid. Both the authority-part and the context-part MUST end with a '.'. If not
-present, the context of the assertion is inherited from the containing Zone.
-
-The value of the range (11) key MUST be a two element array of strings or nulls
-(subject-name A, subject-name B). A must lexicographically sort before B, but
-neither subject name need be present in the shard's contents. If A is null, the
-shard begins at the beginning of the zone. If B is null, the shard ends at the
-end of the zone. The shard MUST NOT contain any assertions whose subject names
-sort before A or after B.
-
-Shards are lexicographically complete within the range described in the range
-value: a subject-name within the range that is not contained in the shard is
-asserted to not exist.
 
 ### Sorting Shards {#cbor-shard-sorting}
 
@@ -1424,56 +1733,7 @@ meta data.
 
 ## P-Shard body {#cbor-P-Shard}
 
-A P-Shard body is a map. The keys present in the map depend on whether the P-Shard
-is contained in a Message or in a Zone.
-
-P-Shards contained in a Message's content value are "bare P-Shards". Since they
-cannot inherit any values from their contained Zone, they MUST contain the
-signatures (0), subject-zone (4), context (6), range (11), and data-structure
-(18) keys.
-
-P-Shards within a Zone are "contained P-Shards", and can inherit values from their
-containing Zone. A contained P-Shards MUST contain the the range(11) and
-data-structure (18) keys. The subject-zone (4) and context (6) keys MUST NOT be
-present. They are assumed to have the same value as the corresponding values in
-the containing Zone for signature generation and signature verification
-purposes; see {{cbor-signature}}.
-
-A contained P-Shard SHOULD contain the signatures (0) key, since an unsigned
-contained P-Shard cannot be used by a RAINS server to answer a query for
-nonexistence; it must be returned in a signed Zone.
-
-The value of the signatures (0) key, if present, is an array of one or more
-Signatures as defined in {{cbor-signature}}. If not present, the containing Zone
-MUST be signed. Signatures on a contained P-Shard are generated as if the
-inherited subject-zone and context values are present in the P-Shard,
-whether actually present or not. The signatures on the P-Shard are to be
-verified against the appropriate key for the Zone containing the P-Shard in
-the given context, as described in {{signatures-in-assertions}}.
-
-The value of the subject-zone (4) key, if present, is a UTF-8 encoded string
-containing the name of the zone in which the Assertions in the P-Shard is
-made and MUST end with '.' (the root zone). If not present, the zone of the
-assertion is inherited from the containing Zone.
-
-The value of the context (6) key, if present, is a UTF-8 encoded string
-containing the name of the context in which the Assertions in the P-Shard
-are valid. Both the authority-part and the context-part MUST end with a '.'.  If
-not present, the context of the assertion is inherited from the containing Zone.
-
-The value of the range (11) key MUST be a two element array of strings or nulls
-(subject-name A, subject-name B). A must lexicographically sort before B, but
-neither subject name need be present in the P-Shard's contents. If A is
-null, the P-Shard begins at the beginning of the zone. If B is null, the
-P-Shard ends at the end of the zone. The P-Shard MUST NOT contain any
-assertions whose subject names sort before A or after B.
-
-The value of the data-structure (18) key is an array of elements, as defined in
-{{cbor-data-structure}}.
-
-P-Shards are lexicographically complete within the range described in the
-range value: a subject-name and type within the range of a P-Shard giving a
-negative answer is asserted to not exist.
+\[EDITOR'S NOTE: content moved, delete me]
 
 ### Sorting P-Shard {#cbor-P-Shard-sorting}
 
@@ -1483,6 +1743,8 @@ mentioned order: zone name, context, range begin, range end, hash family, number
 of hash functions, filter, signature meta data.
 
 ## Zone body {#cbor-zone}
+
+\[EDITOR'S NOTE: content moved, delete me]
 
 ## Query body {#cbor-query}
 
@@ -1749,269 +2011,7 @@ to an administrator to help debug the issue identified by the negotiation.
 
 ## Object {#cbor-object}
 
-Objects are encoded as arrays in CBOR, where the first element is the type of
-the object, encoded as an integer in the following table:
-
-{: #tabobj title="Object type codes"}
-
-| Code  | Name         | Description                             |
-|------:|--------------|-----------------------------------------|
-| 1     | name         | name associated with subject            |
-| 2     | ip6-addr     | IPv6 address of subject                 |
-| 3     | ip4-addr     | IPv4 address of subject                 |
-| 4     | redirection  | name of zone authority server           |
-| 5     | delegation   | public key for zone delgation           |
-| 6     | nameset      | name set expression for zone            |
-| 7     | cert-info    | certificate information for name        |
-| 8     | service-info | service information for srvname         |
-| 9     | registrar    | registrar information                   |
-| 10    | registrant   | registrant information                  |
-| 11    | infrakey     | public key for RAINS infrastructure     |
-| 12    | extrakey     | external public key for subject         |
-| 13    | nextkey      | next public key for subject             |
-
-A name (1) object contains a name associated with a name as an alias. It is
-represented as a three-element array. The second element is a fully-qualified
-name as a UTF-8 encoded string. The third type is an array of object type
-codes for which the alias is valid, with the same semantics as the query-types
-(9) key in queries (see {{cbor-query}}).
-
-An ip6-addr (2) object contains an IPv6 address associated with a name. It is
-represented as a two element array. The second element is a byte array of
-length 16 containing an IPv6 address in network byte order.
-
-An ip4-addr (3) object contains an IPv4 address associated with a name. It is
-represented as a two element array. The second element is a byte array of
-length 4 containing an IPv4 address in network byte order.
-
-A redirection (4) object contains the fully-qualified name of a RAINS
-authority server for a named zone. It is represented as a two-element array.
-The second element is a fully-qualified name of an RAINS authority server as a
-UTF-8 encoded string.
-
-A delegation (5) object contains a public key used to generate signatures on
-assertions in a named zone, and by which a delegation of a name within a zone to
-a subordinate zone may be verified. It is represented as an N-element array. The
-second element is a signature algorithm identifier as in {{cbor-signature}}. The
-third element is a key phase as in {{cbor-signature}}. Additional elements are
-as defined in {{cbor-signature}} for the given algorithm identifier and RAINS
-delegation chain keyspace.
-
-A nameset (6) object contains an expression defining which names are allowed
-and which names are disallowed in a given zone. It is represented as a two-
-element array. The second element is a nameset expression to be applied to
-each name element within the zone without an intervening delegation, as
-defined in {{cbor-nameset}}
-
-A cert-info (7) object contains an expression binding a certificate or
-certificate authority to a name, such that connections to the name must either
-use the bound certificate or a certificate signed by a bound authority. It is
-represented as an five-element array, as defined in {{cbor-certinfo}}.
-
-A service-info (8) object gives information about a named service. Services
-are named as in {{!RFC2782}}. It is represented as a four-element array. The
-second element is a fully-qualified name of a host providing the named service
-as a UTF-8 string. The third element is a transport port number as a positive
-integer in the range 0-65535. The fourth element is a priority as a positive
-integer, with lower numbers having higher priority.
-
-A registrar (9) object gives the name and other identifying information of the
-registrar (the organization which caused the name to be added to the namespace)
-for organization-level names. It is represented as a two element array. The
-second element is a UTF-8 string of maximum length 256 bytes containing
-identifying information chosen by the registrar according to the registry's
-policy.
-
-A registrant (10) object gives information about the registrant of an
-organization-level name. It is represented as a two element array. The second
-element is a UTF-8 string with a maximum length of 4096 bytes containing this
-information, with a format chosen by the registrar according to the registry's
-policy.
-
-An infrakey (11) object contains a public key used to generate signatures on
-messages by a named RAINS server, by which a RAINS message signature may be
-verified by a receiver. It is identical in structure to a delegation object,
-as defined in {{cbor-signature}}. Infrakey signatures are especially useful
-for clients which delegate verification to their query servers to authenticate
-the messages sent by the query server.
-
-An extrakey (12) object contains a public key used to generate signatures on
-assertions in a named zone outside of the normal delegation chain. It is
-represented as an 4-element array, where the second element is a signature
-algorithm identifier, and the third element is keyspace identifier, as in
-{{cbor-signature}}. The fourth element is the public key, as defined in
-{{cbor-signature}} for the given algorithm identifier. An extrakey may be
-matched with a public key obtained through other means for additional
-authentication of an assertion. Extrakeys are different from delegation keys in
-that they may not be used in the delegation chain: an extrakey signature is
-valid only on assertions of object types other than delegation.
-
-A nextkey (13) object contains the a public key that a zone owner would like its
-superordinate to delegate to in the future. It is represented as an 5-element
-array The second element is a signature algorithm identifier as in
-{{cbor-signature}}. The third element is the public key, as defined in
-{{cbor-signature}} for the given algorithm identifier. The fourth element is the
-requested-valid-since time, and the fifth element is the requested-valid-until
-time, formatted as for signatures as in {{cbor-signature}}. See
-{{public-key-management}} for more.
-
-### Certificate information format {#cbor-certinfo}
-
-A cert-info object contains information about the certificate(s) that can be
-used to authenticate a transport-layer association with a named entity. It is
-encoded as a file-element array. The first element is the RAINS object type (7).
-The second element is the protocol family specifier, describing the
-cryptographic protocol used to connect, as defined in {{tabcertproto}}. The
-protocol family defines the format of certificate data to be hashed. The third
-element is the certificate usage specifier as in {{tabcertusage}}, describing
-the constraint imposed by the assertion. These are defined to be compatible with
-Certificate Usages in the TLSA RRTYPE for DANE {{?RFC6698}}. The fourth element
-is the hash algorithm identifier, defining the hash algorithm used to generate
-the certificate data, as in {{tabhash}}. The fifth item is the data itself,
-whose format is defined by the protocol family and hash algorithm.
-
-{: #tabcertproto title="Certificate information protocol families"}
-
-| Code | Name     | Protocol family                            | Certificate format |
-|-----:|----------|--------------------------------------------|--------------------|
-|    0 | unspec   | Unspecified                                | Unspecified        |
-|    1 | tls      | Transport Layer Security (TLS) {{!RFC8446}} | {{!RFC5280}}        |
-
-Protocol family 0 leaves the protocol family unspecified; client validation
-and usage of cert-info assertions, and the protocol used to connect, are up to
-the client, and no information is stored in RAINS. Protocol family 1 specifies
-Transport Layer Security version 1.3 {{!RFC8446}} or a subsequent version,
-secured with PKIX {{!RFC5280}} certificates.
-
-{: #tabcertusage title="Certificate information usage values"}
-
-| Code | Name | Certificate usage                |
-|-----:|------|----------------------------------|
-|    2 | ta   | Trust Anchor Certificate         |
-|    3 | ee   | End-Entity Certificate           |
-
-A trust anchor certificate constraint specifies a certificate that MUST appear
-as the trust anchor for the certificate presented by the subject of the
-assertion on a connection attempt. An end-entity certificate constraint
-specifies a certificate that MUST be presented by the subject of the assertion
-on a connection attempt.
-
-{: #tabhash title="Hash algorithms"}
-
-| Code | Name       | Notes                                    |
-|-----:|------------|------------------------------------------|
-| 0    | full       | Data contains full certificate           |
-| 1    | sha-256    | Data contains SHA-256 hash (32 bytes)    |
-| 2    | sha-512    | Data contains SHA-512 hash (64 bytes)    |
-| 3    | sha-384    | Data contains SHA-384 hash (48 bytes)    |
-| 4    | fnv-64     | Data contains FNV-64 hash (64 bytes)     |
-| 5    | murmur3-64 | Data contains murmur3-64 hash (64 bytes) |
-
-Code 0 is used to store full certificates in RAINS assertions, while other
-codes are used to store hashes for verification.
-
-For example, in a cert-info object with values \[ 7, 1, 3, 3, (data) ], the
-data would be a 48 SHA-384 hash of the ASN.1 DER-encoded X.509v3 certificate
-(see Section 4.1 of {{?RFC5280}}) to be presented by the endpoint on a
-connection attempt with TLS version 1.2 or later.
-
-### Name expression format {#cbor-nameset}
-
-The nameset expression is represented as a UTF-8 string encoding a modified POSIX
-Extended Regular Expression format (see POSIX.2) to be applied to each element
-of a name within the zone. A name containing an element that does not match
-the valid nameset expression for a zone is not valid within the zone, and the
-nameset assertion can be used to prove nonexistence.
-
-The POSIX character classes :alnum:, :alpha:, :ascii:, :digit:, :lower:, and :upper: are available in these regular expressions, where:
-
-- :lower: matches all codepoints within the Unicode general category "Letter, lowercase"
-- :upper: matches all codepoints within the Unicode general category "Letter, uppercase"
-- :alpha: matches all codepoints within the Unicode general category "Letter".
-- :digit: matches all codepoints within the Unicode general category "Number, decimal digit"
-- :alnum: is the union of :alpha: and :digit:
-- :ascii: matches all codepoints in the range 0x20-0x7f
-
-In addition, each Unicode block is available as a character class, with the
-syntax :ublkXXXX: where XXXX is a 4 or 5 digit, zero-prefixed hex encoding of
-the first codepoint in the block. For example, the Cyrillic block is available
-as :ublk0400:.
-
-Unicode escapes are supported in these regular expressions; the sequence
-\uXXXX where XXXX is a 4 or 5 digit, possibly zero-prefixed hex encoding of
-the codepoint, is substituted with that codepoint.
-
-Set operations (intersection and subtraction) are available on character
-classes. Two character class or range expressions in a bracket expression
-joined by the sequence && are equivalent to the intersection of the two
-character classes or ranges. Two character class or range expressions in a
-bracket expression joined by the sequence -- are equivalent to the subtraction
-of the second character class or range from the first.
-
-For example, the nameset expression:
-
-\[\[:ublk0400:]&&\[:lower:]\[:digit:]]+
-
-matches any name made up of one or more lowercase Cyrillic letters and digits. The same expression can be implemented with a range instead of a character class:
-
-\[\u0400-\u04ff&&\[:lower:]\[:digit:]]+
-
-## Data structures {#cbor-data-structure}
-
-A data structure is encoded as an arrays in CBOR, where the first element is the
-type of the data structure, encoded as an integer in the following table:
-
-{: #tabds title="Data structure type codes"}
-
-| Code  | Name         | Description                             |
-|------:|--------------|-----------------------------------------|
-| 1     | bloom-filter | A bloom filter data structure           |
-
-A bloom-filter (1) data structure is represented as a five-element array. The
-second element is an array of integers specifying a family of hash function(s)
-identifier, as in {{tabhash}}. The third element is an integer determining the
-number of hash functions used in the bloom filter from the specified family of
-hash functions. The fourth element is an integer specifying the mode of
-operation identifier, as in {{tabbfopmode}} The fifth element is a bit string
-representing the bloom filter itself as defined in
-{{cbor-bloom-filter-bit-string}}
-
-{: #tabbfopmode title="Bloom filter mode of operations"}
-
-| Code  | Name                  | Description                                           |
-|------:|-----------------------|-------------------------------------------------------|
-| 0     | standard              | Provided hash functions are used                      |
-| 1     | Kirsch-Mitzenmacher-1 | Kirsch-Mitzenmacher optimization with 1 hash function |
-| 2     | Kirsch-Mitzenmacher-2 | Kirsch-Mitzenmacher optimization with 2 hash function |
-
-For code 0, the number of provided hash function identifiers must be equal to
-the number of hash functions used in the bloom filter. The results of the hash
-functions are taken modulo the size of the bloom filter to determine which
-position to set or check in the filter.
-
-For code 1 and 2, instead of using k different hash functions to calculate the
-bit string of the bloom filter, it is sufficient to use one or two and then
-apply the Kirsch-Mitzenmacher-Optimization {{BETTER-BLOOM-FILTER}}. If only one
-hash function is used, then its calculated hash value is split in half. The
-first part corresponds to the first hash function in the optimization and the
-second part to the second one. The following formula is used to obtain the
-position which will be set to or checked for a 1 according to the ith hash
-function:
-
-pos = (hash1 + hash2*i) modulo bit-string-size
-
-### Bloom Filter Bit String {#cbor-bloom-filter-bit-string}
-
-The bit string of an empty bloom filter is all zeros. To add an assertion,
-first, the assertion's fully-qualified name, context and code of its type are
-concatenated separated by a space. This value is then hashed a certain amount of
-times with the provided hash functions depending on the mode of operation and
-the corresponding position(s) in the filter are set to one, see {{tabbfopmode}}.
-
-To check wether an assertion is not part of the bloom filter, the same process
-is repeated for the assertion in question. If any of the obtained filter
-position(s) is zero, then this assertion is certainly not contained.
-
+\[EDITOR'S NOTE - content moved up]
 
 ## Signatures, delegation keys, and RAINS infrastructure keys {#cbor-signature}
 
