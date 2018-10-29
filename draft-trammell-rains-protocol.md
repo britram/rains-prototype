@@ -620,17 +620,21 @@ algorithms in {{tabsig}}.
 | 6    | context        | Context of an Assertion, Shard, P-Shard, Zone or Query |
 | 7    | objects        | Objects of an Assertion                                |
 | 8    | query-name     | Fully qualified name for a Query                       |
+| 9    | reserved       | Reserved for future use                                |
 | 10   | query-types    | Acceptable object types for a Query                    |
 | 11   | range          | Lexical range of Assertions in Shard or P-Shard        |
 | 12   | query-expires  | Absolute timestamp for query expiration                |
 | 13   | query-opts     | Set of query options requested                         |
-| 14   | hash-type      | Hash function used in an update query                  |
-| 15   | hash-value     | Value of a hashed Assertion, Shard, P-Shard or Zone    |
-| 17   | key-phases     | All requested key phases of a Query                    |
-| 18   | data-structure | Data structure of a P-Shard                            |
+| 14   | hash-type      | Hash function used in an update query \[EDITOR'S NOTE: reclaim?] |
+| 15   | hash-value     | Value of a hashed Assertion, Shard, P-Shard or Zone \[EDITOR'S NOTE: reclaim?] |
+| 16   | reserved       | Reserved for future use                                |
+| 17   | query-keyphase | All requested key phases of a Query                    |
+| 18   | data-structure | Data structure of a P-Shard \[EDITOR'S NOTE: reclaim?] |
+| 19   | shards         | Shard content of a zone                                |
+| 20   | assertions     | Singular Assertion content of a Shard or Zone          |
 | 21   | note-type      | Notification type                                      |
 | 22   | note-data      | Additional notification data                           |
-| 23   | content        | Content of a message, shard, P-Shard or zone           |
+| 23   | content        | Content of a Message                                   |
 
 The information model is designed to be representation-independent, and can be
 rendered using alternate structured-data representations that support the
@@ -681,11 +685,11 @@ or Notification.
 
 ### Message Section structure {#message-sections}
 
-Each Message Section in the Message's content value is a two-element array.
-The first element in the array is the message section type, encoded as an
-integer as in {{tabsection}}. The second element in the array is a message
-section body, a CBOR map defined as in the subsections
-{{assertions}}, {{queries}}, and {{notifications}}
+Each Message Section in the Message's content value is represented as a
+two-element array. The first element in the array is the message section type,
+encoded as an integer as in {{tabsection}}. The second element in the array is a
+message section body, a CBOR map defined as in the subsections {{assertions}},
+{{queries}}, and {{notifications}}
 
 {: #tabsection title="Message Section Type Codes"}
 
@@ -735,12 +739,16 @@ negative proof of the lack of such an association, or both):
   within a given zone in a given context. The signature on a Zone can be used to
   prove both the existence of an association between a subject name and an
   object of a given type, as well as the absence of such an association. Zones
-  are described in detail in {{zones}}.
-- Shards contain Assertions for every object associated with every subject name
-  in a given lexicographic range of subject names within a given zone in a given
-  context. The signature on a Shard can be used to prove the nonexistance of an
-  object of a given type for a name within its range. Shards are described in
-  detail in {{shards}}.
+  are described in detail in {{zones}}. If signed, the assertions within a Zone
+  can also be treated as Singular Assertions; in this case they inherit zone and
+  context information from the containing zone.
+- Shards contain Singular Assertions for every object associated with every
+  subject name in a given lexicographic range of subject names within a given
+  zone in a given context. The signature on a Shard can be used to prove the
+  nonexistance of an object of a given type for a name within its range. Shards
+  are described in detail in {{shards}}. If signed, the assertions within a
+  Shard can also be treated as Singular Assertions; in this case they inherit
+  zone and context information from the containing shard.
 - P-Shards (or Probabalistic Shards) contain a data structure that can be used
   to demonstrate, within predictable bounds of false-negative probability, the
   non-existence of an object of a given type for a name within a lexicographic
@@ -755,41 +763,36 @@ qualified name, context, type, object value(s), signature meta data.]
  
 ### Singular Assertions {#singular-assertions}
 
-\[EDITOR'S NOTE: fix this section up]
+A Singular Assertion contains the set of objects associated with a single given
+subject name in a given zone in a given context. A Singular Assertion with a
+valid signature can be used as a positive answer to a query for a name. It is
+represented as a CBOR map. The keys present in this map depend on whether the
+Singular Assertion is contained in a Message, Shard or Zone.
 
-An Assertion body is a map. The keys present in this map depend on whether the
-Assertion is contained in a Message, Shard or Zone.
+Assertions contained directly within a Message's content value cannot inherit any
+values from their containers, and therefore MUST contain the signatures (0),
+subject-name (3), subject-zone (4), context (6), and objects (7) keys.
 
-Assertions contained in a Message's content value are "bare Assertions". Since
-they cannot inherit any values from their containers, they MUST contain the
-signatures (0), subject-name (3), subject-zone (4), context (6), and objects (7)
-keys.
-
-Assertions within a Shard or Zone are "contained Assertions", and can inherit
-values from their containers. A contained Assertion MUST contain the subject-
-name (3) and objects (7) keys. The subject-zone (4) and context (6) keys MUST
-NOT be present. They are assumed to have the same value as the corresponding
-values in the containing Shard or Zone for signature generation and signature
-verification purposes; see {{cbor-signature}}.
-
-A contained Assertion SHOULD contain the signatures (0) key, since an unsigned
-contained Assertion cannot be used by a RAINS server to answer a query; it
-must be returned in a signed Shard or Zone.
+Assertions within a Shard or Zone can inherit values from their containers. A
+contained Assertion MUST contain the subject-name (3), objects (7) keys. The
+subject-zone (4) and context (6) keys MUST NOT be present. They are assumed to
+have the same value as the corresponding values in the containing Shard or Zone
+for signature generation and signature verification purposes; see
+{{signature}}.
 
 The value of the signatures (0) key, if present, is an array of one or more
-Signatures as defined in {{cbor-signature}}. If not present, the containing
-Shard or Zone MUST be signed. Signatures on a contained Assertion are generated
-as if the inherited subject-zone and context values are present in the
+Signatures as defined in {{signature}}. Signatures on a contained Assertion are
+generated as if the inherited subject-zone and context values are present in the
 Assertion, whether actually present or not. The signatures on the Assertion are
 to be verified against the appropriate key for the Zone containing the Assertion
-in the given context, as described in {{signatures-in-assertions}}.
+in the given context.
 
 The value of the subject-name (3) key is a UTF-8 encoded {{!RFC3629}} string
-containing the name of the subject of the assertion. The subject name MAY
-contain dot(s) '.'. The subject name never contains the zone in which the
-subject name is registered; the fully-qualified name is obtained by joining the
-subject-name to the subject-zone with a '.' character. The subject-name must be
-valid according to the nameset expression for the zone, if any.
+containing the name of the subject of the assertion. The subject name may cover
+multiple levels of hierarchy, separated by the '.' character. The
+fully-qualified name of an Assertion is obtained by joining the subject-name to
+the subject-zone with a '.' character. The subject-name must be valid according
+to the nameset expression for the zone, if any (see {{obj-nameset}}).
 
 The value of the subject-zone (4) key, if present, is a UTF-8 encoded string
 containing the name of the zone in which the assertion is made and MUST end with
@@ -799,62 +802,93 @@ the containing Shard or Zone.
 The value of the context (6) key, if present, is a UTF-8 encoded string
 containing the name of the context in which the assertion is valid. Both the
 authority-part and the context-part MUST end with a '.'. If not present, the
-context of the assertion is inherited from the containing Shard or Zone.
+context of the assertion is inherited from the containing Shard or Zone. See
+{{assertion-context}} for more.
 
 The value of the objects (7) key is an array of objects, as defined in
-{{cbor-object}}.
+{{obj-types}}.
+
+### Shards {#shards}
+
+\[EDITOR'S NOTE: work pointer]
 
 ### Zones {#zones}
 
-### Shards {#shards}
+A Zone contains Assertions for every object associated with every subject name
+within a given zone in a given context, organized into Shards or singular
+Assertions. A Zone with a valid signature can be used either as a positive
+answer for a query about a name (when its contained assertions are not signed),
+or as a negative answer to prove that a given object does not exist for a given
+name.
+
+Organizing Assertions into Zones allows operators of zones with few subject
+names (e.g., used only for simple web hosting, as is the case with many zones in
+the current Internet naming system) to minimize signing and zone management
+overhead. 
+
+A Zone is represented as a CBOR map. Zones MUST contain the signatures (0),
+subject-zone (4), and context (6) keys, and MUST contain one of the
+shards (19) or assertions (20) keys.
+
+The value of the signatures (0) key is an array of one or more Signatures on the
+Zone as defined in {{signature}}. Signatures on the Zone are to be verified
+against the appropriate key for the Zone in the given context.
+
+The value of the subject-zone (4) key is a UTF-8 encoded string containing the
+name of the Zone which MUST end with '.' (the root zone).
+
+The value of the context (6) key is a UTF-8 encoded string containing the name
+of the context for which the Zone is valid. Both the authority-part and the
+context-part MUST end with a '.'. See {{assertion-context}}
+
+The contents of the Zone are contained in the values of the shards (19) or
+assertions (20) key. The value of the shards key is a CBOR array of Shards as
+defined in {{shards}}. The value of the assertions key is a CBOR array of
+Singular Assertions as defined in {{singular-assertions}}. A Zone may either be
+organized into Shards, in which case the Shards within the Zone must cover the
+entire lexicographic space of subject names within the Zone, or it may be
+organized as Singular Assertions. 
+
+Within the shards array, if present, the contained Shards MUST be sorted in
+lexicographic order by shard range start. Within the assertions array, if
+present, the contained Singular Assertions MUST be sorted in lexicographic order
+by subject name.
+
+\[EDITOR'S NOTE bind p-shards to zones?]
+
+
+
+
+
 
 ### P-Shards {#p-shards}
 
 ### Dynamic Assertion Validity {#assertion-dynamics}
 
-## Object Types {#obj-types}
+### Signatures in Assertions {#assertion-signatures}
+ 
+\[EDITOR'S NOTE: fix up or eliminate this section]
 
-### Infrastructure Key {#obj-infrakey}
+A signature over an assertion contains the following information elements:
 
+- Algorithm: identifier of the algorithm used to generate the signature.
+- Keyspace: identifier of the key space used to generate the signature, i.e. how
+  the key to verify the signature should be retrieved. RAINS supports an
+  internal keyspace, but allows signatures using externally obtained keys to
+  appear on assertions for additional security.
+- Keyphase: phase of the key used to generate the signature. Since multiple keys
+  may be valid for a given authority at a given point in time, this allows the
+  correct key to be retrieved directly.
+- Valid-Since: a timestamp of the start of validity of this signature.
+- Valid-Until: a timestamp of the end of validity of this signature.
+- Signature: the cryptographic signature itself, whose format is determined by
+  the algorithm used.
 
-## Queries
+The signature protects all the information in an assertion as well as its own
+algorithm identifier, keyspace identifier, key phase, valid-since, and
+valid-until values; it does not protect other signatures on the assertion.
 
-## Context in Queries {#query-context}
-
-## Notifications
-
-## Signatures
-
-### Canonicalization {#c14n}
-
-## Tokens {#tokens}
-
-Messages and notifications contain an opaque token (2) key, whose
-content is a 16-byte array, and is used to link Messages to the Queries they
-respond to, and Notifications to the Messages they respond to. Tokens MUST be
-treated as opaque values by RAINS servers.
-
-A Message sent in response to a Query (normal and update) MUST contain the token
-of the Message containing the Query. Otherwise, the Message MUST contain a token
-selected by the server originating it, so that future Notifications can be
-linked to the Message causing it. Likewise, a Notification sent in response to a
-Message MUST contain the token from the Message causing it (where the new
-Message contains a fresh token selected by the server). This allows sending
-multiple Notifications within one Message and the receiving server to respond to
-a Message containing Notifications (e.g. when it is malformed).
-
-Since tokens are used to link queries to replies, and to link notifications to
-messages, regardless of the sender or recipient of a message, they MUST be
-chosen by servers to be hard to guess; e.g. generated by a cryptographic random
-number generator.
-
-When a server creates a new query to forward to another server in response to
-a query it received, it MUST NOT use the same token on the delegated query
-as on the received query, unless option 6 Enable Tracing is present in the
-received, in which case it MUST use the same token.
-
-
-## Context in Assertions {#assertion-context}
+### Context in Assertions {#assertion-context}
 
 Assertion contexts are used to provide explicit inconsistency, while allowing
 Assertions themselves to be globally valid regardless of the query to which they
@@ -910,6 +944,44 @@ Developing conventions for assertion contexts for different situations will
 require implementation and deployment experience, and is a subject for future
 work.
 
+## Object Types {#obj-types}
+
+### Infrastructure Key {#obj-infrakey}
+
+## Queries
+
+## Notifications
+
+## Signatures {#signatures}
+
+### Canonicalization {#c14n}
+
+## Tokens {#tokens}
+
+Messages and notifications contain an opaque token (2) key, whose
+content is a 16-byte array, and is used to link Messages to the Queries they
+respond to, and Notifications to the Messages they respond to. Tokens MUST be
+treated as opaque values by RAINS servers.
+
+A Message sent in response to a Query (normal and update) MUST contain the token
+of the Message containing the Query. Otherwise, the Message MUST contain a token
+selected by the server originating it, so that future Notifications can be
+linked to the Message causing it. Likewise, a Notification sent in response to a
+Message MUST contain the token from the Message causing it (where the new
+Message contains a fresh token selected by the server). This allows sending
+multiple Notifications within one Message and the receiving server to respond to
+a Message containing Notifications (e.g. when it is malformed).
+
+Since tokens are used to link queries to replies, and to link notifications to
+messages, regardless of the sender or recipient of a message, they MUST be
+chosen by servers to be hard to guess; e.g. generated by a cryptographic random
+number generator.
+
+When a server creates a new query to forward to another server in response to
+a query it received, it MUST NOT use the same token on the delegated query
+as on the received query, unless option 6 Enable Tracing is present in the
+received, in which case it MUST use the same token.
+
 ## Context in Queries {#query-context}
 
 # Zone File Format {#zonefiles}
@@ -917,7 +989,7 @@ work.
 \[EDITOR'S NOTE: derive this from the zonefile parser]
 
 
-
+# Old content below
 
 
 ## Assertion
@@ -984,26 +1056,6 @@ point in time; the union of the object values of all of these assertions is
 considered to be the set of valid values at that point in time.
 
 
-### Signatures in Assertions
-
-A signature over an assertion contains the following information elements:
-
-- Algorithm: identifier of the algorithm used to generate the signature.
-- Keyspace: identifier of the key space used to generate the signature, i.e. how
-  the key to verify the signature should be retrieved. RAINS supports an
-  internal keyspace, but allows signatures using externally obtained keys to
-  appear on assertions for additional security.
-- Keyphase: phase of the key used to generate the signature. Since multiple keys
-  may be valid for a given authority at a given point in time, this allows the
-  correct key to be retrieved directly.
-- Valid-Since: a timestamp of the start of validity of this signature.
-- Valid-Until: a timestamp of the end of validity of this signature.
-- Signature: the cryptographic signature itself, whose format is determined by
-  the algorithm used.
-
-The signature protects all the information in an assertion as well as its own
-algorithm identifier, keyspace identifier, key phase, valid-since, and
-valid-until values; it does not protect other signatures on the assertion.
 
 ### Semantic of nonexistence proofs
 
@@ -1079,25 +1131,6 @@ The Types supported for each P-Shard are:
 
 # Zone
 
-A zone is the entire set of shards, P-Shards, and assertions subject to a given
-authority within a given context. The majority of zones will be tiny. Thus, a
-zone can be used for both positive and negative answers as it contains all
-information about the zone while still being small. 
-
-A zone has the following information elements:
-
-- Context: name of the context in which the assertions in the zone are valid;
-  see {{context-in-assertions}} above.
-- Zone: name of the zone.
-- Content: a set of assertions, P-Shards and/or shards sharing the context
-  and zone.
-- Signatures: one or more signatures generated by the authority for the
-  zone; see {{signatures-in-assertions}}.
-
-For efficiency's sake, information elements within a zone common to all
-assertions, shards, and P-Shards (zone, context) within the zone must be omitted
-from the assertions, shards, and P-Shards themselves. Signatures on contained
-assertions, shards, and P-Shards may be omitted.
 
 ### Zone-Reflexive Assertions
 
@@ -1451,32 +1484,11 @@ of hash functions, filter, signature meta data.
 
 ## Zone body {#cbor-zone}
 
-A Zone body is a map. Zones MUST contain the content (23), signatures (0),
-subject-zone (4), and context (6) keys.
-
-Signatures on the Zone are to be verified against the appropriate key for the
-Zone in the given context, as described in {{signatures-in-assertions}}.
-
-The value of the content (23) key is an array of Shard bodies as defined in
-{{cbor-shard}}, P-Shard bodies as defined in {{cbor-P-Shard}} and/or Assertion
-bodies as defined in {{cbor-assertion}}. Assertions, P-Shards and Shards in the
-content array MUST be sorted. Assertions are sorted before P-Shards, which in
-turn are sorted before Shards. Groups of the same section type are sorted
-according to {{cbor-assertion-sorting}}, {{cbor-P-Shard-sorting}}, and
-{{cbor-shard-sorting}}.
-
-The value of the subject-zone (4) key is a UTF-8 encoded string containing the
-name of the Zone which MUST end with '.' (the root zone).
-
-The value of the context (6) key is a UTF-8 encoded string containing the name
-of the context for which the Zone is valid. Both the authority-part and the
-context-part MUST end with a '.'.
-
 ## Query body {#cbor-query}
 
 A Query body is a map. Queries MUST contain the query-name (8),
 context (6), query-types (10), and query-expires (12) keys. Queries MAY contain
-the query-opts (13), and the key-phases (17) keys.
+the query-opts (13), and the query-keyphase (17) keys.
 
 The value of the query-name (8) key is a UTF-8 encoded string containing the
 name for which the query is issued and MUST end with a '.' (the root zone).
@@ -1492,9 +1504,9 @@ the querier is equally interested in both IPv4 and IPv6 addresses for the
 query-name. An empty query-types array indicates that objects of any type are
 acceptable in answers to the query.
 
-The value of the key-phases (17) key is an array of integers representing all
+The value of the query-keyphase (17) key is an array of integers representing all
 key phases (see {{cbor-signature}}) expected in delegation assertion answers to
-the query. The value of the key-phases (17) key MUST NOT be empty when the query
+the query. The value of the query-keyphase (17) key MUST NOT be empty when the query
 asks for delegation assertion(s). Otherwise, it MUST be empty.
 
 The value of the query-expires (12) key, is a CBOR integer counting seconds
