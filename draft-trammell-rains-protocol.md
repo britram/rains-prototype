@@ -629,12 +629,11 @@ algorithms in {{tabsig}}.
 | 15   | hash-value     | Value of a hashed Assertion, Shard, P-Shard or Zone \[EDITOR'S NOTE: reclaim?] |
 | 16   | reserved       | Reserved for future use                                |
 | 17   | query-keyphase | All requested key phases of a Query                    |
-| 18   | data-structure | Data structure of a P-Shard \[EDITOR'S NOTE: reclaim?] |
 | 19   | shards         | Shard content of a zone                                |
 | 20   | assertions     | Singular Assertion content of a Shard or Zone          |
 | 21   | note-type      | Notification type                                      |
 | 22   | note-data      | Additional notification data                           |
-| 23   | content        | Content of a Message                                   |
+| 23   | content        | Content of a Message or a P-Shard                     |
 
 The information model is designed to be representation-independent, and can be
 rendered using alternate structured-data representations that support the
@@ -819,6 +818,16 @@ negative query result for that subject name. Shards are used exclusively for
 negative proof; the individual signatures on their contained Singular Assertions
 are used for positive proof of the existence of an assertion.
 
+The content of a Shard (in terms of the number of Singular Assertions it covers)
+is chosen by the authority of the zone for which the Shard is valid. There is an
+inherent tradeoff between the number of Assertions within a Shard and the size
+of the Shard, and therefore the size of the Message that must be presented as
+negative proof. P-Shards ("Probabalistic Shards", see {{#p-shards}}) allow a
+different tradeoff, gaining space efficiency and coverage for a fixed,
+predictable probability of a false positive (i.e., the possibility that the
+P-Shard cannot be used to prove the nonexistence of a subject which does not, in
+fact, exist).
+
 A Shard is represented as a CBOR map. The keys present in this map depend on
 whether the Shard is contained in a Message or Zone.
 
@@ -901,15 +910,6 @@ lexicographic order by shard range start. Within the assertions array, if
 present, the contained Singular Assertions MUST be sorted in lexicographic order
 by subject name.
 
-### Zone-Reflexive Assertions
-
-A zone may make an assertion about itself by using the string "@" as a subject
-name. This facility can be used for any assertion type, but is especially useful
-for self-signing root zones, and for a zone to make a subsequent key assertion
-about itself. If an assertion of a given type about a zone is available both in
-the zone itself and in the superordinate zone, the assertion in the
-superordinate zone will take precedence.
-
 ### P-Shards {#p-shards}
 
 \[EDITOR'S NOTE: fix up this section -- rework the representation to make the
@@ -918,150 +918,86 @@ representation more parsimonious. Specifically, a P-Shard should have a content
 be contained within Zones, since that doesn't make sense; they're supplemental
 only].
 
-A P-Shard body is a map. The keys present in the map depend on whether the P-Shard
-is contained in a Message or in a Zone.
+Shards ({{shards}}) can be used as definitive proof of the nonexistence of a
+name within a zone. P-Shards serve the same purpose, but offer only a
+probabalistic guarantee of the non-existence of the name. Specifically, as they
+are based on Bloom filters, a subject name which does not in fact exist may
+appear in the P-Shard; in return for this uncertainty, they offer a much more
+space-efficient way to demonstrate the non-existence of a subject within the
+zone than Shards do. There is a tradeoff between the size of the bit string
+storing the Bloom filter, the number of Assertions covered by the P-Shard, and
+the false positive error rate. The zone authority can determine how to weight
+them.
 
-P-Shards contained in a Message's content value are "bare P-Shards". Since they
-cannot inherit any values from their contained Zone, they MUST contain the
-signatures (0), subject-zone (4), context (6), range (11), and data-structure
-(18) keys.
+A P-Shard is represented as a CBOR map. This map MUST contain the signatures
+(0), subject-zone (4), context (6), and content(23) keys. It MAY contain the range(11) key.
 
-P-Shards within a Zone are "contained P-Shards", and can inherit values from their
-containing Zone. A contained P-Shards MUST contain the the range(11) and
-data-structure (18) keys. The subject-zone (4) and context (6) keys MUST NOT be
-present. They are assumed to have the same value as the corresponding values in
-the containing Zone for signature generation and signature verification
-purposes; see {{cbor-signature}}.
+The value of the signatures (0) key is an array of one or more Signatures as
+defined in {{cbor-signature}}. The signatures on the P-Shard are to be verified
+against the appropriate key for the Zone for which the P-Shard is cvalid in the
+given context.
 
-A contained P-Shard SHOULD contain the signatures (0) key, since an unsigned
-contained P-Shard cannot be used by a RAINS server to answer a query for
-nonexistence; it must be returned in a signed Zone.
+The value of the subject-zone (4) key is a UTF-8 encoded string containing the
+name of the zone in which the Assertions in the P-Shard is made and MUST end
+with '.' (the root zone).
 
-The value of the signatures (0) key, if present, is an array of one or more
-Signatures as defined in {{cbor-signature}}. If not present, the containing Zone
-MUST be signed. Signatures on a contained P-Shard are generated as if the
-inherited subject-zone and context values are present in the P-Shard,
-whether actually present or not. The signatures on the P-Shard are to be
-verified against the appropriate key for the Zone containing the P-Shard in
-the given context, as described in {{signatures-in-assertions}}.
+The value of the context (6) key is a UTF-8 encoded string containing the name
+of the context in which the Assertions in the P-Shard are valid. Both the
+authority-part and the context-part MUST end with a '.'.
 
-The value of the subject-zone (4) key, if present, is a UTF-8 encoded string
-containing the name of the zone in which the Assertions in the P-Shard is
-made and MUST end with '.' (the root zone). If not present, the zone of the
-assertion is inherited from the containing Zone.
+The value of the range (11) key, if present, is a two element array of strings or nulls
+(subject-name A, subject-name B). A MUST lexicographically sort before B. If A
+is null, the P-Shard begins at the beginning of the zone. If B is null, the
+shard ends at the end of the zone. The P-Shard MUST NOT be used to check the
+existence of any assertions whose subject names are equal to or sort before A,
+or are equal to or sort after B.
 
-The value of the context (6) key, if present, is a UTF-8 encoded string
-containing the name of the context in which the Assertions in the P-Shard
-are valid. Both the authority-part and the context-part MUST end with a '.'.  If
-not present, the context of the assertion is inherited from the containing Zone.
+If the range (11) key is not present, the P-shard covers then entire zone.
 
-The value of the range (11) key MUST be a two element array of strings or nulls
-(subject-name A, subject-name B). A must lexicographically sort before B, but
-neither subject name need be present in the P-Shard's contents. If A is
-null, the P-Shard begins at the beginning of the zone. If B is null, the
-P-Shard ends at the end of the zone. The P-Shard MUST NOT contain any
-assertions whose subject names sort before A or after B.
+The value of the content (23) key is a three-element array. The first element
+identifies the algorithm used for generating the bitstring. The second element
+identifies the hash function in use for generating the bitstring. The third
+element contains the bitstring itself, as an octet array. The size of the
+bitstring must be 0 mod 8.
 
-The value of the data-structure (18) key is an array of elements, as defined in
-{{cbor-data-structure}}.
+{{tabpsds}} enumerates supported generation algorithms; supported hash functions
+are given in {{hash-functions}}.
 
-P-Shards are lexicographically complete within the range described in the
-range value: a subject-name and type within the range of a P-Shard giving a
-negative answer is asserted to not exist.
+{: #tabpsds title="P-shard generation algorithms"}
 
-A P-Shard represents a space-efficient probabilistic data structure stored as a
-bit string to proof nonexistence. The data structure is used to prove membership
-of an element in a set. The set could either be the entire zone or an exclusive
-lexicographic range of that zone (like the range of a shard). All assertions
-within the same zone and context, and whose names are within the range are
-elements of the set. A P-Shard is protected by one or more signatures. A
-membership query to the P-Shard responds either with 'an assertion with a given
-name and type might be part of the set' or 'an assertion with a given name and
-type is definitely not part of the set'. The second response can be used to
-proof nonexistence of an assertion with a given name and type. There is a
-tradeoff between the size of the bit string, membership query time, and the
-false positive error rate. The zone authority can determine how to weight them.
+| Code  | Name         | Description                                |
+|------:|--------------|--------------------------------------------|
+| 0     | bloom-km     | Kirsch-Mitzenmacher optimized Bloom filter |
 
-A P-Shard has the following information elements:
+The bloom-km datastructure generates a bitstring using a Bloom filter and the
+Kirsch-Mitzenmacher optimization {{BETTER-BLOOM-FILTER}}. 
 
-- Context: name of the context in which the assertions in the P-Shard are valid;
-  see {{context-in-assertions}}.
-- Zone: name of the zone in which the assertions are made.
-- Range: an exclusive lexicographic range within which the contained assertions'
-  names must be.
-- Type: the type of the probabilistic data structure contained in the P-Shard.
-- Data structure: meta data about the data structure of the indicated type and a
-  bit string representing the data structure itself.
-- Signatures: one or more signatures generated by the authority for the
-  shard; see {{signatures-in-assertions}}.
-
-The Types supported for each P-Shard are:
-
-- Bloom filter: A space-efficient probabilistic data structure using a
-  configurable amount of hash functions from a specified hash family to generate
-  a bit string encoding all contained assertions.
-
-
-\[EDITOR'S NOTE, old Data Structures section below]
-
-
-A data structure is encoded as an arrays in CBOR, where the first element is the
-type of the data structure, encoded as an integer in the following table:
-
-{: #tabds title="Data structure type codes"}
-
-| Code  | Name         | Description                             |
-|------:|--------------|-----------------------------------------|
-| 1     | bloom-filter | A bloom filter data structure           |
-
-A bloom-filter (1) data structure is represented as a five-element array. The
-second element is an array of integers specifying a family of hash function(s)
-identifier, as in {{tabhash}}. The third element is an integer determining the
-number of hash functions used in the bloom filter from the specified family of
-hash functions. The fourth element is an integer specifying the mode of
-operation identifier, as in {{tabbfopmode}} The fifth element is a bit string
-representing the bloom filter itself as defined in
-{{cbor-bloom-filter-bit-string}}
-
-{: #tabbfopmode title="Bloom filter mode of operations"}
-
-| Code  | Name                  | Description                                           |
-|------:|-----------------------|-------------------------------------------------------|
-| 0     | standard              | Provided hash functions are used                      |
-| 1     | Kirsch-Mitzenmacher-1 | Kirsch-Mitzenmacher optimization with 1 hash function |
-| 2     | Kirsch-Mitzenmacher-2 | Kirsch-Mitzenmacher optimization with 2 hash function |
-
-For code 0, the number of provided hash function identifiers must be equal to
-the number of hash functions used in the bloom filter. The results of the hash
-functions are taken modulo the size of the bloom filter to determine which
-position to set or check in the filter.
-
-For code 1 and 2, instead of using k different hash functions to calculate the
-bit string of the bloom filter, it is sufficient to use one or two and then
-apply the Kirsch-Mitzenmacher-Optimization {{BETTER-BLOOM-FILTER}}. If only one
-hash function is used, then its calculated hash value is split in half. The
-first part corresponds to the first hash function in the optimization and the
-second part to the second one. The following formula is used to obtain the
+\[EDITOR'S NOTE describe algorithm in detail here; some old text that might be
+useful: For code 1 and 2, instead of using k different hash functions to
+calculate the bit string of the bloom filter, it is sufficient to use one or two
+and then apply the Kirsch-Mitzenmacher-Optimization {{BETTER-BLOOM-FILTER}}. If
+only one hash function is used, then its calculated hash value is split in half.
+The first part corresponds to the first hash function in the optimization and
+the second part to the second one. The following formula is used to obtain the
 position which will be set to or checked for a 1 according to the ith hash
-function:
-
-pos = (hash1 + hash2*i) modulo bit-string-size
-
-\[EDITOR'S NOTE, old Bloom Filter Bit String section below]
-
-The bit string of an empty bloom filter is all zeros. To add an assertion,
-first, the assertion's fully-qualified name, context and code of its type are
-concatenated separated by a space. This value is then hashed a certain amount of
-times with the provided hash functions depending on the mode of operation and
-the corresponding position(s) in the filter are set to one, see {{tabbfopmode}}.
-
-To check wether an assertion is not part of the bloom filter, the same process
-is repeated for the assertion in question. If any of the obtained filter
-position(s) is zero, then this assertion is certainly not contained.
+function pos = (hash1 + hash2*i) modulo bit-string-size. The bit string of an
+empty bloom filter is all zeros. To add an assertion, first, the assertion's
+fully-qualified name, context and code of its type are concatenated separated by
+a space. This value is then hashed a certain amount of times with the provided
+hash functions depending on the mode of operation and the corresponding
+position(s) in the filter are set to one. To check whether an assertion is not
+part of the bloom filter, the same process is repeated for the assertion in
+question. If any of the obtained filter position(s) is zero, then this assertion
+is certainly not contained.]
 
 ### Dynamic Assertion Validity {#assertion-dynamics}
 
-\[EDITOR'S NOTE: still TODO, copy from old organization, maybe integrate with the below]
+\[EDITOR'S NOTE: still TODO, copy from old organization, maybe integrate with
+the below. some snippets:]
+
+For a given {subject, type} tuple, multiple assertions can be valid at a given
+point in time; the union of the object values of all of these assertions is
+considered to be the set of valid values at that point in time.
 
 ### Semantic of nonexistence proofs {#antiassertions}
 
@@ -1152,6 +1088,15 @@ in {{context-in-queries}} below.
 Developing conventions for assertion contexts for different situations will
 require implementation and deployment experience, and is a subject for future
 work.
+
+### Zone-Reflexive Assertions
+
+A zone may make an assertion about itself by using the string "@" as a subject
+name. This facility can be used for any assertion type, but is especially useful
+for self-signing root zones, and for a zone to make a subsequent key assertion
+about itself. If an assertion of a given type about a zone is available both in
+the zone itself and in the superordinate zone, the assertion in the
+superordinate zone will take precedence.
 
 ## Object Types and Encodings {#obj-types}
 
@@ -1411,6 +1356,10 @@ algorithm identifier. The fifth element is the requested-valid-since time, and
 the sixth element is the requested-valid-until time, formatted as for signatures
 as in {{signatures}}. See {{public-key-management}} for more.
 
+## Hash Functions {#hash-functions} 
+
+\[EDITOR'S NOTE put hash functions from {{obj-cert}} here]
+
 ## Queries {#queries}
 
 ## Notifications
@@ -1480,10 +1429,6 @@ received, in which case it MUST use the same token.
 
 The Types supported for each assertion are:
 
-
-For a given {subject, type} tuple, multiple assertions can be valid at a given
-point in time; the union of the object values of all of these assertions is
-considered to be the set of valid values at that point in time.
 
 
 
