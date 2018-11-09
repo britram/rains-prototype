@@ -150,9 +150,9 @@ defined and implemented:
 Instead of using a custom binary framing as DNS, RAINS uses Concise Binary
 Object Representation {{!RFC7049}}, partially in an effort to make
 implementations easier to verify and less likely to contain potentially
-dangerous parser bugs {{PARSER-BUGS}}. As with DNS, CBOR messages can be carried
-atop any number of substrate protocols. RAINS is presently defined to use TLS
-over persistent TCP connections (see {{protocol-def}}).
+dangerous parser bugs {{PARSER-BUGS}}. As with DNS, CBOR messages can be
+carried atop any number of substrate protocols. RAINS is presently defined to
+use TLS over persistent TCP connections (see {{protocol}}) as well as over UDP.
 
 ## About This Document
 
@@ -540,14 +540,12 @@ https://ooni.torproject.org/nettest/dns-consistency/.
 
 # RAINS Protocol Architecture
 
-\[EDITOR'S NOTE: text here following from the PINS section, on how RAINS is
-different from DNS]
-
-The RAINS architecture is simple, and resembles the architecture of DNS. A
-RAINS Server is an entity that provides transient and/or permanent storage for
-assertions about names, and a lookup function that finds assertions for a
-given query about a name, either by searching local storage or by delegating
-to another RAINS server. RAINS servers can take on any or all of three roles:
+The RAINS architecture is simple, and vaguely resembles the architecture of
+DNS. A RAINS Server is an entity that provides transient and/or permanent
+storage for assertions about names, and a lookup function that finds assertions
+for a given query about a name, either by searching local storage or by
+delegating to another RAINS server. RAINS servers can take on any or all of
+three roles:
 
 - authority service, acting on behalf of an authority to ensure properly
   signed assertions are made available to the system (equivalent to an
@@ -561,20 +559,40 @@ to another RAINS server. RAINS servers can take on any or all of three roles:
   resolvers in DNS).
 
 RAINS Servers use the RAINS Protocol defined in this document to exchange
-queries and assertions. RAINS Clients use a subset variant of the RAINS Protocol
-(called the RAINS Client Protocol) to interact with RAINS Servers providing
-query services on their behalf.
+queries and assertions. 
 
-\[EDITOR'S NOTE: text on the authority's view of the system here: continuous
-signing, etc]
+From the point of view of an authority (an entity owning some part of the
+namespace by virtue of holding private keys associated with a zone delegation),
+the RAINS protocol is used to publish signed assertions toward one or more
+RAINS servers configured to provide authority service for their domains. Since
+the signatures on these assertions expire periodically, the authority must
+publish assertions continuously toward the authority services. In order to
+provide a DNS-like operational experience, a RAINS server providing authority
+service may be colocated with the infrastructure for publishing assertions;
+however, the architecture of the protocol means these functions need not be
+colocated.
 
-\[EDITOR'S NOTE: text on the client's view of the system here: include
-operational bootstrapping?]
+Clients are configured, or use some out-of-band discovery mechanism, to contact
+one or more query services using the RAINS protocol, and may trust those
+services to verify assertion signatures on the client's behalf.
 
-\[EDITOR'S NOTE: introduce the protocol here, and point out the primacy of the
-information/data model]
+In this way, the same protocol is used between servers, from client to server,
+and from publisher to server, with minor differences among the interactions
+implemented as profiles. See {{protocol}} for details 
 
-# Information and Data Model
+The protocol itself is designed in terms of its information and data model,
+detailed in {{infomodel}}. Since all RAINS information is carried in messages
+containing assertions, and an assertion is not valid unless it is signed, the
+validity of an assertion is separated from whence the assertion was received.
+This means the RAINS protocol itself is merely a means for moving RAINS
+assertions around, and moving RAINS queries to places where they can be
+answered. This document defines bindings for carrying RAINS messages over TLS
+over TCP and over UDP, but bindings to other transports (e.g. QUIC
+{{?QUIC=I-D.ietf-quic-transport}}) or session layers (e.g. HTTP {{?RFC7540}})
+would be trivial to design, and the protocol provides a capability mechanism
+for discovering alternate transports.
+
+# Information and Data Model {{infomodel}}
 
 The RAINS Protocol is based on an information model containing three primary
 kinds of objects: Assertions, Queries, and Notifications. An Assertion contains
@@ -587,19 +605,19 @@ capabilities-based versioning of the protocol, and for recognition of a chunk of
 CBOR-encoded binary data at rest to be recognized as a RAINS message.
 
 The RAINS data model is a relatively straightforward mapping of the information
-model to the Concise Binary Object Representation (CBOR) {{!RFC7049}}, such that
-Assertions are split into four subtypes of assertion depending on their scope
-and purpose: singular Assertions and Zones for positive proof of the existence of
-an association between a name and an object, Shards and P-Shards for negative
-proof. Messages, singular Assertions, Shards, P-Shards, Zones, Queries, and Notifications
-are each represented as a CBOR map of integer keys to values, which allows each
-of these types to be extended in the future, as well as the addition of non-
-standard, application-specific information to RAINS messages and data items. A
-common registry of map keys is given in {{tabmkey}}. RAINS implementations MUST
-ignore any data objects associated with map keys they do not understand. Integer
-map keys in the range -22 to +23 are reserved for the use of future versions or
-extensions to the RAINS protocol, due to the efficiency of representation of
-these values in CBOR.
+model to the Concise Binary Object Representation (CBOR) {{!RFC7049}}, such
+that Assertions are split into four subtypes of assertion depending on their
+scope and purpose: singular Assertions and Zones for positive proof of the
+existence of an association between a name and an object, Shards and P-Shards
+for negative proof. Messages, singular Assertions, Shards, P-Shards, Zones,
+Queries, and Notifications are each represented as a CBOR map of integer keys
+to values, which allows each of these types to be extended in the future, as
+well as the addition of non- standard, application-specific information to
+RAINS messages and data items. A common registry of map keys is given in
+{{tabmkey}}. RAINS implementations MUST ignore any data objects associated with
+map keys they do not understand. Integer map keys in the range -22 to +23 are
+reserved for the use of future versions or extensions to the RAINS protocol,
+due to the efficiency of representation of these values in CBOR.
 
 Message contents, signatures and object values are implemented as type-
 prefixed CBOR arrays with fixed meanings of each array element; the structure
@@ -625,8 +643,8 @@ algorithms in {{tabsig}}.
 | 11   | range          | Lexical range of Assertions in Shard or P-Shard        |
 | 12   | query-expires  | Absolute timestamp for query expiration                |
 | 13   | query-opts     | Set of query options requested                         |
-| 14   | hash-type      | Hash function used in an update query \[EDITOR'S NOTE: reclaim?] |
-| 15   | hash-value     | Value of a hashed Assertion, Shard, P-Shard or Zone \[EDITOR'S NOTE: reclaim?] |
+| 14   | current-answer  | Current querier information for an update query        |
+| 15   | reserved       | Reserved for future use                                |
 | 16   | reserved       | Reserved for future use                                |
 | 17   | query-keyphase | All requested key phases of a Query                    |
 | 19   | shards         | Shard content of a zone                                |
@@ -701,8 +719,6 @@ message section body, a CBOR map defined as in the subsections {{assertions}},
 | 4    | query        | Query (see {{queries}})                           |
 | -4   | revquery     | Address Query (see {{revquery}})                  |
 | 5    | p-shard      | P-Shard (see {{p-shards}})                        |
-| 6    | auquery      | Assertion update query (see {{auquery}})          |
-| 7    | nuquery      | Nonexistence update query (see {{nuquery}})       |
 | 23   | notification | Notification (see {{cbor-notification}})          |
 
 ## Assertions {#assertions}
@@ -989,13 +1005,13 @@ assertions is considered to be the set of valid values at that point in time.
 ### Semantic of nonexistence proofs {#antiassertions}
 
 Shards, P-Shards and Zones can all be used to prove nonexistence during their
-validity. But to allow change to happen frequently and to have a dynamic system,
-an assertion might be created, altered, expired or revoked during the validity
-period of a shard, P-Shard or zone, leading to an inconsistency. Thus, a section
-proving nonexistence only captures the state at the point in time when it was
-signed. To make sure that the content of a shard, P-Shard or zone is still
-accurate, a nonexistence update query {{nonexistence-update-query}} must be sent
-to the server having authority over that name.
+validity. However, real naming systems are dynamic: an assertion might be
+created, altered, expired or revoked during the validity period of a shard,
+P-Shard or zone, leading to an inconsistency. Thus, a section proving
+nonexistence only captures the state at the point in time when it was signed.
+If an authoritative proof of non-existence is necessary, a query for
+nonexistence (see {{nonexistence-query}}) may be sent to a server identified as
+an authority for the name.
 
 ### Context in Assertions {#assertion-context}
 
@@ -1312,32 +1328,220 @@ Hash algorithms are used in several places in the RAINS data model:
 - hashing certificate data in cert-info objects (see {{obj-cert}})
 - hashing assertions into Bloom filters for probabalistic shards (see {{p-shards}})
 - hashing assertion and message data as part of generating a MAC (see {{signatures}})
+- hashing assertion data for a confirmation query (see {{confirmation}})
 
 Where they are used in RAINS, hash functions are identified by a code given in
 {{tabhash}}. In this table, applicability "C" means the hash is valid for use
 in a certificate info object, "P" that it can be used for hashing assertions
-for P-shards, and S that it can be used for hashing assertions and messages for
-signatures.
+for P-shards, "S" that it can be used for hashing assertions and messages for
+signatures, and "Q" that it can be used for hashing assertions for confirmation queries.
 
 {: #tabhash title="Hash algorithms"}
 
 | Code | Name       | Reference         | Length | Applicability |
 |-----:|------------|-------------------|--------|---------------|
 | 0    | nohash     | (data not hashed) | var.   | C             |
-| 1    | sha-256    | {{!RFC6234}}      | 32     | CPS           |
-| 2    | sha-512    | {{!RFC6234}}      | 64     | CS            |
-| 3    | sha-384    | {{!RFC6234}}      | 48     | CS            |
-| 4    | shake256   | {{!RFC8419}}      | 32     | PS            |
+| 1    | sha-256    | {{!RFC6234}}      | 32     | CPSQ          |
+| 2    | sha-512    | {{!RFC6234}}      | 64     | CSQ           |
+| 3    | sha-384    | {{!RFC6234}}      | 48     | CSQ           |
+| 4    | shake256   | {{!RFC8419}}      | 32     | PSQ           |
 | 5    | fnv-64     | {{!FNV=I-D.eastlake-fnv}} | 8 | P          |
-| 6    | fnv-128    | {{!FNV=I-D.eastlake-fnv}} | 16 | P          |
-
+| 6    | fnv-128    | {{!FNV=I-D.eastlake-fnv}} | 16 | P         |
 
 ## Queries {#queries}
 
+Information about requests for information about names is carried in Queries. A
+Query specifies the name and object type about which information is requested,
+information about how long the querier is willing to wait for an answer, and
+additional options indicating the querier's preferences about how the query
+should be handled.
+
+In contrast to Assertions, the subject in a Query is given as a fully-qualified
+name - the subject name concatenated to the zone name with a '.', since a
+querier may not know the zone name associated with a fully-qualified name.
+
+There are two kinds of queries supported by the RAINS data model:
+
+- Query (or Normal Query): a request for information of a given type about a
+given subject, about which the querier expresses no prior information.
+
+- Confirmation Query: a request for information of a given type about a given
+subject, for which the querier already has a valid cached assertion or a valid
+cached nonexistence proof, but for which the querier would like a new assertion
+if available. Confirmation queries are covered in {{confirmation}}.
+
+Both of queries are carried in a Query message section. Each Query section in a
+Message represents a separate query.
+
+A Query body is represented as a CBOR map. Queries MUST contain the query-name (8),
+context (6), query-types (10), and query-expires (12) keys. Queries MAY contain
+the query-opts (13), query-keyphase (17) keys, and/or current-answer (14) keys. 
+
+The value of the query-name (8) key is a UTF-8 encoded string containing the
+name for which the query is issued and MUST end with a '.' (the root zone).
+
+The value of the context (6) key is a UTF-8 encoded string containing the name
+of the context to which a query pertains. A zero-length string indicates that
+assertions will be accepted in any context.
+
+The value of the query-types (10) key is an array of integers encoding the
+type(s) of objects (as in {{cbor-object}}) acceptable in answers to the query.
+All values in the query-type array are treated at equal priority: for example,
+\[2,3] means the querier is equally interested in both IPv4 and IPv6 addresses
+for the query-name. An empty query-types array indicates that objects of any
+type are acceptable in answers to the query.
+
+The value of the query-expires (12) key is a CBOR integer epoch timestamp
+identified with tag value 1 and encoded as in section 2.4.1 of {{!RFC7049}}.
+After the query-expires time, the query will have been considered not answered
+by the original issuer and can be ignored.
+
+The value of the query-keyphase (17) key, if present, is an array of integers
+representing all key phases (see {{cbor-signature}}) desired in delegation and
+nextkey answers to queries (see {{obj-deleg}} and {{obj-nextkey}}). The value
+of the query-keyphase key is ignored for all queries where query-types does not
+include delegation or nextkey. A query for a delegation or nextkey object that
+does not contain a query-keyphase key should return information for all
+available keyphases.
+
+The value of the query-opts (13) key, if present, is an array of integers in
+priority order of the querier's preferences in tradeoffs in answering the
+query. See {{query-opts}}.
+
+The value of the current-answer (14) key, if present, is the information the
+querier would like confirmed. See {{confirmation}} for details of how this
+key's value is represented.
+
+### Query Options {#query-opts}
+
+RAINS supports a set of query options to allow a querier to express
+preferences. Query options are advisory.
+
+{: #tabqopts title="Query Option Codes"}
+
+| Code | Description                                                    |
+|-----:|----------------------------------------------------------------|
+| 1    | Minimize end-to-end latency                                    |
+| 2    | Minimize last-hop answer size (bandwidth)                      |
+| 3    | Minimize information leakage beyond first hop                  |
+| 4    | No information leakage beyond first hop: cached answers only   |
+| 5    | Expired assertions are acceptable                              |
+| 6    | Enable query token tracing                                     |
+| 7    | Disable verification delegation (client protocol only)         |
+| 8    | Suppress proactive caching of future assertions                |
+| 9    | Maximize freshness of result                                   |
+
+Options 1-5 and 9 specify performance/privacy tradeoffs. Each server is free to
+determine how to minimize each performance metric requested; however, servers
+MUST NOT generate queries to other servers if "no information leakage" is
+specified, and servers MUST NOT return expired assertions unless "expired
+assertions acceptable" is specified.
+
+Option 6 specifies that the token on the message containing the query (see
+{{tokens}}) should be used on all queries resulting from a given query,
+allowing traceability through an entire RAINS infrastructure. These resulting
+queries SHOULD also carry Option 6. When Option 6 is not present, queries
+sent by a server in response to an incoming query SHOULD use different tokens.
+
+By default, a client service will perform verification of negative queries and
+return a 404 No Assertion Exists for queries with a consistent proof of non-
+existence, within a message signed by the query service's infrakey. Option 7
+disables this behavior, and causes the query service to return the shard
+proving nonexistence for verification by the client. It is intended to be used
+with untrusted query services.
+
+Option 8 specifies that a querier's interest in a query is strictly ephemeral,
+and that future assertions related to this query SHOULD NOT be proactively
+pushed to the querier.
+
+Option 9 specifies that the querier would prefer a fresh result to one from the
+server's cache. If the server is not running an authority service for the
+queried subject, it can honor this request by issuing a query toward the
+authority. As this could be used for denial-of-service-attacks, a server
+honoring Option 9 SHOULD limit the rate of "freshness" queries it issues.
+
+\[EDITOR'S NOTE: verify we actually need this, since a P-shard will _never_ contain a false negative existence proof: Option 10 specifies that the querier will not accept a P-shard as a negative
+proof, and that any negative proof returned for the query should be a Shard or a Zone]
+
+\[EDITOR'S NOTE: decide later whether these are actually necessary, they seem _awfully_ implementation-specific: Option 10 directly
+returns the section in a negative cache hit without checking if it is still up
+to date. Option 11 sends a nonexistence update query to the naming server in
+case there is a negative cache hit. Option 12 requests a notification response
+before the server forwards the query if there is a negative cache hit. This is
+especially useful with option 11 to get feedback early, e.g. to correct a typo.]
+
+### Confirmation Queries {#confirmation}
+
+A Query containing a current-answer key is a confirmation query, used by a
+server to refresh a cached query result. The querier passes a hash of the most
+recent assertion it has answering the query in the current-answer key. The
+answer to a confirmation query is only given if the server has newer
+information to answer the query. The answer to a confirmation query whose
+answer is older or would match the current answer is a notification of type 304
+(see {{notifications}}).
+
+The current-answer key is represented as a 4-element CBOR array. The first
+element is the type of assertion the hash contains, as a section type code as
+in {{tabsection}}. An Assertion section confirms a positive answer, a Shard or
+P-shard section confirms a negative answer, a Zone section confirms either a
+positive or negative answer. The second element is the code for a hash
+algorithm applicable for confirmation queries, as in {{hash-functions}}. The
+third element is the timestamp at which the query was received, expressed as a
+CBOR integer epoch timestamp identified with tag value 1 and encoded as in
+section 2.4.1 of {{!RFC7049}}. The fourth element is the hashed assertion as an
+octet array, resulting by applying the identified hash function to the
+assertion normalized for signing as in {{c14n}}.
+
 ### Context in Queries {#query-context}
 
+Context is used in queries as it is in assertions (see
+{{context-in-assertions}}). Assertion contexts in an answer to a query have to
+match the context in the query in order to respond to a query. The Context
+section of a query contains the context of desired assertions; a special "any"
+context (represented by the empty string) indicates that assertions in any
+context will be accepted.
+
+Query contexts can also be used to provide additional information to RAINS
+servers about the query. For example, context can provide a method for explicit
+selection of a CDN server not based on either the client's or the resolver's
+address (see {{?RFC7871}}). Here, the CDN creates a context for each of its
+content zones, and an external service selects appropriate contexts for the
+client based not just on client source address but passive and active
+measurement of performance. Queries for names at which content resides can then
+be made within these contexts, with the priority order of the contexts
+reflecting the goodness of the zone for the client. Here, a context might be
+'zrh.cx--cdn-zones.some-cdn.com.' for names of servers hosting content in a
+CDN's Zurich data center. A client could represent its desire to find content
+nearby by making queries in the zrh.cx--, fra.cx-- (Frankfurt), and ams.cx--
+(Amsterdam) contexts of the 'cdn-zones.some-cdn.com.' authority. In all cases,
+the assertions themselves will be signed by the authority for
+'cdn-zones.some-cdn.com.', accurately representing that it is the CDN, not the
+owner of the related name in the global context, that is making the assertion.
+
+As with assertion contexts, developing conventions for query contexts for
+different situations will require implementation and deployment experience,
+and is a subject for future work.
 
 ## Notifications {#notifications}
+
+\[EDITOR'S NOTE frontmatter]
+
+{: #tabnotify title="Notification Type Codes"}
+
+| Code | Description                                                    |
+|-----:|----------------------------------------------------------------|
+| 100  | Connection heartbeat                                           |
+| 304  | No new information for a confirmation query                    |
+| 399  | Capability hash not understood                                 |
+| 400  | Bad message received                                           |
+| 403  | Inconsistent message received                                  |
+| 404  | No assertion exists (client protocol only)                     |
+| 413  | Message too large                                              |
+| 500  | Unspecified server error                                       |
+| 501  | Server not capable                                             |
+| 504  | No assertion available                                         |
+
+\[EDITOR'S NOTE pull content up from below]
 
 ## Signatures {#signatures}
 
@@ -1374,7 +1578,7 @@ received, in which case it MUST use the same token.
 
 \[EDITOR'S NOTE: derive this from the zonefile parser]
 
-# RAINS Protocols
+# RAINS Protocol {#protocol}
 
 # Operational Considerations
 
@@ -1391,59 +1595,9 @@ received, in which case it MUST use the same token.
 
 ## Query
 
-A query is a request for a set of assertions supporting a conclusion about a
-given subject-object mapping. It consists of the following information
-elements:
-
-- Context: the context(s) in which assertions answering the query will be
-  accepted; see {{context-in-queries}} below.
-- Qualified-Subject: the name about which the query is made. The subject name
-  in a query must be fully-qualified.
-- Types: a set of assertion types the querier is interested in.
-- Key phases: the key phases of the delegation assertions the querier is
-  interested in.
-- Valid-Until: an optional client-generated timestamp for the query after which
-  it expires and should not be answered.
-- Query Token: a client-generated token for the query, which can be used in the
-  answer to refer to the query.
-- Options: a set of options by which a client may specify tradeoffs (e.g.
-  privacy for performance).
-
-A query expresses interest about all the given types of assertion in all the
-specified contexts; more complex expressions of which types in which contexts
-must be asked using multiple queries. Preferences for tradeoffs (freshness,
-bandwidth efficiency, latency, privacy preservation) in servicing a query may
-be bound to the query using query options.
 
 ### Context in Queries
 
-Context is used in queries as it is in assertions (see
-{{context-in-assertions}}). Assertion contexts in an answer to a query have to
-match the context in the query in order to respond to a query. The Context
-section of a query contains the context of desired assertions; a special "any"
-context (represented by the empty string) indicates that assertions in any
-context will be accepted.
-
-Query contexts can also be used to provide additional information to RAINS
-servers about the query. For example, context can provide a method for explicit
-selection of a CDN server not based on either the client's or the resolver's
-address (see {{?RFC7871}}). Here, the CDN creates a context for each of its
-content zones, and an external service selects appropriate contexts for the
-client based not just on client source address but passive and active
-measurement of performance. Queries for names at which content resides can then
-be made within these contexts, with the priority order of the contexts
-reflecting the goodness of the zone for the client. Here, a context might be
-'zrh.cx--cdn-zones.some-cdn.com.' for names of servers hosting content in a
-CDN's Zurich data center. A client could represent its desire to find content
-nearby by making queries in the zrh.cx--, fra.cx-- (Frankfurt), and ams.cx--
-(Amsterdam) contexts of the 'cdn-zones.some-cdn.com.' authority. In all cases,
-the assertions themselves will be signed by the authority for
-'cdn-zones.some-cdn.com.', accurately representing that it is the CDN, not the
-owner of the related name in the global context, that is making the assertion.
-
-As with assertion contexts, developing conventions for query contexts for
-different situations will require implementation and deployment experience,
-and is a subject for future work.
 
 ### Answers to Queries
 
@@ -1639,91 +1793,7 @@ of hash functions, filter, signature meta data.
 
 ## Query body {#cbor-query}
 
-A Query body is a map. Queries MUST contain the query-name (8),
-context (6), query-types (10), and query-expires (12) keys. Queries MAY contain
-the query-opts (13), and the query-keyphase (17) keys.
-
-The value of the query-name (8) key is a UTF-8 encoded string containing the
-name for which the query is issued and MUST end with a '.' (the root zone).
-
-The value of the context (6) key is a UTF-8 encoded string containing the name
-of the context to which a query pertains. A zero-length string indicates that
-assertions will be accepted in any context.
-
-The value of the query-types (10) key is an array of integers encoding the
-type(s) of objects (as in {{cbor-object}}) acceptable in answers to the query.
-All values in the query-type array are treated at equal priority: \[2,3] means
-the querier is equally interested in both IPv4 and IPv6 addresses for the
-query-name. An empty query-types array indicates that objects of any type are
-acceptable in answers to the query.
-
-The value of the query-keyphase (17) key is an array of integers representing all
-key phases (see {{cbor-signature}}) expected in delegation assertion answers to
-the query. The value of the query-keyphase (17) key MUST NOT be empty when the query
-asks for delegation assertion(s). Otherwise, it MUST be empty.
-
-The value of the query-expires (12) key, is a CBOR integer counting seconds
-since the UNIX epoch UTC, identified with tag value 1 and encoded as in section
-2.4.1 of {{!RFC7049}}. After the query-expires time, the query will have been
-considered not answered by the original issuer.
-
-The value of the query-opts (13) key, if present, is an array of integers in
-priority order of the querier's preferences in tradeoffs in answering the
-query, as in {{tabqopts}}.
-
-{: #tabqopts title="Query Option Codes"}
-
-| Code | Description                                                    |
-|-----:|----------------------------------------------------------------|
-| 1    | Minimize end-to-end latency                                    |
-| 2    | Minimize last-hop answer size (bandwidth)                      |
-| 3    | Minimize information leakage beyond first hop                  |
-| 4    | No information leakage beyond first hop: cached answers only   |
-| 5    | Expired assertions are acceptable                              |
-| 6    | Enable query token tracing                                     |
-| 7    | Disable verification delegation (client protocol only)         |
-| 8    | Suppress proactive caching of future assertions                |
-| 9    | Maximize freshness of result                                   |
-| 10   | P-Shard not accepted                                            |
-
-Options 1-5 and 9 specify performance/privacy tradeoffs. Each server is free to
-determine how to minimize each performance metric requested; however, servers
-MUST NOT generate queries to other servers if "no information leakage" is
-specified, and servers MUST NOT return expired assertions unless "expired
-assertions acceptable" is specified.
-
-Option 6 specifies that a given token (see {{tokens}}) should be used on
-all queries resulting from a given query, allowing traceability through an
-entire RAINS infrastructure. It is meant for debugging purposes.
-
-By default, a client service will perform verification of negative queries and
-return a 404 No Assertion Exists for queries with a consistent proof of non-
-existence, within a message signed by the query service's infrakey. Option 7
-disables this behavior, and causes the query service to return the shard
-proving nonexistence for verification by the client. It is intended to be used
-with untrusted query services.
-
-Option 8 specifies that a querier's interest in a query is strictly ephemeral,
-and that future assertions related to this query SHOULD NOT be proactively
-pushed to the querier.
-
-Options 9-12 specify a client's preference in the server's mode of operation. A
-server is free to decide if it wants to follow the client's preference according
-to its configuration and policy. E.g. if a server determines it is used in a
-DDoS attack against a naming server, it stops forwarding queries to this server
-and only serve cached entries. Option 9 prevents the server to make a negative
-cache lookup and instead directly does a recursive lookup. Option 10 directly
-returns the section in a negative cache hit without checking if it is still up
-to date. Option 11 sends a nonexistence update query to the naming server in
-case there is a negative cache hit. Option 12 requests a notification response
-before the server forwards the query if there is a negative cache hit. This is
-especially useful with option 11 to get feedback early, e.g. to correct a typo.
-
-Option 10 states if a P-Shard is accepted as a nonexistence proof. As P-Shards
-have false positives, a client has the possibility to request a shard or zone to
-be certain with this option. Depending on the servers' configurations, a false
-positive check can be done at the naming server, an intermediate server or at
-the client.
+\[EDITOR'S NOTE: content moved, delete me]
 
 ## Assertion Update Query body {#cbor-auquery}
 
