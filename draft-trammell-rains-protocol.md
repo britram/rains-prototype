@@ -912,12 +912,6 @@ by subject name.
 
 ### P-Shards {#p-shards}
 
-\[EDITOR'S NOTE: fix up this section -- rework the representation to make the
-representation more parsimonious. Specifically, a P-Shard should have a content
-(23) key, that has a [datastructure spec, octetarray] structure. PShards cannot
-be contained within Zones, since that doesn't make sense; they're supplemental
-only].
-
 Shards ({{shards}}) can be used as definitive proof of the nonexistence of a
 name within a zone. P-Shards serve the same purpose, but offer only a
 probabalistic guarantee of the non-existence of the name. Specifically, as they
@@ -930,7 +924,8 @@ the false positive error rate. The zone authority can determine how to weight
 them.
 
 A P-Shard is represented as a CBOR map. This map MUST contain the signatures
-(0), subject-zone (4), context (6), and content(23) keys. It MAY contain the range(11) key.
+(0), subject-zone (4), context (6), and content(23) keys. It MAY contain the
+range(11) key.
 
 The value of the signatures (0) key is an array of one or more Signatures as
 defined in {{cbor-signature}}. The signatures on the P-Shard are to be verified
@@ -945,14 +940,13 @@ The value of the context (6) key is a UTF-8 encoded string containing the name
 of the context in which the Assertions in the P-Shard are valid. Both the
 authority-part and the context-part MUST end with a '.'.
 
-The value of the range (11) key, if present, is a two element array of strings or nulls
-(subject-name A, subject-name B). A MUST lexicographically sort before B. If A
-is null, the P-Shard begins at the beginning of the zone. If B is null, the
-shard ends at the end of the zone. The P-Shard MUST NOT be used to check the
-existence of any assertions whose subject names are equal to or sort before A,
-or are equal to or sort after B.
-
-If the range (11) key is not present, the P-shard covers then entire zone.
+The value of the range (11) key, if present, is a two element array of strings
+or nulls (subject-name A, subject-name B). A MUST lexicographically sort before
+B. If A is null, the P-Shard begins at the beginning of the zone. If B is null,
+the shard ends at the end of the zone. The P-Shard MUST NOT be used to check
+the existence of any assertions whose subject names are equal to or sort before
+A, or are equal to or sort after B. If the range (11) key is not present, the
+P-shard covers then entire zone.
 
 The value of the content (23) key is a three-element array. The first element
 identifies the algorithm used for generating the bitstring. The second element
@@ -967,37 +961,30 @@ are given in {{hash-functions}}.
 
 | Code  | Name         | Description                                |
 |------:|--------------|--------------------------------------------|
-| 0     | bloom-km     | Kirsch-Mitzenmacher optimized Bloom filter |
+| 1     | bloom-km-2   | KM-optimized bloom filter with nh=2        |
+| 2     | bloom-km-4   | KM-optimized bloom filter with nh=4        |
+| 3     | bloom-km-8   | KM-optimized bloom filter with nh=8        |
 
-The bloom-km datastructure generates a bitstring using a Bloom filter and the
-Kirsch-Mitzenmacher optimization {{BETTER-BLOOM-FILTER}}. 
+The bloom-km-2 and bloom-km-4 datastructures generates a bitstring using a
+Bloom filter and the Kirsch-Mitzenmacher optimization {{BETTER-BLOOM-FILTER}}.
 
-\[EDITOR'S NOTE describe algorithm in detail here; some old text that might be
-useful: For code 1 and 2, instead of using k different hash functions to
-calculate the bit string of the bloom filter, it is sufficient to use one or two
-and then apply the Kirsch-Mitzenmacher-Optimization {{BETTER-BLOOM-FILTER}}. If
-only one hash function is used, then its calculated hash value is split in half.
-The first part corresponds to the first hash function in the optimization and
-the second part to the second one. The following formula is used to obtain the
-position which will be set to or checked for a 1 according to the ith hash
-function pos = (hash1 + hash2*i) modulo bit-string-size. The bit string of an
-empty bloom filter is all zeros. To add an assertion, first, the assertion's
-fully-qualified name, context and code of its type are concatenated separated by
-a space. This value is then hashed a certain amount of times with the provided
-hash functions depending on the mode of operation and the corresponding
-position(s) in the filter are set to one. To check whether an assertion is not
-part of the bloom filter, the same process is repeated for the assertion in
-question. If any of the obtained filter position(s) is zero, then this assertion
-is certainly not contained.]
+To add or verify an assertion to a bloom-km structure, the assertion is first
+encoded as a four-element CBOR array. The first element is the subject name.
+The second element is the subject zone. The third element is the subject
+context. The fourth element is the type code as in {{tabobj}} in {{obj-types}}.
+This encoded object is then hashed according to the specified hash algorithm.
+The hash algorithm's output is then split into nh equal length parts (2 for
+bloom-km-2, 4 for bloom-km-4, 8 for bloom-km-8), and these parts are used as
+indexes into the bitstring modulo the bitstring length. To add the assertion,
+all bits at the given indices are set to 1. To verify the assertion, all bits
+at the given indices are checked, and the assertion is taken to be in the
+filter if all bits are 1.
 
 ### Dynamic Assertion Validity {#assertion-dynamics}
 
-\[EDITOR'S NOTE: still TODO, copy from old organization, maybe integrate with
-the below. some snippets:]
-
-For a given {subject, type} tuple, multiple assertions can be valid at a given
-point in time; the union of the object values of all of these assertions is
-considered to be the set of valid values at that point in time.
+For a given {subject, zone, context, type} tuple, multiple assertions can be
+valid at a given point in time; the union of the object values of all of these
+assertions is considered to be the set of valid values at that point in time.
 
 ### Semantic of nonexistence proofs {#antiassertions}
 
@@ -1009,29 +996,6 @@ proving nonexistence only captures the state at the point in time when it was
 signed. To make sure that the content of a shard, P-Shard or zone is still
 accurate, a nonexistence update query {{nonexistence-update-query}} must be sent
 to the server having authority over that name.
-
-### Signatures in Assertions {#assertion-signatures}
- 
-\[EDITOR'S NOTE: fix up or eliminate this section]
-
-A signature over an assertion contains the following information elements:
-
-- Algorithm: identifier of the algorithm used to generate the signature.
-- Keyspace: identifier of the key space used to generate the signature, i.e. how
-  the key to verify the signature should be retrieved. RAINS supports an
-  internal keyspace, but allows signatures using externally obtained keys to
-  appear on assertions for additional security.
-- Keyphase: phase of the key used to generate the signature. Since multiple keys
-  may be valid for a given authority at a given point in time, this allows the
-  correct key to be retrieved directly.
-- Valid-Since: a timestamp of the start of validity of this signature.
-- Valid-Until: a timestamp of the end of validity of this signature.
-- Signature: the cryptographic signature itself, whose format is determined by
-  the algorithm used.
-
-The signature protects all the information in an assertion as well as its own
-algorithm identifier, keyspace identifier, key phase, valid-since, and
-valid-until values; it does not protect other signatures on the assertion.
 
 ### Context in Assertions {#assertion-context}
 
@@ -1270,23 +1234,10 @@ assertion on a connection attempt. An end-entity certificate constraint
 specifies a certificate that MUST be presented by the subject of the assertion
 on a connection attempt.
 
-\[EDITOR'S NOTE: we use hash algorithm identifiers in certinfo, in pshards, and
-in update queries. factor this table out and make it clear that only
-cryptographically secure hashes are acceptable for certinfo.]
-
-{: #tabhash title="Hash algorithms"}
-
-| Code | Name       | Notes                                    |
-|-----:|------------|------------------------------------------|
-| 0    | full       | Data contains full certificate           |
-| 1    | sha-256    | Data contains SHA-256 hash (32 bytes)    |
-| 2    | sha-512    | Data contains SHA-512 hash (64 bytes)    |
-| 3    | sha-384    | Data contains SHA-384 hash (48 bytes)    |
-| 4    | fnv-64     | Data contains FNV-64 hash (64 bytes) (NOT FOR CERT-INFO) |
-| 5    | murmur3-64 | Data contains murmur3-64 hash (64 bytes)  (NOT FOR CERT-INFO)  |
-
-Code 0 is used to store full certificates in RAINS assertions, while other
-codes are used to store hashes for verification.
+Certificate information be hashed using an appropriate hash function described
+in {{hash-functions}}; hash functions are identified by a code as in
+{{tabhash}}. Code 0 is used to store full certificates in RAINS assertions,
+while other codes are used to store hashes for verification.
 
 For example, in a cert-info object with values \[ 7, 1, 3, 3, (data) ], the
 data would be a 48 SHA-384 hash of the ASN.1 DER-encoded X.509v3 certificate
@@ -1345,8 +1296,6 @@ authentication of an assertion.
 
 ### Next Delegation Public Key {#obj-nextkey}
 
-\[EDITOR'S NOTE keyphase?]
-
 A nextkey (13) object contains the a public key that a zone owner would like its
 superordinate to delegate to in the future. It is represented as an 6-element
 array. The second element is a signature algorithm identifier as in
@@ -1358,11 +1307,37 @@ as in {{signatures}}. See {{public-key-management}} for more.
 
 ## Hash Functions {#hash-functions} 
 
-\[EDITOR'S NOTE put hash functions from {{obj-cert}} here]
+Hash algorithms are used in several places in the RAINS data model:
+
+- hashing certificate data in cert-info objects (see {{obj-cert}})
+- hashing assertions into Bloom filters for probabalistic shards (see {{p-shards}})
+- hashing assertion and message data as part of generating a MAC (see {{signatures}})
+
+Where they are used in RAINS, hash functions are identified by a code given in
+{{tabhash}}. In this table, applicability "C" means the hash is valid for use
+in a certificate info object, "P" that it can be used for hashing assertions
+for P-shards, and S that it can be used for hashing assertions and messages for
+signatures.
+
+{: #tabhash title="Hash algorithms"}
+
+| Code | Name       | Reference         | Length | Applicability |
+|-----:|------------|-------------------|--------|---------------|
+| 0    | nohash     | (data not hashed) | var.   | C             |
+| 1    | sha-256    | {{!RFC6234}}      | 32     | CPS           |
+| 2    | sha-512    | {{!RFC6234}}      | 64     | CS            |
+| 3    | sha-384    | {{!RFC6234}}      | 48     | CS            |
+| 4    | shake256   | {{!RFC8419}}      | 32     | PS            |
+| 5    | fnv-64     | {{!FNV=I-D.eastlake-fnv}} | 8 | P          |
+| 6    | fnv-128    | {{!FNV=I-D.eastlake-fnv}} | 16 | P          |
+
 
 ## Queries {#queries}
 
-## Notifications
+### Context in Queries {#query-context}
+
+
+## Notifications {#notifications}
 
 ## Signatures {#signatures}
 
@@ -1394,53 +1369,24 @@ a query it received, it MUST NOT use the same token on the delegated query
 as on the received query, unless option 6 Enable Tracing is present in the
 received, in which case it MUST use the same token.
 
-## Context in Queries {#query-context}
 
 # Zone File Format {#zonefiles}
 
 \[EDITOR'S NOTE: derive this from the zonefile parser]
 
+# RAINS Protocols
 
+# Operational Considerations
 
+# Security Considerations
 
+# IANA Considerations
 
-
+# Acknowledgments
 
 
 
 # Old content below
-
-
-## Assertion
-, and consists of the following elements:
-
-- Context: name of the context in which the assertion is valid;
-  see {{context-in-assertions}} below.
-- Subject: name about which the assertion is made.
-- Zone: name of the zone in which the assertion is made. The fully qualified
-  name of the subject is made by appending the zone name to the subject name
-  with a domain name separator ('.').
-- Type: the type of information about the Subject contained in the assertion.
-  Each Assertion is about a single type of data.
-- Object: the data of the indicated type associated with the Subject
-- Signatures: one or more signatures generated by the authority for the
-  Assertion. Signatures contain a time interval during which they are considered
-  valid. See {{signatures-in-assertions}} below.
-
-The Types supported for each assertion are:
-
-
-
-
-
-
-### Shards and Probabilistic Shards (P-Shards) {#shards-and-p-shards}
-
-
-
-# Zone
-
-
 
 
 ## Query
