@@ -690,8 +690,10 @@ the entire Message, generated as in {{signatures}}, and to be verified against
 an infrastructure key (see {{obj-infrakey}}) for the RAINS Server originating
 the message.
 
-A Message map MAY contain a capabilities (1) key, whose value is described in
-{{cbor-capabilities}}.
+A Message map MAY contain a capabilities (1) key, for exposing capabilties of
+the message sender. The first Message sent from one peer to another MUST contain
+the capabilities key. The capabilities mechanism is described in
+{{capabilities}}.
 
 A Message map MUST contain a token (2) key, whose value is a 16-byte array.
 See {{tokens}} for details.
@@ -1078,6 +1080,10 @@ about itself. If an assertion of a given type about a zone is available both in
 the zone itself and in the superordinate zone, the assertion in the
 superordinate zone will take precedence.
 
+### Address Assertions {#revassertions}
+
+\[EDITOR'S NOTE write me]
+
 ## Object Types and Encodings {#obj-types}
 
 Each Object associated with a given subject name in a Singular Assertion (see
@@ -1460,17 +1466,23 @@ queried subject, it can honor this request by issuing a query toward the
 authority. As this could be used for denial-of-service-attacks, a server
 honoring Option 9 SHOULD limit the rate of "freshness" queries it issues.
 
-\[EDITOR'S NOTE: verify we actually need this, since a P-shard will _never_ contain a false negative existence proof: Option 10 specifies that the querier will not accept a P-shard as a negative
-proof, and that any negative proof returned for the query should be a Shard or a Zone]
+\[EDITOR'S NOTE: verify we actually need this, since a P-shard will _never_
+contain a false negative existence proof: Option 10 specifies that the querier
+will not accept a P-shard as a negative proof, and that any negative proof
+returned for the query should be a Shard or a Zone]
 
-\[EDITOR'S NOTE: decide later whether these are actually necessary, they seem _awfully_ implementation-specific: Option 10 directly
-returns the section in a negative cache hit without checking if it is still up
-to date. Option 11 sends a nonexistence update query to the naming server in
-case there is a negative cache hit. Option 12 requests a notification response
-before the server forwards the query if there is a negative cache hit. This is
-especially useful with option 11 to get feedback early, e.g. to correct a typo.]
+\[EDITOR'S NOTE: decide later whether these are actually necessary, they seem
+_awfully_ implementation-specific: Option 10 directly returns the section in a
+negative cache hit without checking if it is still up to date. Option 11 sends a
+nonexistence update query to the naming server in case there is a negative cache
+hit. Option 12 requests a notification response before the server forwards the
+query if there is a negative cache hit. This is especially useful with option 11
+to get feedback early, e.g. to correct a typo.]
 
 ### Confirmation Queries {#confirmation}
+
+\[EDITOR'S NOTE: make sure we actually need the hash - why is a timestamp not
+sufficient here?]
 
 A Query containing a current-answer key is a confirmation query, used by a
 server to refresh a cached query result. The querier passes a hash of the most
@@ -1522,30 +1534,53 @@ As with assertion contexts, developing conventions for query contexts for
 different situations will require implementation and deployment experience,
 and is a subject for future work.
 
+### Address Queries {#revqueries}
+
+\[EDITOR'S NOTE: write me]
+
 ## Notifications {#notifications}
 
-\[EDITOR'S NOTE frontmatter]
+Notifications contain information about the operation of the RAINS protocol
+itself. A Notification Message Section body is represented as a CBOR map, which
+MUST contain the token (2) and note-type (21) keys, and MAY contain the
+note-data (22) key. 
+
+The value of the token (2) key is a 16-byte array, which
+MUST contain the token of the message or query to which the notification is a
+response. See {{tokens}}.
+
+The value of the note-type key is encoded as an integer as in the
+{{tabnotify}}.
 
 {: #tabnotify title="Notification Type Codes"}
 
-| Code | Description                                                    |
-|-----:|----------------------------------------------------------------|
-| 100  | Connection heartbeat                                           |
-| 304  | No new information for a confirmation query                    |
-| 399  | Capability hash not understood                                 |
-| 400  | Bad message received                                           |
-| 403  | Inconsistent message received                                  |
-| 404  | No assertion exists (client protocol only)                     |
-| 413  | Message too large                                              |
-| 500  | Unspecified server error                                       |
-| 501  | Server not capable                                             |
-| 504  | No assertion available                                         |
+| Code | Description                          | Reference        |
+|-----:|--------------------------------------|------------------|
+| 100  | Connection heartbeat                 | {{heartbeat}}    |
+| 304  | Confirmation query has latest answer | {{confirmation}} |
+| 399  | Send full capabilities               | {{capabilities}} |
+| 400  | Bad message received                 | {{errors}}       |
+| 403  | Inconsistent message received        | {{consistency}}  |
+| 404  | No assertion exists                  | {{client-proto}} |
+| 413  | Message too large                    | {{errors}}       |
+| 500  | Unspecified server error             | {{errors}}       |
+| 501  | Server not capable                   | {{capabilities}} |
+| 504  | No assertion available               | {{client-proto}} |
 
-\[EDITOR'S NOTE pull content up from below]
+Note that the status codes are chosen to be mnemonically similar to status
+codes for HTTP {{?RFC7231}}.
+
+The value of the note-data (22) key, if present, is a UTF-8 encoded string
+with additional information about the notification, intended to be displayed
+to an administrator to help debug the issue identified by the negotiation.
 
 ## Signatures {#signatures}
 
+\[EDITOR'S NOTE: bring this up from the old document text]
+
 ### Canonicalization {#c14n}
+
+\[EDITOR'S NOTE: canonicalize by sorting and rendering to CBOR]
 
 ## Tokens {#tokens}
 
@@ -1573,12 +1608,65 @@ a query it received, it MUST NOT use the same token on the delegated query
 as on the received query, unless option 6 Enable Tracing is present in the
 received, in which case it MUST use the same token.
 
+## Capabilities {#capabilities}
+
+The capabilities (1) key in a RAINS message allows a the sender of that message
+to communicate its capabilities to its peer. Capabilities MUST be sent on the
+first message sent from one peer to another. If a peer receives a message from a
+counterpart for which it does not have capabilities, it can ask for the next
+message to contain full capabilities by sending a message containing
+notification 399.
+
+A peer's capabilities can be represented in one of two ways:
+
+- an array of uniform resource names specifying capabilities supported by the
+  sending server, taken from the table below, with each name encoded as a
+  UTF-8 string.
+- a SHA-256 hash of the CBOR byte stream derived from normalizing such an
+  array by sorting it in lexicographically increasing order, then serializing
+  it.
+
+This mechanism is inspired by {{XEP0115}}, and is intended to be used to
+reduce the overhead in exposing common sets of capabilities. Each RAINS server
+can cache a set of recently-seen or common hashes, 
+
+The following URNs are presently defined; other URNs will specify future
+optional features, support for alternate transport protocols and new signature
+algorithms, and so on.
+
+| URN                | Meaning                                                |
+|--------------------|--------------------------------------------------------|
+| urn:x-rains:tlssrv | Listens for TLS/TCP connections (see {{transport-tls}} |
+| urn:x-rains:udpsrv | Accepts messages via UDP (see {{transport-udp}})       |
+
+A RAINS server MUST NOT assume that a peer server supports a given capability
+unless it has received a message containing that capability from that server. An
+exception are the capabilities indicating that a server listens for connections
+using a given transport protocol; servers and clients can also learn this
+information from RAINS itself (given redirection and service-info assertions for
+a named zone) or from external configuration.
 
 # Zone File Format {#zonefiles}
 
 \[EDITOR'S NOTE: derive this from the zonefile parser]
 
 # RAINS Protocol {#protocol}
+
+## Transport Bindings {#transport}
+
+### TLS over TCP {#transport-tls}
+
+### UDP {#transport-udp}
+
+### Heartbeat Messages {#heartbeat}
+
+## Client Protocol {#client-proto}
+
+## Publication Protocol {#pub-proto}
+
+## Enforcing Assertion Consistency {#consistency}
+
+## Error Handling {#errors}
 
 # Operational Considerations
 
@@ -1591,13 +1679,7 @@ received, in which case it MUST use the same token.
 
 
 # Old content below
-
-
-## Query
-
-
-### Context in Queries
-
+<!---->
 
 ### Answers to Queries
 
@@ -1768,7 +1850,6 @@ invalid.
 
 \[EDITOR'S NOTE: content moved, delete me]
 
-
 ### Sorting Shards {#cbor-shard-sorting}
 
 Shards are sorted lexicographically by their cbor encoded byte string in
@@ -1794,76 +1875,6 @@ of hash functions, filter, signature meta data.
 ## Query body {#cbor-query}
 
 \[EDITOR'S NOTE: content moved, delete me]
-
-## Assertion Update Query body {#cbor-auquery}
-
-An Assertion Update Query body is a map. Assertion Update Queries MUST contain
-the query-name (8), hash-type (14), hash-value (15), and query-expires (12)
-keys. Assertion Update Queries MAY contain the query-opts (13) keys.
-
-The value of the query-name (8) key is a UTF-8 encoded string containing the
-fully-qualified name for which the update query is issued and MUST end with a
-'.' (the root zone).
-
-The value of the hash-type (14) key is an integer specifying a hash function
-identifier used to generate the hash-value of the assertion, as in
-{{tabhash}}.
-
-The value of the hash-value (15) key is the hash of the assertion for which an
-update is requested. The hash is generated over a byte stream representing the
-assertion in a canonical signing format {{cbor-signature}} (The signature itself
-is not hashed). The format is defined by the hash-type.
-
-The value of the query-expires (12) key, is a CBOR integer counting seconds
-since the UNIX epoch UTC, identified with tag value 1 and encoded as in section
-2.4.1 of {{!RFC7049}}. After the query-expires time, the update query will have
-been considered not answered by the original issuer.
-
-The value of the query-opts (13) key, if present, is an array of integers in
-priority order of the querier's preferences in tradeoffs in answering the
-assertion update query, as in {{tabqopts}}. Only query option codes 1, 2, 3, 6,
-7, 8 are allowed.
-
-## Nonexistence Update Query body {#cbor-nuquery}
-
-A Nonexistence Update Query body is a map. Nonexistence Update Queries MUST
-contain the query-name (8), context (6), query-types (10), hash-type (14),
-hash-value (15), and query-expires (12) keys. Nonexistence Update Queries MAY
-contain the query-opts (13) keys.
-
-The value of the query-name (8) key is a UTF-8 encoded string containing the
-fully-qualified name for which the update query is issued and MUST end with a '.' (the root
-zone).
-
-The value of the context (6) key is a UTF-8 encoded string containing the name
-of the context to which an update query pertains. A zero-length string indicates
-that assertions will be accepted in any context.
-
-The value of the query-types (10) key is an array of integers encoding the
-type(s) of objects (as in {{cbor-object}}) acceptable in answers to the update
-query. All values in the query-type array are treated at equal priority: \[2,3]
-means the querier is equally interested in both IPv4 and IPv6 addresses for the
-query-name. An empty query-types array indicates that objects of any type are
-acceptable in answers to the query.
-
-The value of the hash-type (14) key is an integer specifying a hash function
-identifier used to generate the hash-value of the assertion, as in
-{{tabhash}}.
-
-The value of the hash-value (15) key is the hash of the assertion for which an
-update is requested. The hash is generated over a byte stream representing the
-assertion in a canonical signing format {{cbor-signature}} (The signature itself
-is not hashed). The format is defined by the hash-type.
-
-The value of the query-expires (12) key, is a CBOR integer counting seconds
-since the UNIX epoch UTC, identified with tag value 1 and encoded as in section
-2.4.1 of {{!RFC7049}}. After the query-expires time, the update query will have
-been considered not answered by the original issuer.
-
-The value of the query-opts (13) key, if present, is an array of integers in
-priority order of the querier's preferences in tradeoffs in answering the
-nonexistence update query, as in {{tabqopts}}. Only query option codes 1, 2, 3,
-6, 7, 8 are allowed.
 
 ## Address Assertion body {#cbor-revassert}
 
@@ -1935,40 +1946,7 @@ less-specific in response to a Address Query.
 
 ## Notification body {#cbor-notification}
 
-Notification Message Sections contain information about the operation of the
-RAINS protocol itself. A Notification Message Section body is a map which MUST
-contain the token (2) and note-type (21) keys and MAY contain the note-data
-(22) key. The value of the note-type key is encoded as an integer as in the
-{{tabnotify}}.
-
-{: #tabnotify title="Notification Type Codes"}
-
-| Code | Description                                                    |
-|-----:|----------------------------------------------------------------|
-| 100  | Connection heartbeat                                           |
-| 200  | The hashed section in an update query is still fine            |
-| 210  | The hashed assertion has been revoked and is no longer valid   |
-| 211  | More specific information may follow                           |
-| 399  | Capability hash not understood                                 |
-| 400  | Bad message received                                           |
-| 403  | Inconsistent message received                                  |
-| 404  | No assertion exists (client protocol only)                     |
-| 413  | Message too large                                              |
-| 500  | Unspecified server error                                       |
-| 501  | Server not capable                                             |
-| 504  | No assertion available                                         |
-
-Note that the status codes are chosen to be mnemonically similar to status
-codes for HTTP {{?RFC7231}}. Details of the meaning of each status code are
-given in {{protocol-def}}.
-
-The value of the token (2) key is a 16-byte array, which
-MUST contain the token of the message or query to which the notification is a
-response. See {{tokens}}.
-
-The value of the note-data (22) key, if present, is a UTF-8 encoded string
-with additional information about the notification, intended to be displayed
-to an administrator to help debug the issue identified by the negotiation.
+\[EDITOR'S NOTE - content moved up]
 
 ## Object {#cbor-object}
 
@@ -2094,46 +2072,7 @@ migration from existing DNSSEC deployments; see {{dns-transition}}.
 
 ## Capabilities {#cbor-capabilities}
 
-When a RAINS server or client sends the first message in a stream to a peer, it
-MUST expose its configured capabilities to its peer using the capabilities (1)
-key. This key contains either:
 
-- an array of uniform resource names specifying capabilities supported by the
-  sending server, taken from the table below, with each name encoded as a
-  UTF-8 string.
-- a SHA-256 hash of the CBOR byte stream derived from normalizing such an
-  array by sorting it in lexicographically increasing order, then serializing
-  it.
-
-This mechanism is inspired by {{XEP0115}}, and is intended to be used to
-reduce the overhead in exposing common sets of capabilities. Each RAINS server
-can cache a set of recently-seen or common hashes, and only request the full
-URN set (using notification code 399) on a cache miss.
-
-The following URNs are presently defined; other URNs will specify future
-optional features, support for alternate transport protocols and new signature
-algorithms, etc.
-
-| URN                | Meaning                                                           |
-|--------------------|-------------------------------------------------------------------|
-| urn:x-rains:tlssrv | Listens for connections on TLS over TCP from other RAINS servers. |
-
-Since there are only two defined capabilities at this time, RAINS servers can be
-implemented with two hard-coded hashes to determine whether a peer is listening
-or not. The hash presented by a server supporting urn:x-rains:tlssrv is
-e5365a09be554ae55b855f15264dbc837b04f5831daeb321359e18cdabab5745; the hash
-presented by a client or a server supporting no capabilities (not listening) is
-76be8b528d0075f7aae98d6fa57a6d3c83ae480a8469e668d7b0af968995ac71.
-
-Servers MAY piggyback capability negotiation on other messages, or use dedicated
-messages for capability negotiation.
-
-A RAINS server MUST NOT assume that a peer server supports a given capability
-unless it has received a message containing that capability from that server.
-An exception are the capabilities indicating that a server listens for
-connections using a given transport protocol; servers and clients can also
-learn this information from RAINS itself (given a redirection assertion for a
-named zone) or from external configuration values.
 
 # Canonical signing format {#signing-format}
 
