@@ -643,7 +643,7 @@ algorithms in {{tabsig}}.
 | 11   | range          | Lexical range of Assertions in Shard or P-Shard        |
 | 12   | query-expires  | Absolute timestamp for query expiration                |
 | 13   | query-opts     | Set of query options requested                         |
-| 14   | current-answer  | Current querier information for an update query        |
+| 14   | current-time   | Querier's latest assertion timestamp for a query       |
 | 15   | reserved       | Reserved for future use                                |
 | 16   | reserved       | Reserved for future use                                |
 | 17   | query-keyphase | All requested key phases of a Query                    |
@@ -1082,7 +1082,7 @@ superordinate zone will take precedence.
 
 ### Address Assertions {#revassertions}
 
-\[EDITOR'S NOTE write me]
+\[EDITOR'S NOTE move up from old content, below]
 
 ## Object Types and Encodings {#obj-types}
 
@@ -1381,7 +1381,7 @@ Message represents a separate query.
 
 A Query body is represented as a CBOR map. Queries MUST contain the query-name (8),
 context (6), query-types (10), and query-expires (12) keys. Queries MAY contain
-the query-opts (13), query-keyphase (17) keys, and/or current-answer (14) keys. 
+the query-opts (13), query-keyphase (17) keys, and/or current-time (14) keys. 
 
 The value of the query-name (8) key is a UTF-8 encoded string containing the
 name for which the query is issued and MUST end with a '.' (the root zone).
@@ -1414,9 +1414,9 @@ The value of the query-opts (13) key, if present, is an array of integers in
 priority order of the querier's preferences in tradeoffs in answering the
 query. See {{query-opts}}.
 
-The value of the current-answer (14) key, if present, is the information the
-querier would like confirmed. See {{confirmation}} for details of how this
-key's value is represented.
+The value of the current-time (14) key, if present, is the timestamp of the
+latest information available at the querier for the queried subject and object
+type. See {{confirmation}} for details of how confirmation queries work.
 
 ### Query Options {#query-opts}
 
@@ -1466,43 +1466,34 @@ queried subject, it can honor this request by issuing a query toward the
 authority. As this could be used for denial-of-service-attacks, a server
 honoring Option 9 SHOULD limit the rate of "freshness" queries it issues.
 
-\[EDITOR'S NOTE: verify we actually need this, since a P-shard will _never_
-contain a false negative existence proof: Option 10 specifies that the querier
-will not accept a P-shard as a negative proof, and that any negative proof
-returned for the query should be a Shard or a Zone]
-
-\[EDITOR'S NOTE: decide later whether these are actually necessary, they seem
-_awfully_ implementation-specific: Option 10 directly returns the section in a
-negative cache hit without checking if it is still up to date. Option 11 sends a
-nonexistence update query to the naming server in case there is a negative cache
-hit. Option 12 requests a notification response before the server forwards the
-query if there is a negative cache hit. This is especially useful with option 11
-to get feedback early, e.g. to correct a typo.]
+\[EDITOR'S NOTE: RAINS is missing a facility for "trusted" interserver
+communication. Queries are meant to be as disjoint from their possible answers
+as is specified in this document, since this allows maximum flexibility in
+implementation in the query / but when two servers are configured to be more
+closely coupled to each other, the query/assertion interface really doesn't
+support the full expressiveness of this tight coupling. There are three ways
+that I can see do deal with this: (1) ignore it and deal, (2) try to build a set
+of query options to make queries more, (3) rely on heuristics and/or
+configuration to specify different query answering behavior for trusted servers,
+based on information about the connection itself. Leaning toward (3) now, which
+would go down in the "operational considerations" section]
 
 ### Confirmation Queries {#confirmation}
 
 \[EDITOR'S NOTE: make sure we actually need the hash - why is a timestamp not
 sufficient here?]
 
-A Query containing a current-answer key is a confirmation query, used by a
-server to refresh a cached query result. The querier passes a hash of the most
-recent assertion it has answering the query in the current-answer key. The
-answer to a confirmation query is only given if the server has newer
-information to answer the query. The answer to a confirmation query whose
-answer is older or would match the current answer is a notification of type 304
-(see {{notifications}}).
+A Query containing a current-time key is a confirmation query, used by a server
+to refresh a cached query result. The querier passes the timestamp of the most
+recent result it has cached, taken from the most recent start time of the
+validity of the signature(s) on the assertion(s) that may answer it. If the
+answer to a confirmation query is not newer than the given timestamp, the server
+may answer with a notification of type 304 instead of with an assertion. answer
+is older or would match the current answer is a notification of type 304 (see
+{{notifications}}).
 
-The current-answer key is represented as a 4-element CBOR array. The first
-element is the type of assertion the hash contains, as a section type code as
-in {{tabsection}}. An Assertion section confirms a positive answer, a Shard or
-P-shard section confirms a negative answer, a Zone section confirms either a
-positive or negative answer. The second element is the code for a hash
-algorithm applicable for confirmation queries, as in {{hash-functions}}. The
-third element is the timestamp at which the query was received, expressed as a
-CBOR integer epoch timestamp identified with tag value 1 and encoded as in
-section 2.4.1 of {{!RFC7049}}. The fourth element is the hashed assertion as an
-octet array, resulting by applying the identified hash function to the
-assertion normalized for signing as in {{c14n}}.
+The value of the current-time key is represented as a CBOR integer epoch timestamp
+identified with tag value 1 and encoded as in section 2.4.1 of {{!RFC7049}}.
 
 ### Context in Queries {#query-context}
 
@@ -1576,11 +1567,152 @@ to an administrator to help debug the issue identified by the negotiation.
 
 ## Signatures {#signatures}
 
-\[EDITOR'S NOTE: bring this up from the old document text]
+RAINS supports multiple signature algorithms and hash functions for signing
+assertions for cryptographic algorithm agility {{?RFC7696}}. A RAINS signature
+algorithm identifier specifies the signature algorithm; a hash function for
+generating the HMAC and the format of the encodings of the signature
+values in Assertions, Shards, Zones, and Messages, as well as of public key
+values in delegation objects.
+
+RAINS signatures have five common elements: the algorithm identifier, a keyspace
+identifier, a key phase, a valid-since timestamp, and a valid-until
+timestamp. Signatures are represented as an array of these five values followed
+by additional elements containing the signature data itself, according to the
+algorithm identifier.
+
+The following algorithms are supported:
+
+{: #tabsig title="Defined signature algorithms"}
+
+| Alg ID | Signatures | Hash/HMAC | Format               |
+|-------:|------------|-----------|----------------------|
+| 1      | ed25519    | sha-512   | See {{eddsa-format}} |
+| 2      | ed448      | shake256  | See {{eddsa-format}} |
+
+As noted in {{eddsa-format}}, support for Algorithm 1, ed25519, is REQUIRED;
+other algorithms are OPTIONAL.
+
+The keyspace identifier associates the signature with a method for verifying
+signatures. This facility is used to support signatures on assertions from
+external sources (the extrakey object type). At present, one keyspace identifier
+is defined, and support for it is REQUIRED.
+
+| Keyspace ID | Name  | Signature Verification Algorithm               |
+|------------:|-------|------------------------------------------------|
+| 0           | rains | RAINS delegation chain; see {{cbor-signature}} |
+
+Within the RAINS delegation chain keyspace, the key phase is an unbounded,
+unsigned integer matching a signature's key phase to the delegation key phase.
+Multiple keys may be valid for a delegation at a given point in time, in order
+to support seamless rollover of keys, but only one per key phase and algorithm
+may be valid at once. The third element of delegation objects and signatures is
+the key phase.
+
+Valid-since and valid-until timestamps are represented as CBOR integers
+counting seconds since the UNIX epoch UTC, identified with tag value 1 and
+encoded as in section 2.4.1 of {{!RFC7049}}. 
+
+A signature in RAINS is generated over a byte stream representing the data
+element to be signed. The signing process is defined as follows:
+
+- Render the element to be signed into a canonical byte stream as specified in
+  {{c14n}}.
+
+- Generate a signature on the resulting byte stream according to the algorithm
+  selected.
+
+- Add the full signature to the signatures array at the appropriate point in
+  the element.
+
+To verify a signature, generate the byte stream as for signing, then verify
+the signature according to the algorithm selected.
 
 ### Canonicalization {#c14n}
 
-\[EDITOR'S NOTE: canonicalize by sorting and rendering to CBOR]
+The byte stream representing a data element over which signatures are generated
+and verified is a canonicalized CBOR object representing the data element. 
+
+Signatures may be attached to any form of Assertion, as well as to Messages as a whole.
+
+First, to canonicalize signature metadata to allow it to be protected by the
+signature, regardless of the type of data element:
+
+- recursively strip all signatures from the content of the data element.
+- add a single-element signatures array at the level in the data structure where
+  the generated signature will be attached, containing the information common to
+  all signatures: the algorithm identifier, a keyspace identifier, a key phase,
+  a valid-since timestamp, and a valid-until timestamp, but omitting any
+  signature content.
+
+Then follow the canonicalization steps below appropriate for the type of data
+element to be signed:
+
+To generate a canonicalized Singular Assertion:
+
+- sort the objects array by ascending order of object type ({{tabobj}}), then by
+  ascending numeric or lexicographic order of each subsequent array element in
+  the object(s)' representation.
+- sort the CBOR map by ascending order of its keys ({{tabmkey}}).
+
+To generate a canonicalized Shard:
+
+- sort the objects array in each assertion contained in the assertions array as
+  for Singular Assertions, above.
+- sort the assertions array by lexicographic order of the serialized
+  canonicalized byte string representing the assertion. Note that this will
+  cause the subject array to be sorted in lexicographic order of subject name,
+  as well.
+- sort the CBOR map by ascending order of its keys ({{tabmkey}}).
+
+To generate a canonicalized Zone:
+
+- sort the objects array in each assertion contained in the assertions array as
+  for Singular Assertions, above.
+- sort each shard contained in the shards array as for Shards, above.
+- sort the assertions array by lexicographic order of the serialized
+  canonicalized byte string representing the assertion. Note that this will
+  cause the array to be sorted in lexicographic order of subject name,
+  as well.
+- sort the shards array by lexicographic order of the serialized canonicalized
+  byte string representing the shard. Note that this will
+  cause the array to be sorted in lexicographic order of shard range, as well.
+- sort the CBOR map by ascending order of its keys ({{tabmkey}}).
+
+To generate a canonicalized P-Shard:
+
+- sort the CBOR map by ascending order of its keys ({{tabmkey}}).
+
+To generate a canonicalized Message:
+
+- preserve the order of Sections within the Message
+- canonicalize each section as appropriate by following the canonicalization
+  steps for the appropriate Section type, above.
+
+### EdDSA signature and public key format {#eddsa-format}
+
+EdDSA public keys consist of a single value, a 32-byte bit string generated as
+in Section 5.1.5 of {{!RFC8032}} for Ed25519, and a 57-byte bit string generated
+as in Section 5.2.5 of {{!RFC8032}} for Ed448. The fourth element in a RAINS
+delegation object is this bit string encoded as a CBOR byte array. RAINS
+delegation objects for Ed25519 keys with value k are therefore represented by
+the array \[5, 1, phase, k]; and for Ed448 keys as \[5, 2, phase, k].
+
+Ed25519 and Ed448 signatures are are a combination of two non-negative integers,
+called "R" and "S" in sections 5.1.6 and 5.2.6, respectively, of {{!RFC8032}}. An
+Ed25519 signature is represented as a 64-byte array containing the concatenation
+of R and S, and an Ed448 signature is represented as a 114-byte array containing
+the concatenation of R and S. RAINS signatures using Ed25519 are therefore the
+array \[1, 0, phase, valid-since, valid-until, R|S]; using Ed448 the array \[2, 0,
+phase, valid-since, valid-until, R|S].
+
+Ed25519 keys are generated as in Section 5.1.5 of {{!RFC8032}}, and Ed448 keys
+as in Section 5.2.5 of {{!RFC8032}}.  Ed25519 signatures are generated from a
+normalized serialized CBOR object as in Section 5.1.6 of {{!RFC8032}}, and
+Ed448 signatures as in section 5.2.6 of {{!RFC8032}}.
+
+RAINS Server and Client implementations MUST support Ed25519 signatures for
+delegation.
+
 
 ## Tokens {#tokens}
 
@@ -1660,11 +1792,20 @@ a named zone) or from external configuration.
 
 ### Heartbeat Messages {#heartbeat}
 
+## Protocol Dynamics {#base-proto}
+
+\[EDITOR'S NOTE: things that must appear here listed below]
+
+- MUST check that a P-Shard provides a negative proof for a query before returning it
+
 ## Client Protocol {#client-proto}
 
 ## Publication Protocol {#pub-proto}
 
 ## Enforcing Assertion Consistency {#consistency}
+
+\[EDITOR'S NOTE: inconsistency is only unequivocal when P ^ !P for a given
+assertion at the same instant T]
 
 ## Error Handling {#errors}
 
@@ -1681,85 +1822,6 @@ a named zone) or from external configuration.
 # Old content below
 <!---->
 
-### Answers to Queries
-
-An answer consists of a set of assertions, shards, and/or zones which respond
-to a query. If the query contained a token, it is bound to that query via the
-token.
-
-The content of an answer depends on whether the answer is positive or negative.
-A positive answer contains the information requested in the smallest atomic
-container that can be found, usually a single assertion. A negative answer
-contains the information used to verify it; either a Shard, an entire Zone, or a
-Zone-Nameset assertion showing the name is illegal within the zone.
-
-A query is taken to have an inconclusive answer when no answer returns to the
-querier before the query's Valid-Until time.
-
-## Assertion Update Query
-
-An assertion update query is a request for an updated version of a specified
-assertion. It consists of the following information elements:
-
-- Qualified-Subject: the fully-qualified name of the assertion.
-- Hash function: the hash function used to hash the assertion.
-- Hashed Assertion: The hash value obtained by hashing the assertion.
-- Valid-Until: an optional client-generated timestamp for the query after which
-  it expires and should not be answered.
-- Query Token: a client-generated token for the query, which must be used in the
-  answer to refer to the query.
-
-### Answers to Assertion Update Queries
-
-An answer consists of an assertion, a shard, a zone, or a notification which
-responds to an assertion update query. If the update query contained a token, it
-is bound to that query via the token.
-
-The content of an answer depends on whether there is a newer version of the
-assertion that is already valid. If the hashed assertion is still the most
-recent one, a 200 notification message is returned. In case there is an
-assertion for the same name, type and object value with a higher validUntil
-value, the one with the highest value is returned. Otherwise a shard, zone or
-210 notification is returned. A shard or zone is preferred over the notification
-answer.
-
-An update query is taken to have an inconclusive answer when no answer returns
-to the querier before the update query's Valid-Until time.
-
-## Nonexistence Update Query
-
-A nonexistence update query is a request for an updated version of a previously
-non-existent name proven through a shard or zone. It consists of the following
-information elements:
-
-- Context: the context(s) in which sections answering the update query will be
-  accepted; see {{context-in-queries}} above.
-- Qualified-Subject: the fully-qualified name within the range of the shard or
-  the zone for which a nonexistence proof is requested.
-- Type: the assertion type the querier is interested in.
-- Hash function: the hash function used to hash the shard or the zone.
-- Hashed Section: the hash value obtained by hashing the shard or the zone.
-- Valid-Until: an optional client-generated timestamp for the query after which
-  it expires and should not be answered.
-- Query Token: a client-generated token for the query, which must be used in the
-  answer to refer to the query.
-
-### Answers to Nonexistence Update Queries
-
-An answer consists of an assertion, a shard, a zone, or a notification which
-responds to an update query. If the update query contained a token, it is bound
-to that query via the token.
-
-The content of an answer depends on whether there is a new assertion for the
-queried context, subject-name and type or a newer version of the hashed shard or
-zone which is already valid. If a new assertion exists, it is returned. In case
-there is no matching assertion and there is a currently valid zone or a shard in
-the range of the fully-qualified name in a matching context with a higher validUntil value, the
-section with the highest validUntil value is returned. Otherwise, the shard or
-zone is still the most recent one and a 200 notification message is returned.
-
-An update query is taken to have an inconclusive answer when no answer returns
-to the querier before the query's Valid-Until time.
 
 ## Address to Object Mapping
 
@@ -1954,121 +2016,6 @@ less-specific in response to a Address Query.
 
 ## Signatures, delegation keys, and RAINS infrastructure keys {#cbor-signature}
 
-RAINS supports multiple signature algorithms and hash functions for signing
-assertions for cryptographic algorithm agility {{?RFC7696}}. A RAINS signature
-algorithm identifier specifies the signature algorithm; a hash function for
-generating the HMAC and the format of the encodings of the signature
-values in Assertions, Shards, Zones, and Messages, as well as of public key
-values in delegation objects.
-
-RAINS signatures have five common elements: the algorithm identifier, a keyspace
-identifier, a key phase, a valid-since timestamp, and a valid-until
-timestamp. Signatures are represented as an array of these five values followed
-by additional elements containing the signature data itself, according to the
-algorithm identifier.
-
-The following algorithms are supported:
-
-{: #tabsig title="Defined signature algorithms"}
-
-| Alg ID | Signatures | Hash/HMAC | Format               |
-|-------:|------------|-----------|----------------------|
-| 1      | ed25519    | sha-512   | See {{eddsa-format}} |
-| 2      | ed448      | shake256  | See {{eddsa-format}} |
-| 3      | ecdsa-256  | sha-256   | See {{ecdsa-format}} |
-| 4      | ecdsa-384  | sha-384   | See {{ecdsa-format}} |
-
-As noted in {{eddsa-format}}, support for Algorithm 1, ed25519, is REQUIRED;
-other algorithms are OPTIONAL.
-
-The keyspace identifier associates the signature with a method for verifying
-signatures. This facility is used to support signatures on assertions from
-external sources (the extrakey object type). At present, one keyspace identifier
-is defined, and support for it is REQUIRED.
-
-| Keyspace ID | Name  | Signature Verification Algorithm               |
-|------------:|-------|------------------------------------------------|
-| 0           | rains | RAINS delegation chain; see {{cbor-signature}} |
-
-Within the RAINS delegation chain keyspace, the key phase is an unbounded,
-unsigned integer matching a signature's key phase to the delegation key phase.
-Multiple keys may be valid for a delegation at a given point in time, in order
-to support seamless rollover of keys, but only one per key phase and algorithm
-may be valid at once. The third element of delegation objects and signatures is
-the key phase.
-
-Valid-since and valid-until timestamps are represented as CBOR integers
-counting seconds since the UNIX epoch UTC, identified with tag value 1 and
-encoded as in section 2.4.1 of {{!RFC7049}}. A signature MUST have a
-valid-until timestamp. If a signature has no specified valid-since time (i.e.,
-is valid from the beginning of time until its valid-until timestamp), the
-valid-since time MAY be null (as in Table 2 in Section 2.3 of {{!RFC7049}}).
-
-A signature in RAINS is generated over a byte stream representing the message in
-a canonical signing format. The signing process is defined as follows:
-
-- Parse the object to be signed into a byte stream according to the format
-specified in {{signing-format}}.
-
-- Generate a signature on the resulting byte stream according to the algorithm
-  selected.
-
-- Add the full signature to the signatures array at the appropriate point in
-  the object.
-
-To verify a signature, generate the byte stream as for signing, then verify
-the signature according to the algorithm selected.
-
-### EdDSA signature and public key format {#eddsa-format}
-
-EdDSA public keys consist of a single value, a 32-byte bit string generated as
-in Section 5.1.5 of {{!RFC8032}} for Ed25519, and a 57-byte bit string generated
-as in Section 5.2.5 of {{!RFC8032}} for Ed448. The fourth element in a RAINS
-delegation object is this bit string encoded as a CBOR byte array. RAINS
-delegation objects for Ed25519 keys with value k are therefore represented by
-the array \[5, 1, phase, k]; and for Ed448 keys as \[5, 2, phase, k].
-
-Ed25519 and Ed448 signatures are are a combination of two non-negative integers,
-called "R" and "S" in sections 5.1.6 and 5.2.6, respectively, of {{!RFC8032}}. An
-Ed25519 signature is represented as a 64-byte array containing the concatenation
-of R and S, and an Ed448 signature is represented as a 114-byte array containing
-the concatenation of R and S. RAINS signatures using Ed25519 are therefore the
-array \[1, 0, phase, valid-since, valid-until, R|S]; using Ed448 the array \[2, 0,
-phase, valid-since, valid-until, R|S].
-
-Ed25519 keys are generated as in Section 5.1.5 of {{!RFC8032}}, and Ed448 keys
-as in Section 5.2.5 of {{!RFC8032}}.  Ed25519 signatures are generated from a
-normalized serialized CBOR object as in Section 5.1.6 of {{!RFC8032}}, and
-Ed448 signatures as in section 5.2.6 of {{!RFC8032}}.
-
-RAINS Server and Client implementations MUST support Ed25519 signatures for
-delegation.
-
-### ECDSA signature and public key format {#ecdsa-format}
-
-ECDSA public keys consist of a single value, called "Q" in {{FIPS-186-3}}. Q
-is a simple bit string that represents the uncompressed form of a curve point,
-concatenated together as "x | y". The fourth element in a RAINS delegation
-object is the Q bit string encoded as a CBOR byte array. RAINS delegation
-objects for ECDSA-256 public keys are therefore represented as the array 
-\[5, 3, phase, Q]; and for ECDSA-384 public keys as \[5, 4, phase, Q].
-
-ECDSA signatures are a combination of two non-negative integers, called "r" and
-"s" in {{FIPS-186-3}}. A Signature using ECDSA is represented using a
-four-element CBOR array, with the fourth element being "r | s" such that r is
-represented as a byte array as described in Section C.2 of {{FIPS-186-3}}, and s
-represented as a byte array as described in Section C.2 of {{FIPS-186-3}}. For
-ECDSA-256 signatures, each integer MUST be represented as a 32-byte array. For
-ECDSA-384 signatures, each integer MUST be represented as a 48-byte array. RAINS
-signatures using ECDSA-256 are therefore the array \[3, 0, phase, valid-since,
-valid-until, r|s]; and for ECDSA-384 the array \[4, 0, phase, valid-since,
-valid-until, r|s].
-
-ECDSA-256 signatures and public keys use the P-256 curve as defined in {{FIPS-186-3}}.
-ECDSA-384 signatures and public keys use the P-384 curve as defined in {{FIPS-186-3}}.
-
-ECDSA-256 and ECDSA-384 support are primarily meant for compatibility with and
-migration from existing DNSSEC deployments; see {{dns-transition}}.
 
 ## Capabilities {#cbor-capabilities}
 
