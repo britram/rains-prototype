@@ -1549,6 +1549,7 @@ The value of the note-type key is encoded as an integer as in the
 |-----:|--------------------------------------|------------------|
 | 100  | Connection heartbeat                 | {{heartbeat}}    |
 | 304  | Confirmation query has latest answer | {{confirmation}} |
+| 306  | Reply too large, fallback to TCP     | {{errors}}       |
 | 399  | Send full capabilities               | {{capabilities}} |
 | 400  | Bad message received                 | {{errors}}       |
 | 403  | Inconsistent message received        | {{consistency}}  |
@@ -1784,44 +1785,479 @@ a named zone) or from external configuration.
 
 # RAINS Protocol {#protocol}
 
+RAINS is a message-exchange protocol based around a CBOR data model. Since CBOR
+is self-framing -- a CBOR parser can determine when a CBOR object is complete at
+the point at which it has read its final byte -- RAINS messages requires no
+external framing, and can be carried on a variety of transport protocols.
+
+These transport bindings serve to transfer Messages containing Queries toward
+servers that can answer them, and to transfer Assertions toward clients that
+have indicated an interest in them. The interpretation and action implied by the
+arrival of a RAINS Message at a peer is not affected by the transport used to
+send it.
+
 ## Transport Bindings {#transport}
+
+This document defines two transport bindings for RAINS: TLS-over-TCP in
+{{transport-tls}}, and UDP in {{transport-udp}}. Each of these transport
+bindings offers a different set of tradeoffs. Carrying RAINS Messages over
+persistent TLS 1.3 (or later) connections {{!RFC8446}} over TCP {{!RFC0793}}
+protects query confidentiality and integrity while supporting implementation
+over a ubiquitously-available and well-understood security and transport layer.
+
+RAINS over UDP allows RAINS messages to be exchanged with the same statelessness
+and confidentiality properties as DNS over UDP, reducing state requirements at
+RAINS clients and servers for persistent TLS connection, but without
+confidentiality protection, and with limits on the size of messages which can be
+transferred. RAINS servers MUST support TLS over TCP; other transports can be
+negotiated using the capabilities mechanism (see {{capabilities}}) after
+bootstrapping using TLS 1.3 (or later).
 
 ### TLS over TCP {#transport-tls}
 
+RAINS servers listen on port 7753 by default \[EDITOR'S NOTE: no effort has yet
+been made to assign this port at IANA; should RAINS be standardized, another
+port may be chosen], but servers may listen on other TCP ports subject to local
+configuration. Methods for discovering servers and configuring clients MUST
+allow for the specification of an alternate port. Servers providing authority
+service should use service information records ({{obj-srv}}) to specify a port
+on a service name specified by redirection object(s) for the zone; see
+{{bootstrapping}}.
+
+RAINS servers should strive to keep connections open to peer servers, unless it
+is clear that no future messages will be exchanged with those peers, or in the
+face of resource limitations at either peer. If a RAINS server needs to send a
+message to another RAINS server to which it does not have an open connection, it
+attempts to open a connection with that server.
+
+A RAINS client configured to use one or more servers for query service should
+strive to keep connections open to those servers.
+
+RAINS servers MUST accept Messages over TCP up to 65536 bytes in length, but MAY
+accept messages of greater length, subject to resource limitations of the
+server. A server with resource limitations MUST respond to a message rejected
+due to length restrictions with a notification of type 413 (Message Too Large).
+A server that receives a type 413 notification must note that the peer sending
+the message only accepts messages smaller than the largest message it's
+successfully sent that peer, or cap messages to that peer to 65536 bytes in
+length.
+
+Since a singular assertion with a single Ed25519 signature requires on the order
+of 180 bytes, it is clear that many full zones won't fit into a single minimum
+maximum-size message. Authorities are therefore encouraged to publish zones
+grouped into shards that will fit into 65536-byte messages, to allow servers to
+reply using these shards when full-zone transfers are not possible due to
+message size limitations.
+
 ### UDP {#transport-udp}
+
+When they accept RAINS messages over UDP, servers MUST accept messages up to
+512 bytes in length, but MAY accept messages of greater length.
+
+When a server has a message to send to a client that contacted via UDP that
+would exceed the UDP message size length, it should send a 306 TCP Fallback
+notification, to cause the client to resend the query via a TCP connection to
+the server.
 
 ### Heartbeat Messages {#heartbeat}
 
+Both TCP and UDP connections between RAINS clients and servers may be associated
+with in-network state (such as firewall pinholes and/or network address
+translation cache entries) with relatively short idle timeouts. RAINS provides a
+simple heartbeat mechanism to refresh this state for long-running connections.
+
+A RAINS peer may send its peer a 100 Connection Heartbeat notification at any
+time. This message is ignored by the receiving peer.
+
 ## Protocol Dynamics {#base-proto}
 
-\[EDITOR'S NOTE: things that must appear here listed below]
+\[EDITOR'S NOTE frontmatter here please. better prosify the following: this section describes one
+possible set of rules for handling messages at servers and clients in order to
+illustrate the typical operation of a RAINS peer. It is not intended as a
+normative reference or to prescribe behavior for RAINS peers.]
 
-- MUST check that a P-Shard provides a negative proof for a query before returning it
+### Message Processing {#proto-processing}
+
+Once a transport connection is established, any server may validly send a message with
+any content to any other server. A client may send messages containing queries
+to servers, and a server may sent messages containing anything other than
+queries to clients.
+
+Upon receipt of a message, a server or client attempts to parse it.
+
+If the server or client cannot parse the message at all, it returns a 400 Bad
+Message notification to the peer. This notification may have a null token if the
+token cannot be retrieved from the message.
+
+If the server or client can parse the message, it:
+
+- notes the token on the message. This token MUST be present on any
+  messages sent in reply to this message.
+- processes any capabilities present, replacing the set of capabilities known
+  for the peer with the set present in the message. If the present
+  capabilities are represented by a hash that the server does not have in its
+  cache, it prepares a notification of type 399 "Capability hash not
+  understood" to send to its peer.
+- splits the contents into its constituent message sections, and verifies that
+  each is acceptable. Specifically, queries are not accepted by clients (see
+  {{protocol-client}}), and 404 No Assertion Exists notifications are not
+  accepted by servers. If a message contains an unacceptable section, the server
+  or client returns a 400 Bad Message notification to its peer, and ceases
+  processing of the message.
+
+On receipt of an assertion, shard, P-Shard, or zone message section, a
+server:
+
+- verifies its consistency (see {{runtime-consistency-checking}}). If the
+  section is not consistent, it prepares to send a notification of type 403
+  Inconsistent Message to the peer, and discards the section. Otherwise, it:
+- determines whether it answers an outstanding query; if so, it prepares to
+  forward the section to the server that issued the query.
+- determines whether it is likely to answer a future query, according to its
+  configuration, policy, and query history; if so, it caches the section.
+
+On receipt of an assertion, shard, P-Shard or zone message section, a
+client:
+
+- determines whether it answers an outstanding query; if so, it considers the
+  query answered. It then:
+- determines whether it is likely to answer a future query, according to its
+  configuration, policy, and query history; if so, it caches the section.
+
+On receipt of a query, a server:
+
+\[EDITOR'S NOTE: add positive and negative proof, shards and p-shards here. MUST
+check that a P-Shard provides a negative proof for a query before returning it.
+also, note that a server may refuse to take delegated queries.]
+
+1. determines whether it has expired by checking the query-expires value. If so,
+   it drops the query silently. If not, it:
+2. determines whether it has at least one stored assertion answering the query.
+   If so, it checks to see if the assertion is newer than the current-time value
+   in the query, if present. If the assertion is not newer, it prepares to send
+   a notification of type 304 Querier Has Latest Answer to the peer. Otherwise,
+   it returns the assertion(s) with the longest validUntil value that is already
+   valid. If no stored assertion is available, it:
+3. checks whether the query specifies option 1 and/or 9. If so, it:
+   - determines whether the chosen option is in compliance with the server's
+     configuration and policy. If so, and:
+     - option 9 is set and option 1 is not, it continues with step 4.
+     - option 1 is set, it checks whether it has a cached section to
+       proof nonexistence. If so:
+       - and option 9 is not set, it returns the section with the shortest size
+         or the signature of the longest remaining validity to the peer that
+         issued the query depending on the server's policy. \[EDITOR'S NOTE: Add a
+         query option for this decision?]
+       - and option 9 is set, it might send a 211 notification back to the
+         client, depending on the server's configuration. Independent of the
+         previous decision it then continues with step 4. 
+     If not, the server overwrites the query's option according to its 
+     configuration and policy and processes it as above with the adapted option.
+   If not, it:
+4. checks to see whether the query specifies option 4 (cached answers only). If
+   so, and if option 5 (expired assertions acceptable) is also specified, it
+   then checks to see if it has any cached sections that answer the query on
+   which signatures are expired; otherwise, processing stops, and the server
+   returns a 504 No Assertion Available notification, as if the query had
+   instantly expired. If the query does not specify option 4, delegation
+   proceeds, and the server:
+5. determines whether it has other non-authoritative servers it can forward the
+   query to, according to its configuration and policy, and in compliance with
+   any query options (see {{cbor-query}}). If so, it prepares to forward the
+   query to those servers, noting the reply for the received query depends on
+   the replies for the forwarded query. If not, it:
+6. determines the responsible authority servers for the zone containing the
+   query name in the query for the context requested, and forwards the query to
+   those authority servers, noting the reply for the received query depends on
+   the reply for the forwarded query.
+
+If query delegation fails to return an answer within the maximum of the
+valid-until time in the received query and a configured maximum timeout for a
+delegated query, the server prepares to send a 504 No assertion available
+response to the peer from which it received the query.
+
+When a server creates a new query to forward to another server in response to
+a query it received, it SHOULD NOT use the same token on the delegated query
+as on the received query, unless option 6 Enable Tracing is present in the
+received, in which case it MUST use the same token. The Enable Tracing option
+is designed to allow debugging of query processing across multiple servers, It
+SHOULD only be enabled by clients designed explicitly for debugging RAINS
+itself, and MUST NOT be enabled by default by client resolvers.
+
+When a server creates a new query to forward to another server in response to a
+query it received, and the received query contains a query-expires time, the
+delegated query MUST NOT have a query-expires time after that in the received
+query. If the received query contains no query-expires time, the delegated query
+MAY contain a query- expires time of the server's choosing, according to its
+configuration.
+
+On receipt of a notification, a server's behavior depends on the notification type:
+
+- For type 100 "Connection Heartbeat", the server does nothing: these null
+  messages are used to keep long-lived connections open in the presence of
+  network behaviors that may drop state for idle connections.
+- For type 399 "Capability hash not understood", the server prepares to send a
+  full capabilities list on the next message it sends to the peer.
+- For type 504 "No assertion available", the server checks the token on the
+  message, and prepares to forward the assertion to the associated query.
+- For type 413 "Message too large" the server notes that large messages may not
+  be sent to a peer and tries again (see {{protocol-limits}}), or logs the error
+  along with the note-data content.
+- For type 400 "Bad message", type 403 "Inconsistent message", type 500
+  "Server error", or type 501 "Server not capable", the server logs the error
+  along with the note-data content, as these notifications generally represent
+  implementation or configuration error conditions which will require human
+  intervention to mitigate.
+
+On receipt of a notification, a client's behavior depends on the notification type:
+
+- For type 100 "Connection Heartbeat", the client does nothing, as above.
+- For type 304 "Querier has newest assertion", the client notes that its
+  cache is up-to-date for the given query.
+- For type 399 "Capability hash not understood", the client prepares to send a
+  full capabilities list on the next message it sends to the peer.
+- For type 404 "No assertion exists", the client takes the query to be
+  unanswerable. It may reissue the query with query option 7 to do the
+  verification of nonexistence again, if the server from which it received the
+  notification is untrusted.
+- For type 413 "Message too large" the client notes that large messages may 
+  not be sent to a peer and tries again (see {{protocol-limits}}), or logs
+  the error along with the note-data content.
+- For type 400 "Bad message", type 403 "Inconsistent message", type 500
+  "Server error", or type 501 "Server not capable", the client logs the error
+  along with the note-data content, as these notifications generally represent
+  implementation or configuration error conditions which will require human
+  intervention to mitigate.
+
+The first message a server or client sends to a peer after a new connection is
+established SHOULD contain a capabilities section, if the server or client
+supports any optional capabilities. See {{cbor-capabilities}}.
+
+If the server is configured to keep long-running connections open, due to the
+presence of network behaviors that may drop state for idle connections, it
+SHOULD send a message containing a type 100 Connection Heartbeat notification
+after a configured idle time without any messages containing other content
+being sent.
+
+In general, servers should follow the principles laid out in
+{{?I-D.iab-protocol-maintenance}}. A malformed message section, or a message
+section with any invalid (but not expired) signature, should be dropped and
+logged. A malformed message section or invalid signature should not, however,
+result in other sections in the same message being dropped, except as explicitly
+noted above.
+
+### Message Transmission
+
+As noted in {{protocol-processing}} many messages are sent in reply to messages
+received from peers. Servers may also originate messages on their own, based
+on their configuration and policy:
+
+- Proactive queries to retrieve assertions, shards, and zones for which all
+  signatures have expired or will soon expire, for cache management purposes.
+- Proactive push of assertions, shards, and zones to other servers, based on
+  query history or other information indicating those servers may query for
+  the assertions they contain.
 
 ## Client Protocol {#client-proto}
 
+\[EDITOR'S NOTE: check and fix up the following]
+
+The protocol used by clients to issue queries to and receive responses from a
+query service is a subset of the full RAINS protocol, with the following
+differences:
+
+- Clients only process assertion, shard, zone, and notification sections;
+  sending a query to a client results in a 400 Bad Message notification.
+- Clients never listen for connections; a client must initiate and maintain a
+  transport session to the query server(s) it uses for name resolution.
+- Servers only process query and notification sections when connected to
+  clients; a client sending assertions to a server results in a 400 Bad
+  Message notification.
+
+Since signature verification is resource-intensive, clients delegate signature
+verification to query servers by default. The query server signs the message
+containing results for a query using its own key (published as an infrakey
+object associated with the query server's name), and a validity time
+corresponding to the signature it verified with the longest lifetime,
+stripping other signatures from the reply. This behavior can be disabled by a
+client by specifying query option 7, allowing the client to do its own
+verification.
+
 ## Publication Protocol {#pub-proto}
+
+\[EDITOR'S NOTE: check and fix up the following; we probably don't need bad
+message here, or we need a different error that means "inappropriate message for
+this connection?"]
+
+The protocol used by authorities to publish assertions to an authority service
+is a subset of the full RAINS protocol, with the following differences:
+
+- Servers only process assertion, shard, zone, and notification sections when
+  connected to publishers; sending a query to a server via the publication
+  procotol results in a 400 Bad Message notification. Servers only process
+  notifications for capability negotiation purposes (see {{cbor-capabilities}}).
+- Publishers only process notification sections; sending a query or assertion to
+  a publisher results in a 400 Bad Message notification.
 
 ## Enforcing Assertion Consistency {#consistency}
 
 \[EDITOR'S NOTE: inconsistency is only unequivocal when P ^ !P for a given
-assertion at the same instant T]
+assertion at the same instant T -- check and fix up the following]
+
+The data model used by the RAINS protocol allows inconsistent information to
+be asserted, all resulting from misconfigured or misbehaving authority
+servers. The following types of inconsistency are possible:
+
+- A shard omits an assertion within its range which is valid at the same
+  time as the shard.
+- A zone omits an assertion within its zone which is valid at the same time
+  as the zone.
+- An address assertion contains an object that is not allowed (see {{cbor-revassert}})
+- An assertion prohibited by its zone's nameset is valid at the same time
+  as the zone's nameset assertion.
+- A zone contains a valid reflexive assertion of a given object type at the same
+  time that its superordinate zone contains a valid assertion of the same type.
+- Delegations to more than one key are simultaneously valid for a given context,
+  zone, signature algorithm, and key phase.
+
+RAINS relies on runtime consistency checking to mitigate inconsistency: each
+server receiving an assertion, shard, or zone SHOULD, subject to resource
+constraints, ensure that it is consistent with other information it has, and if
+not, discard all inconsistent assertions, shards, and zones in its cache, log
+the error, and send a 403 Inconsistent Message to the source of the message.
+
+For RAINS to work in a highly dynamic environment, some time-bounded
+inconsistencies are allowed to occur. On the one hand, an authority wants to
+prove nonexistence of a name for a duration of time to make caching possible to
+reduce query latency and reduce load on its naming servers. On the other hand,
+an authority wants to add the name of a new delegation as quickly as possible
+and also allow its customers to make changes available quickly. Assuming an
+authority resigns sections every x seconds, then any inconcistency can occur at
+most x seconds. At the point in time a section is signed, its content MUST
+represent the state of the zone at that point in time. The following actions
+result in allowed inconsistencies:
+
+- Creation of a new assertion: Shards and P-Shards in range, and zones
+  signed before this assertion was created and which are still valid, prove that
+  this assertion is nonexistent, although it does now.
+- Changed object value of an assertion: Shards in range and zones signed before
+  this assertion was created and which are still valid, prove that this
+  assertion is nonexistent, althoug it does now.
+- Expiration of an assertion: Shards and P-Shards in range, and zones
+  signed before this assertion has expired and which are still valid, prove that
+  this assertion exists, although it does not anymore.
+- Revocation of an assertion: Same inconsistencies as for expiration of an
+  assertion with the addition, that the assertion itself might still be cached
+  and served although it has been revoked.
+
+Two sections for proving nonexistence (shard, P-Shard or zone) which have
+an overlapping range and validity time where in between the signing of the two
+sections any of the above mentioned actions leading to inconsistencies happend,
+become inconsistent as well. One of them has the old view, while the newer one
+has the updated view about the assertion. Note that there is no inconsistency
+between a P-Shard and any other section proving nonexistence if only the
+object value of the assertion has changed (a P-Shard does not store this
+information).
+
+Note that most assertions are consistent between each other as the union of them
+is considered to be the valid state. However, there are few exceptions mentioned
+in {{runtime-consistency-checking}}.
 
 ## Error Handling {#errors}
 
+\[EDITOR'S NOTE: content please?]
+
 # Operational Considerations
+
+## Discovering RAINS servers
+
+## Bootstrapping RAINS Services {#bootstrapping}
+
+\[EDITOR'S NOTE: check and expand]
+
+At startup, a server performing recursive lookup MUST have access to at least
+one of each of these three assertion types: a self-signed delegation assertion
+of the root zone, a redirection assertion containing the name of an
+authoritative root name server, and an ip4 or ip6 assertion of the root name
+server mentioned in the redirection assertion. These assertions must be obtained
+through a secure out of band mechanism. For a caching server, it is sufficient
+to have a connection to a recursive resolver which does the lookup on its
+behalf.
+
+When a zone authority delegates a part of its namespace to a subordinate, it
+MUST sign and serve the assertions of the three above mentioned types. This
+information is necessary for a recursive resolver to determine in a recursive
+lookup where to ask for a more specific answer and to validate the response.
 
 # Security Considerations
 
+\[EDITOR'S NOTE: check and fix up]
+
+This document specifies a new, experimental protocol for Internet name
+resolution, with mandatory integrity protection for assertions about names
+built into the information model, and confidentiality for query information
+protected on a hop-by-hop basis. See especially {{signatures-in-assertions}},
+{{integrity-and-confidentiality-protection}}, {{cbor-signature}},
+{{cbor-certinfo}}, and {{secret-key-management}} for security-relevant details.
+
+With respect to the resistance of the protocol itself to various attacks, we
+consider a few potential attacks against RAINS servers and RAINS clients in the
+subsections below:
+
+## Server state exhaustion
+
+\[EDITOR'S NOTE: detail this attack: attacker can create domain, use
+long-validity queries to exhaust state at server. defense: server can consider
+shorter validity time than that requested, but not longer. attack: attacker can
+push garbage assertions proactively. defense: server doesn't accept assertions
+it's never seen a query for. how to handle an attacker that pushes assertions
+and queries? attack: attacker can push garbage delegations, exhausting
+delegation chain cache. defense: server doesn't accept sigs for domains it
+doesn't know about, but what about a domain with hundreds of valid delegations?
+in all cases, blacklisting both clients and domains seems like a good idea.]
+
+## Query relay attacks
+
+\[EDITOR'S NOTE: detail this attack: attacker can cause traffic overload at a
+targeted intermediate or authority service by crafting queries and sending them
+via multiple query services. There is no amplification here, but a
+concentration, with indirection that makes tracing difficult.]
+
 # IANA Considerations
+
+The present revision of this document has no actions for IANA.
+
+The authors have registered the CBOR tag 15309736 to identify RAINS messages
+in the CBOR tag registry at 
+https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml.
+
+RAINS servers currently listen for connections from other servers by default on
+TCP port 7753. This port has not been registered with IANA, and is intended only
+for experimentation with RAINS on closed, non-Internet-connected networks.
+Future revisions of this document may specify a different port, registered with
+IANA via Expert Review {{?RFC5226}}.
+
+The urn:x-rains namespace used by the RAINS capability mechanism in 
+{{cbor-capabilities}} may be a candidate for replacement with an IANA-registered
+namespace in a future revision of this document.
 
 # Acknowledgments
 
+Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Ted Hardie, Joe
+Hildebrand, Tobias Klausmann, Steve Matsumoto, Adrian Perrig, Raphael Reischuk,
+Wendy Seltzer, Andrew Sullivan, and Suzanne Woolf for the discussions leading to
+the design of this protocol, and the definition of an ideal naming service on
+which it is based. Thanks especially to Stephen Shirley for detailed feedback.
 
 
-# Old content below
-<!---->
 
+
+--- back
+
+# Reverse Name Service in RAINS
+
+Content in this section is taken from the old revision of the RAINS document,
+and covers reverse service. Figure out where to put it.
 
 ## Address to Object Mapping
 
@@ -1892,51 +2328,6 @@ address spaces may only delegate addresses that are reserved for local use
 {{!RFC1918}} {{!RFC4193}}. Local context assertions for other addresses are
 invalid.
 
-# CBOR Data Model {#cbor}
-
-\[EDITOR'S NOTE: frontmatter moved, delete me]
-
-## Symbol Table {#cbor-symtab}
-
-\[EDITOR'S NOTE: content moved, delete me]
-
-## Message {#cbor-message}
-
-\[EDITOR'S NOTE: content moved, delete me]
-
-## Assertion body {#cbor-assertion}
-
-\[EDITOR'S NOTE: content moved, delete me]
-
-## Shard body {#cbor-shard}
-
-\[EDITOR'S NOTE: content moved, delete me]
-
-### Sorting Shards {#cbor-shard-sorting}
-
-Shards are sorted lexicographically by their cbor encoded byte string in
-ascending order. That means, they are sorted by the following elements in the
-mentioned order: zone name, context, range begin, range end, content, signature
-meta data.
-
-## P-Shard body {#cbor-P-Shard}
-
-\[EDITOR'S NOTE: content moved, delete me]
-
-### Sorting P-Shard {#cbor-P-Shard-sorting}
-
-P-Shards are sorted lexicographically by their cbor encoded byte string in
-ascending order. That means, they are sorted by the following elements in the
-mentioned order: zone name, context, range begin, range end, hash family, number
-of hash functions, filter, signature meta data.
-
-## Zone body {#cbor-zone}
-
-\[EDITOR'S NOTE: content moved, delete me]
-
-## Query body {#cbor-query}
-
-\[EDITOR'S NOTE: content moved, delete me]
 
 ## Address Assertion body {#cbor-revassert}
 
@@ -2006,413 +2397,10 @@ query, as in {{tabqopts}}. See {{cbor-query}} for more.
 An Address Assertion with a more-specific prefix is preferred over a
 less-specific in response to a Address Query.
 
-## Notification body {#cbor-notification}
+# Deployment Considerations
 
-\[EDITOR'S NOTE - content moved up]
-
-## Object {#cbor-object}
-
-\[EDITOR'S NOTE - content moved up]
-
-## Signatures, delegation keys, and RAINS infrastructure keys {#cbor-signature}
-
-
-## Capabilities {#cbor-capabilities}
-
-
-
-# Canonical signing format {#signing-format}
-
-\[EDITOR'S NOTE: to define, based on CBOR canonicalization, once this is implemented.]
-
-# RAINS Protocol Definition {#protocol-def}
-
-As noted in {{cbor}}, RAINS is a message-exchange protocol that uses CBOR
-{{!RFC7049}} as its framing. Since CBOR is self-framing -- a CBOR parser can
-determine when a CBOR object is complete at the point at which it has read its
-final byte -- RAINS requires no external framing. It can therefore run over
-any streaming, multistreaming, or message-oriented transport protocol. In
-order to protect query confidentiality, and support rapid deployment over a
-ubiquitously implemented transport, RAINS is defined in this document to run
-over persistent TLS 1.3 connections {{!RFC8446}} over TCP {{!RFC0793}} with
-mutual authentication between servers, and authentication of servers by
-clients. The TLS certificates of RAINS server peers can be verified as
-specified in the cert-info assertions for those servers.
-
-RAINS servers MUST support this transport; future transports can be negotiated
-using the capabilities mechanism after bootstrapping using TLS 1.3. As RAINS
-is an experimental protocol, RAINS servers listen on port 1022 {{!RFC4727}} for
-connections from other RAINS servers and clients. RAINS servers should strive
-to keep connections open to peer servers, unless it is clear that no future
-messages will be exchanged with those peers, or in the face of resource
-limitations at either peer. If a RAINS server needs to send a message to
-another RAINS server to which it does not have an open connection, it attempts
-to open a connection with that server.
-
-This section describes the operation of the protocol as used among RAINS
-servers. A simplified version of the protocol for client access is described in
-{{protocol-client}}, and a simplified version of the protocol for publication by
-authorities is described in {{protocol-publish}}.
-
-## Bootstrapping
-
-At startup, a server performing recursive lookup MUST have access to at least
-one of each of these three assertion types: a self-signed delegation assertion
-of the root zone, a redirection assertion containing the name of an
-authoritative root name server, and an ip4 or ip6 assertion of the root name
-server mentioned in the redirection assertion. These assertions must be obtained
-through a secure out of band mechanism. For a caching server, it is sufficient
-to have a connection to a recursive resolver which does the lookup on its
-behalf.
-
-When a zone authority delegates a part of its namespace to a subordinate, it
-MUST sign and serve the assertions of the three above mentioned types. This
-information is necessary for a recursive resolver to determine in a recursive
-lookup where to ask for a more specific answer and to validate the response.
-
-## Allowed Inconsistencies
-
-For RAINS to work in a highly dynamic environment, some time-bounded
-inconsistencies are allowed to occur. On the one hand, an authority wants to
-prove nonexistence of a name for a duration of time to make caching possible to
-reduce query latency and reduce load on its naming servers. On the other hand,
-an authority wants to add the name of a new delegation as quickly as possible
-and also allow its customers to make changes available quickly. Assuming an
-authority resigns sections every x seconds, then any inconcistency can occur at
-most x seconds. At the point in time a section is signed, its content MUST
-represent the state of the zone at that point in time. The following actions
-result in allowed inconsistencies:
-
-- Creation of a new assertion: Shards and P-Shards in range, and zones
-  signed before this assertion was created and which are still valid, prove that
-  this assertion is nonexistent, although it does now.
-- Changed object value of an assertion: Shards in range and zones signed before
-  this assertion was created and which are still valid, prove that this
-  assertion is nonexistent, althoug it does now.
-- Expiration of an assertion: Shards and P-Shards in range, and zones
-  signed before this assertion has expired and which are still valid, prove that
-  this assertion exists, although it does not anymore.
-- Revocation of an assertion: Same inconsistencies as for expiration of an
-  assertion with the addition, that the assertion itself might still be cached
-  and served although it has been revoked.
-
-Two sections for proving nonexistence (shard, P-Shard or zone) which have
-an overlapping range and validity time where in between the signing of the two
-sections any of the above mentioned actions leading to inconsistencies happend,
-become inconsistent as well. One of them has the old view, while the newer one
-has the updated view about the assertion. Note that there is no inconsistency
-between a P-Shard and any other section proving nonexistence if only the
-object value of the assertion has changed (a P-Shard does not store this
-information).
-
-Note that most assertions are consistent between each other as the union of them
-is considered to be the valid state. However, there are few exceptions mentioned
-in {{runtime-consistency-checking}}.
-
-## Message processing {#protocol-processing}
-
-Once a transport is established, any server may validly send a message with
-any content to any other server. A client may send messages containing queries
-to servers, and a server may sent messages containing anything other than
-queries to clients.
-
-Upon receipt of a message, a server or client attempts to parse it.
-
-If the server or client cannot parse the message at all, it returns a 400 Bad
-Message notification to the peer. This notification may have a null token if the
-token cannot be retrieved from the message.
-
-If the server or client can parse the message, it:
-
-- notes the token on the message. This token MUST be present on any
-  messages sent in reply to this message.
-- processes any capabilities present, replacing the set of capabilities known
-  for the peer with the set present in the message. If the present
-  capabilities are represented by a hash that the server does not have in its
-  cache, it prepares a notification of type 399 "Capability hash not
-  understood" to send to its peer.
-- splits the contents into its constituent message sections, and verifies that
-  each is acceptable. Specifically, queries are not accepted by clients (see
-  {{protocol-client}}), and 404 No Assertion Exists notifications are not
-  accepted by servers. If a message contains an unacceptable section, the server
-  or client returns a 400 Bad Message notification to its peer, and ceases
-  processing of the message.
-
-On receipt of an assertion, shard, P-Shard, or zone message section, a
-server:
-
-- verifies its consistency (see {{runtime-consistency-checking}}). If the
-  section is not consistent, it prepares to send a notification of type 403
-  Inconsistent Message to the peer, and discards the section. Otherwise, it:
-- determines whether it answers an outstanding query; if so, it prepares to
-  forward the section to the server that issued the query.
-- determines whether it is likely to answer a future query, according to its
-  configuration, policy, and query history; if so, it caches the section.
-
-On receipt of an assertion, shard, P-Shard or zone message section, a
-client:
-
-- determines whether it answers an outstanding query; if so, it considers the
-  query answered. It then:
-- determines whether it is likely to answer a future query, according to its
-  configuration, policy, and query history; if so, it caches the section.
-
-On receipt of a query, a server:
-
-1. determines whether it has expired by checking the query-expires value. If so,
-   it drops the query silently. If not, it:
-2. determines whether it has at least one stored assertion answering the query.
-   If so, it returns the assertion(s) with the longest validUntil value that is
-   already valid. If not, it:
-3. checks whether the query specifies option 1 and/or 9. If so, it:
-   - determines whether the chosen option is in compliance with the server's
-     configuration and policy. If so, and:
-     - option 9 is set and option 1 is not, it continues with step 4.
-     - option 1 is set, it checks whether it has a cached section to
-       proof nonexistence. If so:
-       - and option 9 is not set, it returns the section with the shortest size
-         or the signature of the longest remaining validity to the peer that
-         issued the query depending on the server's policy. \[EDITOR'S NOTE: Add a
-         query option for this decision?]
-       - and option 9 is set, it might send a 211 notification back to the
-         client, depending on the server's configuration. Independent of the
-         previous decision it then continues with step 4. 
-     If not, the server overwrites the query's option according to its 
-     configuration and policy and processes it as above with the adapted option.
-   If not, it:
-4. checks to see whether the query specifies option 4 (cached answers only). If
-   so, and if option 5 (expired assertions acceptable) is also specified, it
-   then checks to see if it has any cached sections that answer the query on
-   which signatures are expired; otherwise, processing stops, and the server
-   returns a 504 No Assertion Available notification, as if the query had
-   instantly expired. If the query does not specify option 4, delegation
-   proceeds, and the server:
-5. determines whether it has other non-authoritative servers it can forward the
-   query to, according to its configuration and policy, and in compliance with
-   any query options (see {{cbor-query}}). If so, it prepares to forward the
-   query to those servers, noting the reply for the received query depends on
-   the replies for the forwarded query. If not, it:
-6. determines the responsible authority servers for the zone containing the
-   query name in the query for the context requested, and forwards the query to
-   those authority servers, noting the reply for the received query depends on
-   the reply for the forwarded query.
-
-If query delegation fails to return an answer within the maximum of the
-valid-until time in the received query and a configured maximum timeout for a
-delegated query, the server prepares to send a 504 No assertion available
-response to the peer from which it received the query.
-
-When a server creates a new query to forward to another server in response to
-a query it received, it SHOULD NOT use the same token on the delegated query
-as on the received query, unless option 6 Enable Tracing is present in the
-received, in which case it MUST use the same token. The Enable Tracing option
-is designed to allow debugging of query processing across multiple servers, It
-SHOULD only be enabled by clients designed explicitly for debugging RAINS
-itself, and MUST NOT be enabled by default by client resolvers.
-
-When a server creates a new query to forward to another server in response to a
-query it received, and the received query contains a query-expires time, the
-delegated query MUST NOT have a query-expires time after that in the received
-query. If the received query contains no query-expires time, the delegated query
-MAY contain a query- expires time of the server's choosing, according to its
-configuration.
-
-On receipt of an assertion update query, a server:
-
-- determines whether it has expired by checking the query-expires value. If so,
-  it drops the query silently. If not, it:
-- determines whether it is the authoritative server of the queried name. If so,
-  - it checks if the hashed assertion is still the assertion currently valid
-    with the highest validUntil time for the given name, context, type and
-    object value. In that case it returns a 200 notification message which
-    contains the hash value of the assertion. If not, it:
-  - determines whether there is at least one assertion for the same name, type
-    and object value which is already valid and its validUntil time is higher.
-    If so, the assertion with the highest validUntil value is returned. If not:
-  - the assertion must have been revoked in the meantime and either a 210
-    notification message containing the hash value of the assertion or a section
-    proofing nonexistence is returned. If such a section exists it MUST be
-    returned.
-  If not, it:
-- determines whether it has other non-authoritative servers it can forward the
-  query to, according to its configuration and policy. If so, it prepares to
-  forward the query to those servers, noting the reply for the received query
-  depends on the replies for the forwarded query. If not, it:
-- determines the responsible authority servers for the zone containing the query
-  name and forwards the query to those authority servers, noting the reply for
-  the received query depends on the reply for the forwarded query.
-
-If the server does not obtain an answer within the maximum of the valid-until
-time in the received query and a configured maximum timeout for an assertion
-update query, the server sends a 504 No assertion available response to the peer
-from which it received the query.
-
-When a server creates a new assertion update query to forward to another server
-in response to an assertion update query it received, it SHOULD NOT use the same
-token on the new query as on the received query, unless query option 6 Enable
-Tracing is present in the received query, in which case it MUST use the same
-token. The Enable Tracing option is designed to allow debugging of query
-processing across multiple servers, It SHOULD only be enabled by clients
-designed explicitly for debugging RAINS itself, and MUST NOT be enabled by
-default by client resolvers.
-
-When a server creates a new assertion update query to forward to another server
-in response to an assertion update query it received, and the received query
-contains a query-expires time, the new query MUST NOT have a query-expires time
-after that in the received query. If the received query contains no
-query-expires time, the new query MAY contain a query- expires time of the
-server's choosing, according to its configuration.
-
-On receipt of an nonexistence update query, a server:
-
-- determines whether it has expired by checking the query-expires value. If so,
-  it drops the query silently. If not, it:
-- determines whether it is the authoritative server of the queried name. If so,
-  - it checks if it has a valid assertion for the queried context, subject-name
-    and type. In this case it returns the assertion. If not, it:
-  - determines whether it has an already valid zone, P-Shard, or shard in
-    the range of the queried fully-qualified name, in a matching context, and
-    with a higher validUntil value. If so, the section with the highest
-    validUntil value is returned. If not, it:
-  - knows that the received shard, P-Shard, or zone is still the most
-    recent one and a 200 notification message containing the hash value of the
-    section is returned.
-  If not, it:
-- determines whether it has other non-authoritative servers it can forward the
-  query to, according to its configuration and policy. If so, it prepares to
-  forward the query to those servers, noting the reply for the received query
-  depends on the replies for the forwarded query. If not, it:
-- determines the responsible authority servers for the zone containing the query
-  name and forwards the query to those authority servers, noting the reply for
-  the received query depends on the reply for the forwarded query.
-
-If the server does not obtain an answer within the maximum of the valid-until
-time in the received query and a configured maximum timeout for an assertion
-update query, the server sends a 504 No assertion available response to the peer
-from which it received the query.
-
-When a server creates a new nonexistence update query to forward to another
-server in response to an nonexistence update query it received, it SHOULD NOT
-use the same token on the new query as on the received query, unless query
-option 6 Enable Tracing is present in the received query, in which case it MUST
-use the same token. The Enable Tracing option is designed to allow debugging of
-query processing across multiple servers, It SHOULD only be enabled by clients
-designed explicitly for debugging RAINS itself, and MUST NOT be enabled by
-default by client resolvers.
-
-When a server creates a new nonexistence update query to forward to another
-server in response to an nonexistence update query it received, and the
-received query contains a query-expires time, the new query MUST NOT have a
-query-expires time after that in the received query. If the received query
-contains no query-expires time, the new query MAY contain a query- expires time
-of the server's choosing, according to its configuration.
-
-On receipt of a notification, a server's behavior depends on the notification type:
-
-- For type 100 "Connection Heartbeat", the server does nothing: these null
-  messages are used to keep long-lived connections open in the presence of
-  network behaviors that may drop state for idle connections.
-- For type 399 "Capability hash not understood", the server prepares to send a
-  full capabilities list on the next message it sends to the peer.
-- For type 504 "No assertion available", the server checks the token on the
-  message, and prepares to forward the assertion to the associated query.
-- For type 413 "Message too large" the server notes that large messages may not
-  be sent to a peer and tries again (see {{protocol-limits}}), or logs the error
-  along with the note-data content.
-- For type 400 "Bad message", type 403 "Inconsistent message", type 500
-  "Server error", or type 501 "Server not capable", the server logs the error
-  along with the note-data content, as these notifications generally represent
-  implementation or configuration error conditions which will require human
-  intervention to mitigate.
-
-On receipt of a notification, a client's behavior depends on the notification type:
-
-- For type 100 "Connection Heartbeat", the client does nothing, as above.
-- For type 399 "Capability hash not understood", the client prepares to send a
-  full capabilities list on the next message it sends to the peer.
-- For type 404 "No assertion exists", the client takes the query to be
-  unanswerable. It may reissue the query with query option 7 to do the
-  verification of nonexistence again, if the server from which it received the
-  notification is untrusted.
-- For type 413 "Message too large" the client notes that large messages may 
-  not be sent to a peer and tries again (see {{protocol-limits}}), or logs
-  the error along with the note-data content.
-- For type 400 "Bad message", type 403 "Inconsistent message", type 500
-  "Server error", or type 501 "Server not capable", the client logs the error
-  along with the note-data content, as these notifications generally represent
-  implementation or configuration error conditions which will require human
-  intervention to mitigate.
-
-The first message a server or client sends to a peer after a new connection is
-established SHOULD contain a capabilities section, if the server or client
-supports any optional capabilities. See {{cbor-capabilities}}.
-
-If the server is configured to keep long-running connections open, due to the
-presence of network behaviors that may drop state for idle connections, it
-SHOULD send a message containing a type 100 Connection Heartbeat notification
-after a configured idle time without any messages containing other content
-being sent.
-
-In general, servers should follow the principles laid out in
-{{?I-D.iab-protocol-maintenance}}. A malformed message section, or a message
-section with any invalid (but not expired) signature, should be dropped and log.
-A malformed message section or invalid signature should not, however, result in
-other sections in the same message being dropped, except as explicitly noted
-above.
-
-## Message Transmission
-
-As noted in {{protocol-processing}} many messages are sent in reply to messages
-received from peers. Servers may also originate messages on their own, based
-on their configuration and policy:
-
-- Proactive queries to retrieve assertions, shards, and zones for which all
-  signatures have expired or will soon expire, for cache management purposes.
-- Proactive push of assertions, shards, and zones to other servers, based on
-  query history or other information indicating those servers may query for
-  the assertions they contain.
-
-## Message Limits {#protocol-limits}
-
-RAINS servers MUST accept messages up to 65536 bytes in length, but MAY accept
-messages of greater length, subject to resource limitations of the server. A
-server with resource limitations MUST respond to a message rejected due to
-length restrictions with a notification of type 413 (Message Too Large). A
-server that receives a type 413 notification must note that the peer sending
-the message only accepts messages smaller than the largest message it's
-successfully sent that peer, or cap messages to that peer to 65536 bytes in
-length.
-
-Since a singular assertion with a single Ed25519 signature requires on the order of
-180 bytes, it is clear that many full zones won't fit into a single minimum
-maximum-size message. Authorities are therefore encouraged to publish zones
-grouped into shards that will fit into 65536-byte messages, to allow servers
-to reply using these shards when full-zone transfers are not possible due to
-message size limitations.
-
-## Runtime Consistency Checking
-
-The data model used by the RAINS protocol allows inconsistent information to
-be asserted, all resulting from misconfigured or misbehaving authority
-servers. The following types of inconsistency are possible:
-
-- A shard omits an assertion within its range which is valid at the same
-  time as the shard.
-- A zone omits an assertion within its zone which is valid at the same time
-  as the zone.
-- An address assertion contains an object that is not allowed (see {{cbor-revassert}})
-- An assertion prohibited by its zone's nameset is valid at the same time
-  as the zone's nameset assertion.
-- A zone contains a valid reflexive assertion of a given object type at the same
-  time that its superordinate zone contains a valid assertion of the same type.
-- Delegations to more than one key are simultaneously valid for a given context,
-  zone, signature algorithm, and key phase.
-
-RAINS relies on runtime consistency checking to mitigate inconsistency: each
-server receiving an assertion, shard, or zone SHOULD, subject to resource
-constraints, ensure that it is consistent with other information it has, and if
-not, discard all inconsistent assertions, shards, and zones in its cache, log
-the error, and send a 403 Inconsistent Message to the source of the message.
+The following subsections discuss issues that must be considered in any
+deployment of RAINS at scale.
 
 ## Integrity and Confidentiality Protection
 
@@ -2450,46 +2438,6 @@ root to the signature on any assertion it gives to a peer or a client, whether
 as additional assertions on a message answering a query, or in reply to a
 subsequent query. This property allows RAINS servers to maintain a full
 delegation tree.
-
-# RAINS Client Protocol {#protocol-client}
-
-The protocol used by clients to issue queries to and receive responses from a
-query service is a subset of the full RAINS protocol, with the following
-differences:
-
-- Clients only process assertion, shard, zone, and notification sections;
-  sending a query to a client results in a 400 Bad Message notification.
-- Clients never listen for connections; a client must initiate and maintain a
-  transport session to the query server(s) it uses for name resolution.
-- Servers only process query and notification sections when connected to
-  clients; a client sending assertions to a server results in a 400 Bad
-  Message notification.
-
-Since signature verification is resource-intensive, clients delegate signature
-verification to query servers by default. The query server signs the message
-containing results for a query using its own key (published as an infrakey
-object associated with the query server's name), and a validity time
-corresponding to the signature it verified with the longest lifetime,
-stripping other signatures from the reply. This behavior can be disabled by a
-client by specifying query option 7, allowing the client to do its own
-verification.
-
-# RAINS Publication Protocol {#protocol-publish}
-
-The protocol used by authorities to publish assertions to an authority service
-is a subset of the full RAINS protocol, with the following differences:
-
-- Servers only process assertion, shard, zone, and notification sections when
-  connected to publishers; sending a query to a server via the publication
-  procotol results in a 400 Bad Message notification. Servers only process
-  notifications for capability negotiation purposes (see {{cbor-capabilities}}).
-- Publishers only process notification sections; sending a query or assertion to
-  a publisher results in a 400 Bad Message notification.
-
-# Deployment Considerations
-
-The following subsections discuss issues that must be considered in any
-deployment of RAINS at scale.
 
 ## Assertion Lifetime Management
 
@@ -2672,67 +2620,4 @@ Second, deployment of RAINS "islands" in the present Internet alongside DNS on
 a per-domain basis would allow for comparison between operational and
 implementation complexity and efficiency and benefits derived from RAINS'
 features, as information for future development of the DNS protocol.
-
-# IANA Considerations
-
-The present revision of this document has no actions for IANA.
-
-The authors have registered the CBOR tag 15309736 to identify RAINS messages
-in the CBOR tag registry at 
-https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml.
-
-RAINS servers currently listen for connections from other servers on Port
-1022. Future revisions of this document may specify a different port,
-registered with IANA via Expert Review {{?RFC5226}}.
-
-The symbol table in this document in {{cbor-symtab}}, the notification code
-table in {{cbor-notification}}, and the signature algorithm table in 
-{{cbor-signature}} may be candidates for IANA registries in future revisions 
-of this document.
-
-The urn:x-rains namespace used by the RAINS capability mechanism in 
-{{cbor-capabilities}} may be a candidate for replacement with an IANA-registered
-namespace in a future revision of this document.
-
-# Security Considerations
-
-This document specifies a new, experimental protocol for Internet name
-resolution, with mandatory integrity protection for assertions about names
-built into the information model, and confidentiality for query information
-protected on a hop-by-hop basis. See especially {{signatures-in-assertions}},
-{{integrity-and-confidentiality-protection}}, {{cbor-signature}},
-{{cbor-certinfo}}, and {{secret-key-management}} for security-relevant details.
-
-With respect to the resistance of the protocol itself to various attacks, we
-consider a few potential attacks against RAINS servers and RAINS clients in the
-subsections below:
-
-## Server state exhaustion
-
-\[EDITOR'S NOTE: detail this attack: attacker can create domain, use
-long-validity queries to exhaust state at server. defense: server can consider
-shorter validity time than that requested, but not longer. attack: attacker can
-push garbage assertions proactively. defense: server doesn't accept assertions
-it's never seen a query for. how to handle an attacker that pushes assertions
-and queries? attack: attacker can push garbage delegations, exhausting
-delegation chain cache. defense: server doesn't accept sigs for domains it
-doesn't know about, but what about a domain with hundreds of valid delegations?
-in all cases, blacklisting both clients and domains seems like a good idea.]
-
-## Query relay attacks
-
-\[EDITOR'S NOTE: detail this attack: attacker can cause traffic overload at a
-targeted intermediate or authority service by crafting queries and sending them
-via multiple query services. There is no amplification here, but a
-concentration, with indirection that makes tracing difficult.]
-
-# Acknowledgments
-
-Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Ted Hardie, Joe
-Hildebrand, Tobias Klausmann, Steve Matsumoto, Adrian Perrig, Raphael Reischuk,
-Wendy Seltzer, Andrew Sullivan, and Suzanne Woolf for the discussions leading to
-the design of this protocol, and the definition of an ideal naming service on
-which it is based. Thanks especially to Stephen Shirley for detailed feedback.
-
---- back
 
