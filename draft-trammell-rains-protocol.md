@@ -660,9 +660,7 @@ represent RAINS messages and data structures for debugging purposes. However,
 signatures over messages and assertions need a single canonical representation
 of the object to be signed as a bitstream. For RAINS, this is the CBOR
 representation canonicalized as in {{c14n}}; therefore alternate
-representations are always secondary to the CBOR data model. An alternate
-representation designed for textual manipulation of RAINS data is described in
-{{zonefiles}}.
+representations are always secondary to the CBOR data model. 
 
 The following subsections describe the information and data model of a RAINS
 message from the top down.
@@ -1082,7 +1080,10 @@ superordinate zone will take precedence.
 
 ### Address Assertions {#revassertions}
 
-\[EDITOR'S NOTE move up from old content, below]
+Reverse naming services in RAINS will be covered in a future revision of this
+document; a non-normative, older version of the reverse naming service
+specification, which gives the broad outline of the design, can be found in
+{{reverse}}.
 
 ## Object Types and Encodings {#obj-types}
 
@@ -1480,9 +1481,6 @@ would go down in the "operational considerations" section]
 
 ### Confirmation Queries {#confirmation}
 
-\[EDITOR'S NOTE: make sure we actually need the hash - why is a timestamp not
-sufficient here?]
-
 A Query containing a current-time key is a confirmation query, used by a server
 to refresh a cached query result. The querier passes the timestamp of the most
 recent result it has cached, taken from the most recent start time of the
@@ -1527,7 +1525,10 @@ and is a subject for future work.
 
 ### Address Queries {#revqueries}
 
-\[EDITOR'S NOTE: write me]
+Reverse naming services in RAINS will be covered in a future revision of this
+document; a non-normative, older version of the reverse naming service
+specification, which gives the broad outline of the design, can be found in
+{{reverse}}.
 
 ## Notifications {#notifications}
 
@@ -1554,6 +1555,7 @@ The value of the note-type key is encoded as an integer as in the
 | 400  | Bad message received                 | {{errors}}       |
 | 403  | Inconsistent message received        | {{consistency}}  |
 | 404  | No assertion exists                  | {{client-proto}} |
+| 406  | Message not acceptable for service   | {{errors}} {{client-proto}} {{pub-proto}} | 
 | 413  | Message too large                    | {{errors}}       |
 | 500  | Unspecified server error             | {{errors}}       |
 | 501  | Server not capable                   | {{capabilities}} |
@@ -1779,10 +1781,6 @@ using a given transport protocol; servers and clients can also learn this
 information from RAINS itself (given redirection and service-info assertions for
 a named zone) or from external configuration.
 
-# Zone File Format {#zonefiles}
-
-\[EDITOR'S NOTE: derive this from the zonefile parser]
-
 # RAINS Protocol {#protocol}
 
 RAINS is a message-exchange protocol based around a CBOR data model. Since CBOR
@@ -1883,11 +1881,10 @@ any content to any other server. A client may send messages containing queries
 to servers, and a server may sent messages containing anything other than
 queries to clients.
 
-Upon receipt of a message, a server or client attempts to parse it.
-
-If the server or client cannot parse the message at all, it returns a 400 Bad
-Message notification to the peer. This notification may have a null token if the
-token cannot be retrieved from the message.
+Upon receipt of a message, a server or client attempts to parse it. If the
+server or client cannot parse the message at all, it returns a 400 Bad Message
+notification to the peer. This notification may have a null token if the token
+cannot be retrieved from the message.
 
 If the server or client can parse the message, it:
 
@@ -2060,19 +2057,18 @@ on their configuration and policy:
 
 ## Client Protocol {#client-proto}
 
-\[EDITOR'S NOTE: check and fix up the following]
-
 The protocol used by clients to issue queries to and receive responses from a
 query service is a subset of the full RAINS protocol, with the following
 differences:
 
 - Clients only process assertion, shard, zone, and notification sections;
-  sending a query to a client results in a 400 Bad Message notification.
-- Clients never listen for connections; a client must initiate and maintain a
-  transport session to the query server(s) it uses for name resolution.
+  sending a query to a client results in a 406 Unacceptable notification.
+- Clients never listen for connections via TCP; a client must initiate and
+  maintain a transport session to the query server(s) it uses for name
+  resolution.
 - Servers only process query and notification sections when connected to
-  clients; a client sending assertions to a server results in a 400 Bad
-  Message notification.
+  clients; a client sending assertions to a server results in a 406 Unacceptable
+  notification.
 
 Since signature verification is resource-intensive, clients delegate signature
 verification to query servers by default. The query server signs the message
@@ -2085,19 +2081,15 @@ verification.
 
 ## Publication Protocol {#pub-proto}
 
-\[EDITOR'S NOTE: check and fix up the following; we probably don't need bad
-message here, or we need a different error that means "inappropriate message for
-this connection?"]
-
 The protocol used by authorities to publish assertions to an authority service
 is a subset of the full RAINS protocol, with the following differences:
 
 - Servers only process assertion, shard, zone, and notification sections when
   connected to publishers; sending a query to a server via the publication
-  procotol results in a 400 Bad Message notification. Servers only process
+  procotol results in a 406 Unacceptable notification. Servers only process
   notifications for capability negotiation purposes (see {{cbor-capabilities}}).
 - Publishers only process notification sections; sending a query or assertion to
-  a publisher results in a 400 Bad Message notification.
+  a publisher results in a 406 Unacceptable notification.
 
 ## Enforcing Assertion Consistency {#consistency}
 
@@ -2169,11 +2161,33 @@ in {{runtime-consistency-checking}}.
 
 # Operational Considerations
 
+The following subsections discuss issues that must be considered in any
+deployment of RAINS at scale.
+
 ## Discovering RAINS servers
 
-## Bootstrapping RAINS Services {#bootstrapping}
+A client that will not do its own verification must be able to discover the
+query server(s) it should trust for resolution. There are three broad approaches
+to this discovery process: (1) static client configuration; (2) server
+configuration as part of dynamic host interface configuration, such as DHCP or
+provisioning domains; (3) discovery of a RAINS server as an optional service,
+for example using mDNS. Integration with any of these approaches is 
 
-\[EDITOR'S NOTE: check and expand]
+In any case, clients MUST provide a configuration interface to allow a user to
+specify (by address or name) and/or constrain (by certificate property) a
+preferred/trusted query server. This would allow client on an untrusted network
+to use an untrusted locally-available query server to discover a preferred query
+server (doing key verification on its own for bootstrapping), before connecting
+to that query server for normal name resolution.
+
+Servers providing query and intermediate service also discover other
+intermediate servers through static configuration, or through an external,
+unspecified discovery protocol. 
+
+Servers providing query and intermediate service discover servers providing
+authority service as in {{bootstrapping}}, below.
+
+## Bootstrapping RAINS Services {#bootstrapping}
 
 At startup, a server performing recursive lookup MUST have access to at least
 one of each of these three assertion types: a self-signed delegation assertion
@@ -2188,247 +2202,6 @@ When a zone authority delegates a part of its namespace to a subordinate, it
 MUST sign and serve the assertions of the three above mentioned types. This
 information is necessary for a recursive resolver to determine in a recursive
 lookup where to ask for a more specific answer and to validate the response.
-
-# Security Considerations
-
-\[EDITOR'S NOTE: check and fix up]
-
-This document specifies a new, experimental protocol for Internet name
-resolution, with mandatory integrity protection for assertions about names
-built into the information model, and confidentiality for query information
-protected on a hop-by-hop basis. See especially {{signatures-in-assertions}},
-{{integrity-and-confidentiality-protection}}, {{cbor-signature}},
-{{cbor-certinfo}}, and {{secret-key-management}} for security-relevant details.
-
-With respect to the resistance of the protocol itself to various attacks, we
-consider a few potential attacks against RAINS servers and RAINS clients in the
-subsections below:
-
-## Server state exhaustion
-
-\[EDITOR'S NOTE: detail this attack: attacker can create domain, use
-long-validity queries to exhaust state at server. defense: server can consider
-shorter validity time than that requested, but not longer. attack: attacker can
-push garbage assertions proactively. defense: server doesn't accept assertions
-it's never seen a query for. how to handle an attacker that pushes assertions
-and queries? attack: attacker can push garbage delegations, exhausting
-delegation chain cache. defense: server doesn't accept sigs for domains it
-doesn't know about, but what about a domain with hundreds of valid delegations?
-in all cases, blacklisting both clients and domains seems like a good idea.]
-
-## Query relay attacks
-
-\[EDITOR'S NOTE: detail this attack: attacker can cause traffic overload at a
-targeted intermediate or authority service by crafting queries and sending them
-via multiple query services. There is no amplification here, but a
-concentration, with indirection that makes tracing difficult.]
-
-# IANA Considerations
-
-The present revision of this document has no actions for IANA.
-
-The authors have registered the CBOR tag 15309736 to identify RAINS messages
-in the CBOR tag registry at 
-https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml.
-
-RAINS servers currently listen for connections from other servers by default on
-TCP port 7753. This port has not been registered with IANA, and is intended only
-for experimentation with RAINS on closed, non-Internet-connected networks.
-Future revisions of this document may specify a different port, registered with
-IANA via Expert Review {{?RFC5226}}.
-
-The urn:x-rains namespace used by the RAINS capability mechanism in 
-{{cbor-capabilities}} may be a candidate for replacement with an IANA-registered
-namespace in a future revision of this document.
-
-# Acknowledgments
-
-Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Ted Hardie, Joe
-Hildebrand, Tobias Klausmann, Steve Matsumoto, Adrian Perrig, Raphael Reischuk,
-Wendy Seltzer, Andrew Sullivan, and Suzanne Woolf for the discussions leading to
-the design of this protocol, and the definition of an ideal naming service on
-which it is based. Thanks especially to Stephen Shirley for detailed feedback.
-
-
-
-
---- back
-
-# Reverse Name Service in RAINS
-
-Content in this section is taken from the old revision of the RAINS document,
-and covers reverse service. Figure out where to put it.
-
-## Address to Object Mapping
-
-In contrast to the current domain name system, information about addresses is
-stored in a completely separate tree, keyed by address and prefix. An address
-assertion consists of the following elements:
-
-- Context: name of the context in which the assertion is valid;
-  see {{context-in-address-assertions}}.
-- Subject: address about which the assertion is made, consisting of an address
-  family, address, and prefix length. A subject may be a network address (where
-  the prefix length is less than the address length for the given address
-  family) or a host address (where the prefix length is equal to the address
-  length for the given address family)
-- Type: the type of information about the Subject contained in the assertion.
-  Each Assertion is about a single type of data.
-- Object: the data of the indicated type associated with the Subject
-- Signatures: one or more signatures generated by the authority for the
-  Assertion. Signatures contain a time interval during which they are considered
-  valid, as in {{signatures-in-assertions}}.
-
-The following object types are available:
-
-- Delegation: the authority associated with the subject network address. The
-  Object contains a public key by which the authority can be identified. Only
-  available for network address subjects.
-- Redirection: The name(s) of one or more RAINS servers providing authority
-  service for the authority associated with the subject network address. The
-  Object contains a set of names. Only available for network address subjects.
-- Name: one or more names associated with the subject network address.
-  The Object contains a set of names. Only available for host address subjects.
-- Zone-Registrant: Information about the organization responsible for a network.
-  Only available for network address subjects.
-
-Queries for addresses are similar to those for names, and consist of the following information elements:
-
-- Context: Context in which the query is made; this must match the assertion
-  context as in {{context-in-address-assertions}}.
-- Subject: the address about which the query is made, consisting of an address
-  family, address, and prefix length.
-- Types: a set of assertion types the querier is interested in, as above.
-- Valid-Until: an optional client-generated timestamp for the query after which
-  it expires and should not be answered.
-- Query Token: a client-generated token for the query, which can be used
-  in the answer to refer to the query.
-
-### Context in Address Assertions
-
-Just as in forward Assertions, Assertion contexts are used in address
-assertions to determine the scope of an address assertion, and the signature
-chain used to verify it.
-
-- The global addressing context for each address family is identified by the
-  special context name '.'. For both IPv4 and IPv6 addresses, this is rooted at
-  IANA, which delegates to the RIRs, which then delegates to LIRs and to
-  address-holding registries.
-- Local contexts associated with a given authority in a forward tree can also
-  make assertions about addresses. As with contexts in forward assertions, the
-  authority-part and the context-part of a local context name are divided by a
-  context marker ('cx--'). The authority-part directly identifies the authority
-  whose key was used to sign the address assertion; address assertions within a
-  local context are only valid if signed by the identified authority.
-  Authorities have complete control over how the contexts under their
-  numberspaces are arranged, and over the addresses within those contexts.
-
-Each local context may have a root address space zone (0/0), but these root
-address spaces may only delegate addresses that are reserved for local use
-{{!RFC1918}} {{!RFC4193}}. Local context assertions for other addresses are
-invalid.
-
-
-## Address Assertion body {#cbor-revassert}
-
-Assertions about addresses are similar to assertions about names, but keyed by
-address and restricted in terms of the objects they can contain. An Address
-Assertion body is a map which MUST contain the signatures (0), subject-addr (5),
-context (6), and objects (7) keys.
-
-The value of the signatures (0) key is an array of one or more Signatures as
-defined in {{cbor-signature}}.
-
-The value of the subject-addr (5) key is a three element CBOR array. The first
-element of the array is the address family encoded as an object type, 2 for
-IPv6 addresses and 3 for IPv4 addresses. The second element is the prefix
-length encoded as an integer, 0-128 for IPv6 and 0-32 for IPv4. The third
-element is the address, encoded as in {{cbor-object}}. Subject addresses with
-the maximum prefix length for the address family are subject host addresses,
-and are nameable; subject addresses with less than the maximum prefix length
-are subject network addresses, and are delegatable.
-
-The value of the context (6) key is a UTF-8 string containing the name of the
-context in which the Address Assertion is valid. See
-{{context-in-address-assertions}}.
-
-The value of the objects (7) key is an array of objects, as defined in
-{{cbor-object}}. Only object types redirection, delegation, and registrant are
-available for subject network addresses, and only object type name is
-available for subject host addresses.
-
-## Address Query body {#cbor-revquery}
-
-Queries for assertions about addresses are similar to queries for assertions
-about names, but have semantic restrictions similar to those for Address
-Assertions.
-
-An Address Query body is a map. Queries MUST contain the subject-addr (5),
-context (6), query-types (10), and query-expires (12) keys. Address Queries MAY
-contain query-opts (13) key.
-
-The value of the subject-addr (5) key is a three-element CBOR array. The first
-element of the array is the address family encoded as an object type, 2 for
-IPv6 addresses and 3 for IPv4 addresses. The second element is the prefix
-length encoded as an integer, 0-128 for IPv6 and 0-32 for IPv4. The third
-element is the address, encoded as in {{cbor-object}}.
-
-The value of the context (6) key is a UTF-8 encoded string containing the name
-of the context for which the Query is valid. Unlike queries for names, Address
-Queries can only pertain to a single context. See
-{{context-in-address-assertions}} for more.
-
-The value of the query-types (10) key is an array of integers encoding the
-type(s) of objects (as in {{cbor-object}}) acceptable in answers to the query.
-All values in the query-type array are treated at equal priority: \[4,5] means
-the querier is equally interested in both redirection and delegation for the
-subject-addr. An empty query-types array indicates that objects of any type are
-acceptable in answers to the query.
-
-The value of the query-expires (12) key is a CBOR integer
-counting seconds since the UNIX epoch UTC, identified with tag value 1 and
-encoded as in section 2.4.1 of {{!RFC7049}}. After the query-expires time, the
-query will have been considered not answered by the original issuer.
-
-The value of the query-opts (13) key, if present, is an array of integers in
-priority order of the querier's preferences in tradeoffs in answering the
-query, as in {{tabqopts}}. See {{cbor-query}} for more.
-
-An Address Assertion with a more-specific prefix is preferred over a
-less-specific in response to a Address Query.
-
-# Deployment Considerations
-
-The following subsections discuss issues that must be considered in any
-deployment of RAINS at scale.
-
-## Integrity and Confidentiality Protection
-
-Assertions are not valid unless they contain at least one signature that can
-be verified from the chain of authorities specified by the name and context on
-the assertion; integrity protection is built into the information model. The
-infrastructure key object type allows keys to be associated with RAINS
-servers in addition to zone authorities, which allows a client to
-delegate integrity verification of assertions to a trusted query service (see
-{{protocol-client}}).
-
-Since the job of an Internet naming service is to provide publicly-available
-information mapping names to information needed to connect to the services
-they name, confidentiality protection for assertions is not a goal of the
-system. Specifically, the information model and the mechanism for proving
-nonexistence of an assertion is not designed to provide resistance against
-zone enumeration.
-
-On the other hand, confidentiality protection of query information is crucial.
-Linking naming queries to a specific user can be nearly as useful to build a
-profile of that user for surveillance purposes as full access to the clear
-text of that client's communications {{?RFC7624}}. In this revision, RAINS uses
-TLS to protect communications between servers and between servers and clients,
-with certificate information for RAINS infrastructure stored in RAINS itself.
-Together with hop-by-hop confidentiality protection, query options, proactive
-caching, default use of non-persistent tokens, and redirection among servers
-can be used to mix queries and reduce the linkability of query information to
-specific clients.
 
 ## Cooperative Delegation Distribution
 
@@ -2521,83 +2294,6 @@ its business relationship with the subordinate. The subordinate can discover
 this, in turn, using its own RAINS queries, or through the delegation assertions
 being similarly pushed to a designated intermediate service.
 
-## Unsigned Contained Assertions
-
-Although RAINS supports Shards and Zones containing unsigned assertions,
-protecting the integrity of those Assertions by the signature on the Shard or
-Zone, it is RECOMMENDED that authorities sign each Assertion, even those
-contained within a Shard or Zone, in order to minimize the size of positive
-answers to queries.
-
-## Query Service Discovery
-
-A client that will not do its own verification must be able to discover the
-query server(s) it should trust for resolution. Integration with DHCP is left
-to a future revision of this document.
-
-In any case, clients MUST provide a configuration interface to allow a user to
-specify (by address or name) and/or constrain (by certificate property) a
-preferred/trusted query server. This would allow client on an untrusted network
-to use an untrusted locally-available query server to discover a preferred query
-server (doing key verification on its own for bootstrapping), before connecting
-to that query server for normal name resolution.
-
-## Transition using translation between RAINS and DNS information models {#dns-transition}
-
-Full adoption of RAINS would require changes to every client device (replacing
-DNS stub resolvers with RAINS clients) and name server on the Internet. In
-addition, most client software would need to change, as well, to get the full
-benefits of explicit context in name resolution. This is an unrealistic goal.
-
-RAINS servers can, however, coexist with Domain Name System servers and
-clients during an indefinite transition period. RAINS assertions can be
-algorithmically translated into DNS answers, and RAINS queries can be
-algorithmically translated into DNS queries, by RAINS to DNS gateways, given
-the mostly compatible information models used by the two.
-
-While DNSSEC and RAINS keys for equivalent ciphersuites are compatible with
-each other, there is no equivalent to query option 7 for gateways, since the
-RAINS signatures are generated over the RAINS byte stream for an assertion, not
-the DNS byte stream. Therefore, RAINS to DNS gateways must provide verification
-services for DNS clients. DNS over TLS {{?RFC7858}} SHOULD be used between the
-DNS client and gateway to ensure confidentiality and integrity for queries and
-answers.
-
-Object type mappings are as follows:
-
-- Objects of type name can (largely) be represented as CNAME RRs.
-- Objects of type ip6-addr can be represented as AAAA RRs.
-- Objects of type ip4-addr can be represented as A RRs.
-- Objects of type redirection can be represented as NS RRs.
-- Objects of type cert-info can be represented as TLSA RRs 
-- Objects of type service-info can be represented as SRV RRs.
-
-There are a few object types without mappings:
-
-- Objects of type delegation can be represented as DS RRs, and signatures as
-  RRSIG RRs, but since these keys are verified by the gateway, there is no need
-  to represent this information to the client.
-- Objects of type infrakey cannot be represented in DNS, but are irrelevant for
-  DNS translation of RAINS messages, since DNS does not support server signing
-  of responses.
-- Objects of type registrar and registrant cannot be represented in DNS; clients
-  can use WHOIS instead. In addition, RRTYPEs could be added for them in the
-  future if RAINS sees significant deployment with DNS as a front-end protocol.
-- Objects of type nameset cannot be represented in DNS; the current equivalent
-  are the IDNA parameters maintained by IANA (for the DNS root zone only) at
-  https://www.iana.org/assignments/idna-tables-6.3.0/idna-tables-6.3.0.xhtml.
-
-When translating a DNS query from a client to a RAINS query for that client,
-client options can be set on a per-server, per-client, or per-query basis
-using some out of band configuration options.
-
-When translating a RAINS assertion to a DNS answer, the gateway can use the
-time to expiry for the verified signature as the TTL.
-
-There is no method for exposing context information in a DNS query or answer.
-Therefore, queries and answers at a RAINS gateway are only supported for the
-global context ".".
-
 # Experimental Design and Evaluation
 
 The protocol described in this document is intended primarily as a prototype
@@ -2621,3 +2317,234 @@ a per-domain basis would allow for comparison between operational and
 implementation complexity and efficiency and benefits derived from RAINS'
 features, as information for future development of the DNS protocol.
 
+# Security Considerations
+
+This document specifies a new, experimental protocol for Internet name
+resolution, with mandatory integrity protection for assertions about names
+built into the information model, and confidentiality for query information
+protected on a hop-by-hop basis.
+
+## Integrity and Confidentiality Protection
+
+Assertions are not valid unless they contain at least one signature that can
+be verified from the chain of authorities specified by the name and context on
+the assertion; integrity protection is built into the information model. The
+infrastructure key object type allows keys to be associated with RAINS
+servers in addition to zone authorities, which allows a client to
+delegate integrity verification of assertions to a trusted query service (see
+{{protocol-client}}).
+
+Since the job of an Internet naming service is to provide publicly-available
+information mapping names to information needed to connect to the services
+they name, confidentiality protection for assertions is not a goal of the
+system. Specifically, the information model and the mechanism for proving
+nonexistence of an assertion is not designed to provide resistance against
+zone enumeration.
+
+On the other hand, confidentiality protection of query information is crucial.
+Linking naming queries to a specific user can be nearly as useful to build a
+profile of that user for surveillance purposes as full access to the clear
+text of that client's communications {{?RFC7624}}. In this revision, RAINS uses
+TLS to protect communications between servers and between servers and clients,
+with certificate information for RAINS infrastructure stored in RAINS itself.
+Together with hop-by-hop confidentiality protection, query options, proactive
+caching, default use of non-persistent tokens, and redirection among servers
+can be used to mix queries and reduce the linkability of query information to
+specific clients.
+
+With respect to the resistance of the protocol itself to various attacks, we
+consider a few potential attacks against RAINS servers and RAINS clients in the
+subsections below:
+
+## Server state exhaustion
+
+\[EDITOR'S NOTE: detail this attack: attacker can create domain, use
+long-validity queries to exhaust state at server. defense: server can consider
+shorter validity time than that requested, but not longer. attack: attacker can
+push garbage assertions proactively. defense: server doesn't accept assertions
+it's never seen a query for. how to handle an attacker that pushes assertions
+and queries? attack: attacker can push garbage delegations, exhausting
+delegation chain cache. defense: server doesn't accept sigs for domains it
+doesn't know about, but what about a domain with hundreds of valid delegations?
+in all cases, blacklisting both clients and domains seems like a good idea.]
+
+## Query relay attacks
+
+\[EDITOR'S NOTE: detail this attack: attacker can cause traffic overload at a
+targeted intermediate or authority service by crafting queries and sending them
+via multiple query services. There is no amplification here, but a
+concentration, with indirection that makes tracing difficult.]
+
+# IANA Considerations
+
+The present revision of this document has no actions for IANA.
+
+The authors have registered the CBOR tag 15309736 to identify RAINS messages
+in the CBOR tag registry at 
+https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml.
+
+RAINS servers currently listen for connections from other servers by default on
+TCP port 7753. This port has not been registered with IANA, and is intended only
+for experimentation with RAINS on closed, non-Internet-connected networks.
+Future revisions of this document may specify a different port, registered with
+IANA via Expert Review {{?RFC5226}}.
+
+The urn:x-rains namespace used by the RAINS capability mechanism in 
+{{cbor-capabilities}} may be a candidate for replacement with an IANA-registered
+namespace in a future revision of this document.
+
+# Acknowledgments
+
+Thanks to Daniele Asoni, Laurent Chuat, Markus Deshon, Ted Hardie, Joe
+Hildebrand, Tobias Klausmann, Steve Matsumoto, Adrian Perrig, Raphael Reischuk,
+Wendy Seltzer, Andrew Sullivan, and Suzanne Woolf for the discussions leading to
+the design of this protocol, and the definition of an ideal naming service on
+which it is based. Thanks especially to Stephen Shirley for detailed feedback.
+
+
+
+
+--- back
+
+# Reverse Name Service in RAINS {reverse}
+
+Content in this section is taken from the old revision of the RAINS document,
+and covers reverse service. It will be reworked and moved into the main document
+in a future revision of the document.
+
+## Address to Object Mapping
+
+In contrast to the current domain name system, information about addresses is
+stored in a completely separate tree, keyed by address and prefix. An address
+assertion consists of the following elements:
+
+- Context: name of the context in which the assertion is valid;
+  see {{context-in-address-assertions}}.
+- Subject: address about which the assertion is made, consisting of an address
+  family, address, and prefix length. A subject may be a network address (where
+  the prefix length is less than the address length for the given address
+  family) or a host address (where the prefix length is equal to the address
+  length for the given address family)
+- Type: the type of information about the Subject contained in the assertion.
+  Each Assertion is about a single type of data.
+- Object: the data of the indicated type associated with the Subject
+- Signatures: one or more signatures generated by the authority for the
+  Assertion. Signatures contain a time interval during which they are considered
+  valid, as in {{signatures-in-assertions}}.
+
+The following object types are available:
+
+- Delegation: the authority associated with the subject network address. The
+  Object contains a public key by which the authority can be identified. Only
+  available for network address subjects.
+- Redirection: The name(s) of one or more RAINS servers providing authority
+  service for the authority associated with the subject network address. The
+  Object contains a set of names. Only available for network address subjects.
+- Name: one or more names associated with the subject network address.
+  The Object contains a set of names. Only available for host address subjects.
+- Zone-Registrant: Information about the organization responsible for a network.
+  Only available for network address subjects.
+
+Queries for addresses are similar to those for names, and consist of the following information elements:
+
+- Context: Context in which the query is made; this must match the assertion
+  context as in {{context-in-address-assertions}}.
+- Subject: the address about which the query is made, consisting of an address
+  family, address, and prefix length.
+- Types: a set of assertion types the querier is interested in, as above.
+- Valid-Until: an optional client-generated timestamp for the query after which
+  it expires and should not be answered.
+- Query Token: a client-generated token for the query, which can be used
+  in the answer to refer to the query.
+
+### Context in Address Assertions
+
+Just as in forward Assertions, Assertion contexts are used in address
+assertions to determine the scope of an address assertion, and the signature
+chain used to verify it.
+
+- The global addressing context for each address family is identified by the
+  special context name '.'. For both IPv4 and IPv6 addresses, this is rooted at
+  IANA, which delegates to the RIRs, which then delegates to LIRs and to
+  address-holding registries.
+- Local contexts associated with a given authority in a forward tree can also
+  make assertions about addresses. As with contexts in forward assertions, the
+  authority-part and the context-part of a local context name are divided by a
+  context marker ('cx--'). The authority-part directly identifies the authority
+  whose key was used to sign the address assertion; address assertions within a
+  local context are only valid if signed by the identified authority.
+  Authorities have complete control over how the contexts under their
+  numberspaces are arranged, and over the addresses within those contexts.
+
+Each local context may have a root address space zone (0/0), but these root
+address spaces may only delegate addresses that are reserved for local use
+{{!RFC1918}} {{!RFC4193}}. Local context assertions for other addresses are
+invalid.
+
+## Address Assertion body {#cbor-revassert}
+
+Assertions about addresses are similar to assertions about names, but keyed by
+address and restricted in terms of the objects they can contain. An Address
+Assertion body is a map which MUST contain the signatures (0), subject-addr (5),
+context (6), and objects (7) keys.
+
+The value of the signatures (0) key is an array of one or more Signatures as
+defined in {{cbor-signature}}.
+
+The value of the subject-addr (5) key is a three element CBOR array. The first
+element of the array is the address family encoded as an object type, 2 for
+IPv6 addresses and 3 for IPv4 addresses. The second element is the prefix
+length encoded as an integer, 0-128 for IPv6 and 0-32 for IPv4. The third
+element is the address, encoded as in {{cbor-object}}. Subject addresses with
+the maximum prefix length for the address family are subject host addresses,
+and are nameable; subject addresses with less than the maximum prefix length
+are subject network addresses, and are delegatable.
+
+The value of the context (6) key is a UTF-8 string containing the name of the
+context in which the Address Assertion is valid. See
+{{context-in-address-assertions}}.
+
+The value of the objects (7) key is an array of objects, as defined in
+{{cbor-object}}. Only object types redirection, delegation, and registrant are
+available for subject network addresses, and only object type name is
+available for subject host addresses.
+
+## Address Query body {#cbor-revquery}
+
+Queries for assertions about addresses are similar to queries for assertions
+about names, but have semantic restrictions similar to those for Address
+Assertions.
+
+An Address Query body is a map. Queries MUST contain the subject-addr (5),
+context (6), query-types (10), and query-expires (12) keys. Address Queries MAY
+contain query-opts (13) key.
+
+The value of the subject-addr (5) key is a three-element CBOR array. The first
+element of the array is the address family encoded as an object type, 2 for
+IPv6 addresses and 3 for IPv4 addresses. The second element is the prefix
+length encoded as an integer, 0-128 for IPv6 and 0-32 for IPv4. The third
+element is the address, encoded as in {{cbor-object}}.
+
+The value of the context (6) key is a UTF-8 encoded string containing the name
+of the context for which the Query is valid. Unlike queries for names, Address
+Queries can only pertain to a single context. See
+{{context-in-address-assertions}} for more.
+
+The value of the query-types (10) key is an array of integers encoding the
+type(s) of objects (as in {{cbor-object}}) acceptable in answers to the query.
+All values in the query-type array are treated at equal priority: \[4,5] means
+the querier is equally interested in both redirection and delegation for the
+subject-addr. An empty query-types array indicates that objects of any type are
+acceptable in answers to the query.
+
+The value of the query-expires (12) key is a CBOR integer
+counting seconds since the UNIX epoch UTC, identified with tag value 1 and
+encoded as in section 2.4.1 of {{!RFC7049}}. After the query-expires time, the
+query will have been considered not answered by the original issuer.
+
+The value of the query-opts (13) key, if present, is an array of integers in
+priority order of the querier's preferences in tradeoffs in answering the
+query, as in {{tabqopts}}. See {{cbor-query}} for more.
+
+An Address Assertion with a more-specific prefix is preferred over a
+less-specific in response to a Address Query.
