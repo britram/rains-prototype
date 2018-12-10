@@ -4,8 +4,8 @@
 
 Network Working Group                                        B. Trammell
 Internet-Draft                                                ETH Zurich
-Intended status: Experimental                              June 13, 2017
-Expires: December 15, 2017
+Intended status: Experimental                           October 01, 2018
+Expires: April 4, 2019
 
 
                        RAINS Parameters for SCION
@@ -24,23 +24,23 @@ Status of This Memo
    Internet-Drafts are working documents of the Internet Engineering
    Task Force (IETF).  Note that other groups may also distribute
    working documents as Internet-Drafts.  The list of current Internet-
-   Drafts is at http://datatracker.ietf.org/drafts/current/.
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
 
    Internet-Drafts are draft documents valid for a maximum of six months
    and may be updated, replaced, or obsoleted by other documents at any
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on December 15, 2017.
+   This Internet-Draft will expire on April 4, 2019.
 
 Copyright Notice
 
-   Copyright (c) 2017 IETF Trust and the persons identified as the
+   Copyright (c) 2018 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
    Provisions Relating to IETF Documents
-   (http://trustee.ietf.org/license-info) in effect on the date of
+   (https://trustee.ietf.org/license-info) in effect on the date of
    publication of this document.  Please review these documents
    carefully, as they describe your rights and restrictions with respect
    to this document.  Code Components extracted from this document must
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Trammell                Expires December 15, 2017               [Page 1]
+Trammell                  Expires April 4, 2019                 [Page 1]
 
-Internet-Draft                    RAINS                        June 2017
+Internet-Draft                    RAINS                     October 2018
 
 
 Table of Contents
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Trammell                Expires December 15, 2017               [Page 2]
+Trammell                  Expires April 4, 2019                 [Page 2]
 
-Internet-Draft                    RAINS                        June 2017
+Internet-Draft                    RAINS                     October 2018
 
 
    is an ISD number as an integer less than or equal to 2^16-1.  The
@@ -165,9 +165,9 @@ Internet-Draft                    RAINS                        June 2017
 
 
 
-Trammell                Expires December 15, 2017               [Page 3]
+Trammell                  Expires April 4, 2019                 [Page 3]
 
-Internet-Draft                    RAINS                        June 2017
+Internet-Draft                    RAINS                     October 2018
 
 
                    +------+----------------------------+
@@ -203,13 +203,13 @@ Internet-Draft                    RAINS                        June 2017
 
    [I-D.trammell-inip-pins]
               Trammell, B., "Properties of an Ideal Naming Service",
-              draft-trammell-inip-pins-03 (work in progress), March
+              draft-trammell-inip-pins-04 (work in progress), September
               2017.
 
    [I-D.trammell-rains-protocol]
               Trammell, B., "RAINS (Another Internet Naming Service)
-              Protocol Specification", draft-trammell-rains-protocol-02
-              (work in progress), March 2017.
+              Protocol Specification", draft-trammell-rains-protocol-03
+              (work in progress), September 2017.
 
 6.2.  Informative References
 
@@ -221,9 +221,9 @@ Internet-Draft                    RAINS                        June 2017
 
 
 
-Trammell                Expires December 15, 2017               [Page 4]
+Trammell                  Expires April 4, 2019                 [Page 4]
 
-Internet-Draft                    RAINS                        June 2017
+Internet-Draft                    RAINS                     October 2018
 
 
 Author's Address
@@ -277,4 +277,4 @@ Author's Address
 
 
 
-Trammell                Expires December 15, 2017               [Page 5]
+Trammell                  Expires April 4, 2019                 [Page 5]
