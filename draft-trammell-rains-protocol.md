@@ -647,7 +647,7 @@ signature algorithms in {{tabsig}}.
 | 15   | reserved       | Reserved for future use                                |
 | 16   | reserved       | Reserved for future use                                |
 | 17   | query-keyphase | All requested key phases of a Query                    |
-| 19   | shards         | Shard content of a zone                                |
+| 19   | reserved       | Reserved for future use                                |
 | 20   | assertions     | Singular Assertion content of a Shard or Zone          |
 | 21   | note-type      | Notification type                                      |
 | 22   | note-data      | Additional notification data                           |
@@ -896,16 +896,18 @@ Assertions of this zone and context and they MUST be sorted (see {{c14n}}).
 
 ### P-Shards {#p-shards}
 
+[EDITOR's NOTE: use consistently nonexistence or non-existence]
+
 Shards ({{shards}}) can be used as definitive proof of the nonexistence of a
 name within a zone. P-Shards serve the same purpose, but offer only a
-probabalistic guarantee of the non-existence of the name. Specifically, as they
+probabilistic guarantee of the non-existence of a name. Specifically, as they
 are based on Bloom filters, a subject name which does not in fact exist may
 appear in the P-Shard; in return for this uncertainty, they offer a much more
-space-efficient way to demonstrate the non-existence of a subject within the
-zone than Shards do. There is a tradeoff between the size of the bit string
-storing the Bloom filter, the number of Assertions covered by the P-Shard, and
-the false positive error rate. The zone authority can determine how to weight
-them.
+space-efficient way to demonstrate the non-existence of an Object for a subject
+name within the zone and context than Shards do. There is a tradeoff between the
+size of the bit string storing the Bloom filter, the number of Assertions
+covered by the P-Shard, and the false positive error rate. The zone Authority
+can determine how to weight them.
 
 A P-Shard is represented as a CBOR map. This map MUST contain the signatures
 (0), subject-zone (4), context (6), and content(23) keys. It MAY contain the
@@ -913,24 +915,24 @@ range(11) key.
 
 The value of the signatures (0) key is an array of one or more Signatures as
 defined in {{signatures}}. The signatures on the P-Shard are to be verified
-against the appropriate key for the Zone for which the P-Shard is cvalid in the
+against the appropriate key for the Zone for which the P-Shard is valid in the
 given context.
 
 The value of the subject-zone (4) key is a UTF-8 encoded string containing the
-name of the zone in which the Assertions in the P-Shard is made and MUST end
-with '.' (the root zone).
+name of the zone in which the Singular Assertions in the P-Shard are made and
+MUST end with '.' (the root zone).
 
 The value of the context (6) key is a UTF-8 encoded string containing the name
-of the context in which the Assertions in the P-Shard are valid. Both the
-authority-part and the context-part MUST end with a '.'.
+of the context in which the Singular Assertions in the P-Shard are valid. Both
+the authority-part and the context-part MUST end with a '.'.
 
 The value of the range (11) key, if present, is a two element array of strings
 or nulls (subject-name A, subject-name B). A MUST lexicographically sort before
 B. If A is null, the P-Shard begins at the beginning of the zone. If B is null,
-the shard ends at the end of the zone. The P-Shard MUST NOT be used to check
-the existence of any assertions whose subject names are equal to or sort before
-A, or are equal to or sort after B. If the range (11) key is not present, the
-P-shard covers then entire zone.
+the P-Shard ends at the end of the zone. The P-Shard MUST NOT be used to check
+the existence of any Singular Assertions whose subject names are equal to or
+sort before A, or are equal to or sort after B. If the range (11) key is not
+present, the P-Shard covers then entire zone.
 
 The value of the content (23) key is a three-element array. The first element
 identifies the algorithm used for generating the bitstring. The second element
@@ -949,33 +951,38 @@ are given in {{hash-functions}}.
 | 2     | bloom-km-4   | KM-optimized bloom filter with nh=4        |
 | 3     | bloom-km-8   | KM-optimized bloom filter with nh=8        |
 
-The bloom-km-2 and bloom-km-4 datastructures generates a bitstring using a
-Bloom filter and the Kirsch-Mitzenmacher optimization {{BETTER-BLOOM-FILTER}}.
+The bloom-km-2, bloom-km-4 and bloom-km-8 datastructures generate a bitstring
+using a Bloom filter and the Kirsch-Mitzenmacher optimization
+{{BETTER-BLOOM-FILTER}}.
 
-To add or verify an assertion to a bloom-km structure, the assertion is first
-encoded as a four-element CBOR array. The first element is the subject name.
-The second element is the subject zone. The third element is the subject
-context. The fourth element is the type code as in {{tabobj}} in {{obj-types}}.
-This encoded object is then hashed according to the specified hash algorithm.
-The hash algorithm's output is then split into nh equal length parts (2 for
-bloom-km-2, 4 for bloom-km-4, 8 for bloom-km-8), and these parts are used as
-indexes into the bitstring modulo the bitstring length. To add the assertion,
-all bits at the given indices are set to 1. To verify the assertion, all bits
-at the given indices are checked, and the assertion is taken to be in the
-filter if all bits are 1.
+To add or verify a Singular Assertion to a bloom-km structure, the Singular
+Assertion is first encoded as a four-element CBOR array. The first element is
+the subject name. The second element is the subject zone. The third element is
+the subject context. The fourth element is the type code as in {{tabobj}} in
+{{obj-types}}. This encoded object is then hashed according to the specified
+hash algorithm. The hash algorithm's output is then split into nh equal length
+parts (2 for bloom-km-2, 4 for bloom-km-4, 8 for bloom-km-8), and these parts
+are used as indexes into the bitstring modulo the bitstring length. To add the
+Singular Assertion, all bits at the given indices are set to 1. To verify the
+Singular Assertion, all bits at the given indices are checked, and the Singular
+Assertion is taken to be in the filter if all bits are 1.
+
+[EDITOR's NOTE CFE: This is not how it is described in the km-paper 
+(https://www.eecs.harvard.edu/~michaelm/postscripts/rsa2008.pdf)]
 
 ### Dynamic Assertion Validity {#assertion-dynamics}
 
-For a given {subject, zone, context, type} tuple, multiple assertions can be
-valid at a given point in time; the union of the object values of all of these
-assertions is considered to be the set of valid values at that point in time.
+For a given {subject, zone, context, type} tuple, multiple Singular Assertions
+can be valid at a given point in time; the union of the object values of all of
+these Singular Assertions is considered to be the set of valid values at that
+point in time.
 
 ### Semantic of nonexistence proofs {#antiassertions}
 
 Shards, P-Shards and Zones can all be used to prove nonexistence during their
-validity. However, real naming systems are dynamic: an assertion might be
-created, altered, expired or revoked during the validity period of a shard,
-P-Shard or zone, leading to an inconsistency. Thus, a section proving
+validity. However, real naming systems are dynamic: a Singular Assertion might
+be created, altered, expired or revoked during the validity period of a Shard,
+P-Shard or Zone, leading to an inconsistency. Thus, a section proving
 nonexistence only captures the state at the point in time when it was signed.
 
 ### Context in Assertions {#assertion-context}
