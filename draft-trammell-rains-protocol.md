@@ -37,7 +37,7 @@ normative:
 
 informative:
     XEP0115:
-      title: XEP-0115 Entity Capababilities
+      title: XEP-0115 Entity Capabilities
       author:
         -
           ins: J. Hildebrand
@@ -122,25 +122,25 @@ Its architecture ({{architecture}}) and information model
 System. However, it does take several radical departures from DNS as presently
 defined and implemented:
 
-- Delegation from a superordinate zone to a subordinate zone is done solely
-  with cryptography: a superordinate defines the key(s) that are valid for
-  signing assertions in the subordinate during a particular time interval.
-  Assertions about names can therefore safely be served from any infrastructure.
+- Delegation from a superordinate zone to a subordinate zone is done solely with
+  cryptography: a superordinate defines the key(s), created by the subordinate,
+  that are valid for signing assertions in the subordinate during a particular
+  time interval. Assertions about names can therefore safely be served from any
+  infrastructure.
 - All time references in RAINS are absolute: instead of a time to live, each
   assertion's temporal validity is defined by the temporal validity of the
   signature(s) on it.
 - All assertions have validity within a specific context. A context determines
   the rules for chaining signatures to verify validity of an assertion. The
-  global context is a special case of context, which uses chains from the
-  global naming root key. The use of context explicitly separates global usage
-  of the DNS from local usage thereof, and allows other application-specific
-  naming constraints to be bound to names; see {{assertion-context}}.
-  Queries are valid in one or more contexts, with specific rules for
-  determining which assertions answer which queries; see
+  global context is a special case of context, which uses chains from one or
+  several global naming root key(s). The use of context explicitly separates
+  global usage of the DNS from local usage thereof, and allows other
+  application-specific naming constraints to be bound to names; see
+  {{assertion-context}}. Queries are valid in one or more contexts, with
+  specific rules for determining which assertions answer which queries; see
   {{query-context}}.
-- There is an explicit separation between registrant-level names and
-  sub-registrant-level names, and explicit information about registrars and
-  registrants available in the naming system at runtime.
+- There is explicit information about registrars and registrants available in
+  the naming system at runtime.
 - Sets of valid characters and rules for valid names are defined on a per-zone
   basis, and can be verified at runtime.
 - Reverse lookups are done using a completely separate tree, supporting
@@ -152,7 +152,7 @@ Object Representation {{!RFC7049}}, partially in an effort to make
 implementations easier to verify and less likely to contain potentially
 dangerous parser bugs {{PARSER-BUGS}}. As with DNS, CBOR messages can be
 carried atop any number of substrate protocols. RAINS is presently defined to
-use TLS over persistent TCP connections (see {{protocol}}) as well as over UDP.
+use TLS over persistent TCP connections (see {{protocol}}).
 
 ## About This Document
 
@@ -170,14 +170,15 @@ In addition, the following terms are used in this document as defined:
 
 - Subject: A name or address about which Assertions can be made.
 - Object: A type/value pair of information about a name within an Assertion.
-- Assertion: A mapping between a Subject and an Object, signed by the Authority
-  for the namespace containing that Subject. See {{assertions}}.
+- Singular Assertion: A mapping between a Subject and one or several Objects,
+  signed by the Authority for the namespace containing that Subject. See
+  {{assertions}}.
 - Authority: An entity that has the right to determine which Assertions exist
   within its Zone
-- Delegation: An Assertion that an Authority has given the right to make
-  assertions about the Assertions within the part of a namespace identified by a
-  Subject to a subordinate Authority, by virtue of holding a secret key which
-  can generate signatures verifiable using a public key associated with a
+- Delegation: An Assertion proving that an Authority has given the right to make
+  Assertions about names within the part of a namespace identified by a Subject
+  to a subordinate Authority. This subordinate Authority holds a secret key
+  which can generate signatures verifiable using a public key associated with a
   delegation to the Zone.
 - Zone: A portion of a namespace rooted at a given point in the namespace
   hierarchy. A Zone contains all the Assertions about Subjects tha exist within
@@ -187,27 +188,30 @@ In addition, the following terms are used in this document as defined:
 - Context: Additional information about the scope in which an Assertion or Query
   is valid. See {{assertion-context}} and {{query-context}}.
 - Shard: A group of assertions common to a zone and valid at a given point in
-  time, scoped to a lexicographic range of Subject names with in the Zone, for
+  time, scoped to a lexicographic range of Subject names within the Zone, for
   purposes of proving non-existence of an Assertion. Shards may be encoded to
-  provide either absolute proof or probabalistic assurance of non-existence. See
+  provide either absolute proof or probabilistic assurance of non-existence. See
   {{shards}} and {{p-shards}}.
-- RAINS Message: Unit of exchange in the RAINS protocol, containing assertions,
-  shards, zones, queries, and notifications. See {{messages}}.
+- Assertion: A signed statement about the existence or non-existence of a
+  mapping from a Subject name and Context to an Object at a given point in time.
+  It is either a Singular Assertion, Shard, or Zone.
+- RAINS Message: Unit of exchange in the RAINS protocol, containing Assertions,
+  Queries, and/or Notifications. See {{messages}}.
 - Notification: A RAINS-internal message section carrying information about the
   operation of the protocol itself. See {{notifications}}.
 - Authority Service: A service provided by a RAINS Server for publishing
-  assertions by an authority. See {{architecture}}.
-- Query Service: A service provided by a RAINS Server for answering queries on
+  Assertions by an Authority. See {{architecture}}.
+- Query Service: A service provided by a RAINS Server for answering Queries on
   behalf of a RAINS Client. See {{architecture}}.
 - Intermediary Service: A service provided by a RAINS Server for answering
-  queries and providing temporary storage for assertions on behalf of other
+  Queries and providing temporary storage for Assertions on behalf of other
   RAINS Servers. See {{architecture}}.
-- RAINS Server: A server that speaks the RAINS Protocol, and provides on or more
-  services on behalf of other RAINS Servers and/or RAINS Clients. See
+- RAINS Server: A server that supports the RAINS Protocol, and provides one or
+  more services on behalf of other RAINS Servers and/or RAINS Clients. See
   {{architecture}}.
 - RAINS Client: A client that uses the Query Service of one or more RAINS
-  Servers to retrieve assertions on behalf of applications that wish to connect
-  to named services in the Internet.
+  Servers to retrieve Assertions on behalf of applications that e.g. wish to
+  connect to named services in the Internet.
 
 # An Ideal Internet Naming Service {#pins}
 
@@ -228,23 +232,21 @@ examines implications of these properties.
 
 ## Interfaces {#pins-interfaces}
 
-At its core, a naming service must provide a few basic functions for queriers,
-associating a Subject of a query with information about that subject. The
-information available from a naming service is that which is necessary for a
-querier to establish a connection with some other entity in the Internet,
-given a name identifying it.
+At its core, a naming service must provide a few basic functions for queriers
+that associate the subject of a query with information about that subject. The
+naming service provides the information necessary for a querier to establish a
+connection with some other entity in the Internet, given a name identifying it.
 
 - Name to Address: given a Subject name, the naming service returns a set of
-  addresses associated with that name, if such an association exists, where the
+  addresses associated with that name, if such an association exists. The
   association is determined by the authority for that name. Names may be
   associated with addresses in one or more address families (e.g. IP version 4,
   IP version 6). A querier may specify which address families it is interested
-  in receiving addresses for, and the naming system treats all address families
-  equally. This mapping is implemented in the DNS protocol via the A and AAAA
-  RRTYPES.
+  in. All address families are treated equally by the naming system. This
+  mapping is implemented in the DNS protocol via the A and AAAA RRTYPES.
 
 - Address to Name: given an Subject address, the naming service returns a set of
-  names associated with that address, if such an association exists, where the
+  names associated with that address, if such an association exists. The
   association is determined by the authority for that address. This mapping is
   implemented in the DNS protocol via the PTR RRTYPE. IPv4 mappings exist within
   the in-addr.arpa. zone, and IPv6 mappings in the ip6.arpa. zone. These
@@ -252,7 +254,7 @@ given a name identifying it.
   (octet boundaries for IPv4, nybble boundaries for IPv6).
 
 - Name to Name: given a Subject name, the naming service returns a set of object
-  names associated with that name, if such an association exists, where the
+  names associated with that name, if such an association exists. The
   association is determined by the authority for the subject name. This mapping
   is implemented in the DNS protocol via the CNAME RRTYPE. CNAME does not allow
   the association of multiple object names with a single subject, and CNAME may
@@ -264,13 +266,12 @@ given a name identifying it.
   with that name. Most of the other RRTYPES in the DNS protocol implement these
   sort of mappings.
 
-The query interface is not the only interface to the naming service: the
-interface a naming service presents to an Authority allows updates to the set
-of Assertions and Delegations in that Authority's namespace. Updates consist
-of additions of, changes to, and deletions of Assertions and Delegations. In
-the present DNS, this interface consists of the publication of a new zone file
-with an incremented version number, but other authority interfaces are
-possible.
+A naming service also provides other interfaces besides the query interface. The
+interface it presents to an Authority allows updates to the set of Assertions
+and Delegations in that Authority's namespace. Updates consist of additions of,
+changes to, and deletions of Assertions and Delegations. In the present DNS,
+this interface consists of the publication of a new zone file with an
+incremented version number, but other authority interfaces are possible.
 
 ## Properties {#pins-properties}
 
@@ -291,9 +292,8 @@ are easily distinguishable from each other by its human users.
 
 A naming service should impose as little structure on the names it supports as
 practical in order to be universally applicable. Naming services that impose a
-given organizational structure on the names expressible using the service will
-not translate well to societies where that organizational structure is not
-prevalent.
+given organizational structure on the names will not translate well to societies
+where that organizational structure is not prevalent.
 
 ### Federation of Authority
 
@@ -354,8 +354,7 @@ the subordinates of those Delegations.
 ### Authenticity of Delegation
 
 Given a Delegation from a superordinate to a subordinate Authority, a querier
-can verify that the superordinate Authority authorized the
-Delegation.
+can verify that the superordinate Authority authorized the Delegation.
 
 Authenticity of delegation in DNS is provided by DNSSEC {{?RFC4033}}.
 
@@ -385,7 +384,7 @@ bandwidth tradeoffs.
 When an Authority makes changes to an Assertion, every query for a given
 Subject returns either the new valid result or a previously valid result,
 with known and/or predictable bounds on "how previously". Given that additions
-of, changes to, and deletions of Asseretion may have different operational
+of, changes to, and deletions of Assertions may have different operational
 causes, different bounds may apply to different operations.
 
 The time-to-live (TTL) on a resource record in DNS provides a mechanism for
@@ -397,8 +396,8 @@ implicitly inconsistent views of an Assertion may be persistent.
 
 ### Explicit Inconsistency
 
-Some techniques require giving different answers to different queries, even in
-the absence of changes: the stable state of the namespace is not globally
+Some techniques require giving different answers to the same query, even in the
+absence of changes: the stable state of the namespace is not globally
 consistent. This inconsistency should be explicit: a querier can know that an
 answer might be dependent on its identity, network location, or other factors.
 
@@ -411,9 +410,8 @@ Another is the common practice of DNS-based content distribution, in which an
 authoritative name server gives different answers for the same query depending
 on the network location from which the query was received, or depending on the
 subnet in which the end client originating a query is located (via the EDNS
-Client Subnet extension {RFC7871}}). Such
-inconsistency based on client identity or network address may increase query
-linkability (see {{query-linkability}}).
+Client Subnet extension {RFC7871}}). Such inconsistency based on client identity
+or network address may increase query linkability (see {{query-linkability}}).
 
 These forms of inconsistency are implicit, not explicit, in the current DNS. We
 note that while DNS can be deployed to allow essentially unlimited kinds of
@@ -430,20 +428,19 @@ An Assertion which is not intended to be explicitly inconsistent by the
 Authority issuing it must return the same result for every Query for it,
 regardless of the identity or location of the querier.
 
-This property is not provided by DNS, as it depends on the robust support on
-the Explicit Inconsistency property above. Examples of global invariance
-failures include geofencing and DNS-based censorship ordered by a local
-jurisdiction.
+This property is not provided by DNS, as it depends on the robust support of the
+Explicit Inconsistency property above. Examples of global invariance failures
+include geofencing and DNS-based censorship ordered by a local jurisdiction.
 
 ### Availability
 
-The naming service as a whole is resilient to failures of individual
-nodes providing the naming service, as well as to failures of links among
-them. Intentional prevention of successful, authenticated query by an
-adversary should be as hard as practical.
+The naming service as a whole is resilient to failures of individual nodes
+providing the naming service, as well as to failures of links among them.
+Intentional prevention of a successful answer to a query by an adversary should
+be as hard as practical.
 
 The DNS protocol was designed to be highly available through the use of
-secondary nameservers. Operational practices (e.g. anycast deployment) also
+secondary name servers. Operational practices (e.g. anycast deployment) also
 increase the availability of DNS as currently deployed.
 
 ### Lookup Latency
@@ -505,16 +502,16 @@ that might inform future work.
 
 ### Delegation and redirection are separate operations
 
-Any system which can provide the authenticity properties enumerated above
-is freed from one of the design characteristics of the present domain name
-system: the requirement to bind a zone of authority to a specific set of
-authoritative servers. Since the authenticity of delegation must be a
-protected by a chain of signatures back to the root of authority, the location
-within the infrastructure where an authoritative mapping "lives" is no longer
-bound to a specific name server. While the present design of DNS does have its
-own scalability advantages, this implication allows a much larger design space
-to be explored for future name service work, as a Delegation need not always
-be implemented via redirection to another name server.
+Any system which can provide the authenticity properties enumerated above is
+freed from one of the design characteristics of the present domain name system:
+the requirement to bind a zone of authority to a specific set of authoritative
+servers. Since the authenticity of a delegation must be protected by a chain of
+signatures back to the root authority, the location within the infrastructure
+where an authoritative mapping "lives" is no longer bound to a specific name
+server. While the present design of DNS does have its own scalability
+advantages, this implication allows a much larger design space to be explored
+for future name service work, as a Delegation need not always be implemented via
+redirection to another name server.
 
 ### Unicode alone may not be sufficient for distinguishable names
 
@@ -540,12 +537,12 @@ https://ooni.torproject.org/nettest/dns-consistency/.
 
 # RAINS Protocol Architecture {#architecture}
 
-The RAINS architecture is simple, and vaguely resembles the architecture of
-DNS. A RAINS Server is an entity that provides transient and/or permanent
-storage for assertions about names, and a lookup function that finds assertions
-for a given query about a name, either by searching local storage or by
-delegating to another RAINS server. RAINS servers can take on any or all of
-three roles:
+The RAINS architecture is simple, and vaguely resembles the architecture of DNS.
+A RAINS Server is an entity that provides transient and/or permanent storage for
+assertions about names and addresses, and a lookup function that finds
+assertions for a given query about a name or address, either by searching local
+storage or by delegating to another RAINS server. RAINS servers can take on any
+or all of three roles:
 
 - authority service, acting on behalf of an authority to ensure properly
   signed assertions are made available to the system (equivalent to an
@@ -605,25 +602,28 @@ capabilities-based versioning of the protocol, and for recognition of a chunk of
 CBOR-encoded binary data at rest to be recognized as a RAINS message.
 
 The RAINS data model is a relatively straightforward mapping of the information
-model to the Concise Binary Object Representation (CBOR) {{!RFC7049}}, such
-that Assertions are split into four subtypes of assertion depending on their
-scope and purpose: singular Assertions and Zones for positive proof of the
-existence of an association between a name and an object, Shards and P-Shards
-for negative proof. Messages, singular Assertions, Shards, P-Shards, Zones,
-Queries, and Notifications are each represented as a CBOR map of integer keys
-to values, which allows each of these types to be extended in the future, as
-well as the addition of non- standard, application-specific information to
-RAINS messages and data items. A common registry of map keys is given in
-{{tabmkey}}. RAINS implementations MUST ignore any data objects associated with
-map keys they do not understand. Integer map keys in the range -22 to +23 are
-reserved for the use of future versions or extensions to the RAINS protocol,
-due to the efficiency of representation of these values in CBOR.
+model to the Concise Binary Object Representation (CBOR) {{!RFC7049}}, such that
+Assertions are split into four subtypes depending on their scope and purpose:
 
-Message contents, signatures and object values are implemented as type-
-prefixed CBOR arrays with fixed meanings of each array element; the structure
-of these lower-level elements can therefore not be extended. Message section
-types are given in {{tabsection}}, object types in {{tabobj}}, and signature
-algorithms in {{tabsig}}.
+- Singular Assertions and Zones for a positive proof of the existence of an
+  association between a name and an Object;
+- Shards and P-Shards for negative proof thereof. 
+
+Messages, Singular Assertions, Shards, P-Shards, Zones, Queries, and
+Notifications are each represented as a CBOR map of integer keys to values,
+which allows each of these types to be extended in the future, as well as the
+addition of non-standard, application-specific information to RAINS messages
+and data items. A common registry of map keys is given in {{tabmkey}}. RAINS
+implementations MUST ignore any data objects associated with map keys they do
+not understand. Integer map keys in the range -22 to +23 are reserved for the
+use of future versions or extensions to the RAINS protocol, due to the
+efficiency of representation of these values in CBOR.
+
+Message and Assertion contents, signatures and object values are implemented as
+type- prefixed CBOR arrays with fixed meanings of each array element; the
+structure of these lower-level elements can therefore not be extended. Message
+section types are given in {{tabsection}}, object types in {{tabobj}}, and
+signature algorithms in {{tabsig}}.
 
 {: #tabmkey title="CBOR Map Keys used in RAINS"}
 
@@ -651,7 +651,7 @@ algorithms in {{tabsig}}.
 | 20   | assertions     | Singular Assertion content of a Shard or Zone          |
 | 21   | note-type      | Notification type                                      |
 | 22   | note-data      | Additional notification data                           |
-| 23   | content        | Content of a Message or a P-Shard                     |
+| 23   | content        | Content of a Message or a P-Shard                      |
 
 The information model is designed to be representation-independent, and can be
 rendered using alternate structured-data representations that support the
@@ -659,8 +659,9 @@ concepts of maps and arrays. For example, YAML or JSON could be used to
 represent RAINS messages and data structures for debugging purposes. However,
 signatures over messages and assertions need a single canonical representation
 of the object to be signed as a bitstream. For RAINS, this is the CBOR
-representation canonicalized as in {{c14n}}; therefore alternate
-representations are always secondary to the CBOR data model. 
+representation canonicalized as in {{c14n}}; therefore alternate representations
+are always secondary to the CBOR data model. An alternate representation
+designed for textual manipulation of RAINS data is described in {{zonefiles}}.
 
 The following subsections describe the information and data model of a RAINS
 message from the top down.
@@ -688,17 +689,10 @@ the entire Message, generated as in {{signatures}}, and to be verified against
 an infrastructure key (see {{obj-infrakey}}) for the RAINS Server originating
 the message.
 
-A Message map MAY contain a capabilities (1) key, for exposing capabilties of
-the message sender. The first Message sent from one peer to another MUST contain
+The value of the capabilities key, when present, is an array of Capabilities or
+the hash thereof. The first Message sent from one peer to another MUST contain
 the capabilities key. The capabilities mechanism is described in
 {{capabilities}}.
-
-A Message map MUST contain a token (2) key, whose value is a 16-byte array.
-See {{tokens}} for details.
-
-A Message map MUST contain a content (23) key, whose value is an array of
-Message Sections; a Message Section is either an Assertion, Shard, Zone, Query,
-or Notification.
 
 ### Message Section structure {#message-sections}
 
@@ -714,18 +708,18 @@ message section body, a CBOR map defined as in the subsections {{assertions}},
 |-----:|--------------|---------------------------------------------------|
 | 1    | assertion    | Singular Assertion (see {{singular-assertions}})  |
 | 2    | shard        | Shard (see {{shards}})                            |
-| 3    | zone         | Zone (see {{zones}})                              |
-| 4    | query        | Query (see {{queries}})                           |
-| 5    | p-shard      | P-Shard (see {{p-shards}})                        |
+| 3    | p-shard      | P-Shard (see {{p-shards}})                        |
+| 4    | zone         | Zone (see {{zones}})                              |
+| 5    | query        | Query (see {{queries}})                           |
 | 23   | notification | Notification (see {{notifications}})              |
 
 ## Assertions {#assertions}
 
 Information about names in RAINS is carried by Assertions. An Assertion is a
-statement about a mapping from a subject name to one or several object values of
-the same type, signed by some authority for the namespace containing the
-assertion, with a temporal validity determined by the lifetime of the
-signature(s) on the Assertion.
+statement about a mapping from a Subject name to one or several Object values,
+signed by some Authority for the namespace containing the Assertion, with a
+temporal validity determined by the lifetime of the signature(s) on the
+Assertion.
 
 The subject of an Assertion is identified by a name in three parts:
 
@@ -735,37 +729,37 @@ The subject of an Assertion is identified by a name in three parts:
 - the subject context, as in {{assertion-context}}, identifying the context for
   purposes of explicit inconsistency.
 
-The types of objects that can be associated with a subject are of several types,
-described in {{obj-types}}.
+The types of Objects that can be associated with a Subject are described in
+{{obj-types}}.
 
-There are four kinds of assertions, distinguished by their scope (how many
-subjects are covered by a single Assertion) and their utility (whether the
-assertion can be used for positive proof of a subject-object association, for
+There are four kinds of Assertions, distinguished by their scope (how many
+Subjects are covered by a single Assertion) and their utility (whether the
+Assertion can be used for positive proof of a Subject-Object association, for
 negative proof of the lack of such an association, or both):
 
-- Singular Assertions contain a set of objects associated with a single given
+- Singular Assertions contain a set of Objects associated with a single given
   subject name in a given zone in a given context. The signature on a Singular
-  Assertion can be used to prove the existance of an association between the
-  subject name and the objects within the Assertion. Singular assertions are
+  Assertion can be used to prove the existence of an association between the
+  subject name and the Objects within the Assertion. Singular Assertions are
   described in detail in {{singular-assertions}}.
-- Zones contain Assertions for every object associated with every subject name
-  within a given zone in a given context. The signature on a Zone can be used to
-  prove both the existence of an association between a subject name and an
-  object of a given type, as well as the absence of such an association. Zones
-  are described in detail in {{zones}}. If signed, the assertions within a Zone
-  can also be treated as Singular Assertions; in this case they inherit zone and
-  context information from the containing zone.
-- Shards contain Singular Assertions for every object associated with every
+- Zones contain all Singular Assertions that have the same zone and context
+  values. The signature on a Zone can be used to prove both the existence of an
+  association between a subject name and an Object, as well as the absence of
+  such an association. Zones are described in detail in {{zones}}. If signed,
+  the Singular Assertions within a Zone can also be treated as Singular
+  Assertions; in this case they inherit zone and context information from the
+  containing zone.
+- Shards contain Singular Assertions for every Object associated with every
   subject name in a given lexicographic range of subject names within a given
   zone in a given context. The signature on a Shard can be used to prove the
-  nonexistance of an object of a given type for a name within its range. Shards
-  are described in detail in {{shards}}. If signed, the assertions within a
-  Shard can also be treated as Singular Assertions; in this case they inherit
-  zone and context information from the containing shard.
-- P-Shards (or Probabalistic Shards) contain a data structure that can be used
+  nonexistence of an Object for a subject name within its range. Shards are
+  described in detail in {{shards}}. If a Singular Assertions within a Shard is
+  signed, it inherits zone and context information from the containing shard and
+  can also be used outside the Shard.
+- P-Shards (or Probabilistic Shards) contain a data structure that can be used
   to demonstrate, within predictable bounds of false-negative probability, the
-  non-existence of an object of a given type for a name within a lexicographic
-  range of subjet names within a given zone in a given context. They allow an
+  non-existence of an Object for a subject name within a lexicographic range of
+  subject names within a given zone in a given context. They allow an
   efficiency-accuracy tradeoff for negative proofs. P-Shards are described in
   detail in {{p-shards}}
 
