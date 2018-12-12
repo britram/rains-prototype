@@ -770,29 +770,29 @@ qualified name, context, type, object value(s), signature meta data.]
  
 ### Singular Assertions {#singular-assertions}
 
-A Singular Assertion contains the set of objects associated with a single given
+A Singular Assertion contains a set of Objects associated with a single given
 subject name in a given zone in a given context. A Singular Assertion with a
 valid signature can be used as a positive answer to a query for a name. It is
 represented as a CBOR map. The keys present in this map depend on whether the
 Singular Assertion is contained in a Message, Shard or Zone.
 
-Assertions contained directly within a Message's content value cannot inherit any
-values from their containers, and therefore MUST contain the signatures (0),
-subject-name (3), subject-zone (4), context (6), and objects (7) keys.
+Singular Assertions contained directly within a Message's content value cannot
+inherit any values from their containers, and therefore MUST contain the
+signatures (0), subject-name (3), subject-zone (4), context (6), and objects (7)
+keys.
 
-Assertions within a Shard or Zone can inherit values from their containers. A
-contained Assertion MUST contain the subject-name (3), objects (7) keys. The
-subject-zone (4) and context (6) keys MUST NOT be present. They are assumed to
-have the same value as the corresponding values in the containing Shard or Zone
-for signature generation and signature verification purposes; see
-{{signatures}}.
+Singular Assertions within a Shard or Zone can inherit values from their
+containers. A contained Singular Assertion MUST contain the subject-name (3),
+and objects (7) keys. It MAY contain the signatures (0) key. The subject-zone
+(4) and context (6) keys MUST NOT be present. They are assumed to have the same
+value as the corresponding values in the containing Shard or Zone for signature
+generation and signature verification purposes; see {{signatures}}. 
 
 The value of the signatures (0) key, if present, is an array of one or more
 Signatures as defined in {{signatures}}. Signatures on a contained Assertion are
 generated as if the inherited subject-zone and context values are present in the
-Assertion, whether actually present or not. The signatures on the Assertion are
-to be verified against the appropriate key for the Zone containing the Assertion
-in the given context.
+Assertion. The signatures on the Assertion are to be verified against the
+appropriate key for the Zone containing the Assertion in the given context.
 
 The value of the subject-name (3) key is a UTF-8 encoded {{!RFC3629}} string
 containing the name of the subject of the assertion. The subject name may cover
@@ -817,82 +817,67 @@ The value of the objects (7) key is an array of objects, as defined in
 
 ### Shards {#shards}
 
-A Shard contain Singular Assertions for every object within a zone in a given
+A Shard contains Singular Assertions for every Object within a zone in a given
 context whose subject name falls within a specified lexicographic range. A Shard
 with a valid signature, within which a subject name should fall (i.e. appearing
 within that Shard's range), but within which there is no Singular Assertion for
-the specified subject name and object type, can therefore be taken as proof of a
-negative query result for that subject name. Shards are used exclusively for
+the specified subject name and Object, can therefore be taken as a proof of
+non-existence for that subject name and Object. Shards are used exclusively for
 negative proof; the individual signatures on their contained Singular Assertions
 are used for positive proof of the existence of an assertion.
 
 The content of a Shard (in terms of the number of Singular Assertions it covers)
-is chosen by the authority of the zone for which the Shard is valid. There is an
-inherent tradeoff between the number of Assertions within a Shard and the size
-of the Shard, and therefore the size of the Message that must be presented as
-negative proof. P-Shards ("Probabalistic Shards", see {{p-shards}}) allow a
-different tradeoff, gaining space efficiency and coverage for a fixed,
+is chosen by the Authority of the zone for which the Shard is valid. There is an
+inherent tradeoff between the number of Singular Assertions within a Shard and
+the size of the Shard, and therefore the size of the Message that must be
+presented as negative proof. P-Shards ("Probabalistic Shards", see {{p-shards}})
+allow a different tradeoff, gaining space efficiency and coverage for a fixed,
 predictable probability of a false positive (i.e., the possibility that the
 P-Shard cannot be used to prove the nonexistence of a subject which does not, in
 fact, exist).
 
-A Shard is represented as a CBOR map. The keys present in this map depend on
-whether the Shard is contained in a Message or Zone.
-
-Shards contained in a Message's content value cannot inherit any values from a
-contained Zone, and therefore MUST contain the  signatures (0),
+A Shard is represented as a CBOR map. Shards MUST contain the  signatures (0),
 subject-zone (4), context (6), range (11), and assertions (20) keys.
 
-Shards contained within a Zone's shards value inherit zone and context values
-from their containing Zone, and therefore  MUST contain the signatures (0),
-range(11), and assertions (20) keys. The subject-zone (4) and context (6) keys
-MUST NOT be present.
-
 The value of the signatures (0) key is an array of one or more Signatures as
-defined in {{signatures}}. If not present, the containing Zone MUST be signed.
-Signatures on a Shard contained within a Zone are generated as if the inherited
-subject-zone and context values are present in the Shard. The signatures on the
-Shard are to be verified against the appropriate key for the Zone containing the
-Shard in the given context.
+defined in {{signatures}}. Signatures on the Shard are to be verified
+against the appropriate key for the Shard in the given context.
 
-The value of the subject-zone (4) key, if present, is a UTF-8 encoded string
-containing the name of the zone in which the Assertions within the Shard is made
-and MUST end with '.' (the root zone). If not present, the zone of the assertion
-is inherited from the containing Zone.
+The value of the subject-zone (4) key is a UTF-8 encoded string containing the
+name of the zone in which the Singular Assertions within the Shard are made and
+MUST end with '.' (the root zone).
 
-The value of the context (6) key, if present, is a UTF-8 encoded string
-containing the name of the context in which the Assertions within the Shard are
-valid. Both the authority-part and the context-part MUST end with a '.'. If not
-present, the context of the assertion is inherited from the containing Zone.
+The value of the context (6) key is a UTF-8 encoded string containing the name
+of the context in which the Singular Assertions within the Shard are valid. Both
+the authority-part and the context-part MUST end with a '.'.
 
 The value of the range (11) key is a two element array of strings or nulls
 (subject-name A, subject-name B). A MUST lexicographically sort before B. If A
 is null, the shard begins at the beginning of the zone. If B is null, the shard
-ends at the end of the zone. The shard MUST NOT contain any assertions whose
-subject names are equal to or sort before A, or are equal to or sort after B.
+ends at the end of the zone. The shard MUST NOT contain any Singular Assertions
+whose subject names are equal to or sort before A, or are equal to or sort after
+B.
 
-The value of the assertions (20) key is an array of Singular Assertions as
-defined in {{assertions}}. These Singular Assertions MUST be sorted within the
-in lexicographic order by subject name; the set of allowable Singular Assertions
-is restricted by the range, as above.
+The value of the assertions (20) key is a CBOR array of Singular Assertions as
+defined in {{singular-assertions}}. These Singular Assertions MUST be sorted (see
+{{c14n}}); the set of allowable Singular Assertions is restricted by the range,
+as above.
 
 ### Zones {#zones}
 
-A Zone contains Assertions for every object associated with every subject name
-within a given zone in a given context, organized into Shards or singular
-Assertions. A Zone with a valid signature can be used either as a positive
-answer for a query about a name (when its contained assertions are not signed),
-or as a negative answer to prove that a given object does not exist for a given
-name.
+A Zone contains Singular Assertions for every Object associated with every
+subject name within a given zone in a given context. A Zone with a valid
+signature can be used either as a positive answer for a query about a name (when
+its contained Singular Assertions are not signed), or as a negative answer to
+prove that a given Object does not exist for a given name.
 
-Organizing Assertions into Zones allows operators of zones with few subject
-names (e.g., used only for simple web hosting, as is the case with many zones in
-the current Internet naming system) to minimize signing and zone management
-overhead.
+Organizing Singular Assertions into Zones allows operators of zones with few
+subject names (e.g., used only for simple web hosting, as is the case with many
+zones in the current Internet naming system) to minimize signing and zone
+management overhead.
 
 A Zone is represented as a CBOR map. Zones MUST contain the signatures (0),
-subject-zone (4), and context (6) keys, and MUST contain one of the
-shards (19) or assertions (20) keys.
+subject-zone (4), context (6), and assertions (20) keys.
 
 The value of the signatures (0) key is an array of one or more Signatures on the
 Zone as defined in {{signatures}}. Signatures on the Zone are to be verified
@@ -905,18 +890,9 @@ The value of the context (6) key is a UTF-8 encoded string containing the name
 of the context for which the Zone is valid. Both the authority-part and the
 context-part MUST end with a '.'. See {{assertion-context}}
 
-The contents of the Zone are contained in the values of the shards (19) or
-assertions (20) key. The value of the shards key is a CBOR array of Shards as
-defined in {{shards}}. The value of the assertions key is a CBOR array of
-Singular Assertions as defined in {{singular-assertions}}. A Zone may either be
-organized into Shards, in which case the Shards within the Zone must cover the
-entire lexicographic space of subject names within the Zone, or it may be
-organized as Singular Assertions. 
-
-Within the shards array, if present, the contained Shards MUST be sorted in
-lexicographic order by shard range start. Within the assertions array, if
-present, the contained Singular Assertions MUST be sorted in lexicographic order
-by subject name.
+The value of the assertions (20) key is a CBOR array of Singular Assertions as
+defined in {{singular-assertions}}. The CBOR array contains all Singular
+Assertions of this zone and context and they MUST be sorted (see {{c14n}}).
 
 ### P-Shards {#p-shards}
 
