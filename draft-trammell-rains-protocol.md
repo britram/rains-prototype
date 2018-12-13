@@ -627,31 +627,31 @@ signature algorithms in {{tabsig}}.
 
 {: #tabmkey title="CBOR Map Keys used in RAINS"}
 
-| Code | Name           | Description                                            |
-|-----:|----------------|------------------------------------------------        |
-| 0    | signatures     | Signatures on a message or section                     |
-| 1    | capabilities   | Capabilities of server sending message                 |
-| 2    | token          | Token for referring to a data item                     |
-| 3    | subject-name   | Subject name in an Assertion, Shard, P-Shard or Zone   |
-| 4    | subject-zone   | Zone name in an Assertion, Shard, P-Shard or Zone      |
-| 5    | subject-addr   | Subject address in address assertion                   |
-| 6    | context        | Context of an Assertion, Shard, P-Shard, Zone or Query |
-| 7    | objects        | Objects of an Assertion                                |
-| 8    | query-name     | Fully qualified name for a Query                       |
-| 9    | reserved       | Reserved for future use                                |
-| 10   | query-types    | Acceptable object types for a Query                    |
-| 11   | range          | Lexical range of Assertions in Shard or P-Shard        |
-| 12   | query-expires  | Absolute timestamp for query expiration                |
-| 13   | query-opts     | Set of query options requested                         |
-| 14   | current-time   | Querier's latest assertion timestamp for a query       |
-| 15   | reserved       | Reserved for future use                                |
-| 16   | reserved       | Reserved for future use                                |
-| 17   | query-keyphase | All requested key phases of a Query                    |
-| 19   | reserved       | Reserved for future use                                |
-| 20   | assertions     | Singular Assertion content of a Shard or Zone          |
-| 21   | note-type      | Notification type                                      |
-| 22   | note-data      | Additional notification data                           |
-| 23   | content        | Content of a Message or a P-Shard                      |
+| Code | Name            | Description                                            |
+|-----:|-----------------|------------------------------------------------        |
+| 0    | signatures      | Signatures on a message or section                     |
+| 1    | capabilities    | Capabilities of server sending message                 |
+| 2    | token           | Token for referring to a data item                     |
+| 3    | subject-name    | Subject name in an Assertion, Shard, P-Shard or Zone   |
+| 4    | subject-zone    | Zone name in an Assertion, Shard, P-Shard or Zone      |
+| 5    | subject-addr    | Subject address in address assertion                   |
+| 6    | context         | Context of an Assertion, Shard, P-Shard, Zone or Query |
+| 7    | objects         | Objects of an Assertion                                |
+| 8    | query-name      | Fully qualified name for a Query                       |
+| 9    | reserved        | Reserved for future use                                |
+| 10   | query-types     | Acceptable object types for a Query                    |
+| 11   | range           | Lexical range of Assertions in Shard or P-Shard        |
+| 12   | query-expires   | Absolute timestamp for query expiration                |
+| 13   | query-opts      | Set of query options requested                         |
+| 14   | current-time    | Querier's latest assertion timestamp for a query       |
+| 15   | reserved        | Reserved for future use                                |
+| 16   | reserved        | Reserved for future use                                |
+| 17   | query-keyphases | All requested key phases of a Query                    |
+| 19   | reserved        | Reserved for future use                                |
+| 20   | assertions      | Singular Assertion content of a Shard or Zone          |
+| 21   | note-type       | Notification type                                      |
+| 22   | note-data       | Additional notification data                           |
+| 23   | content         | Content of a Message or a P-Shard                      |
 
 The information model is designed to be representation-independent, and can be
 rendered using alternate structured-data representations that support the
@@ -1064,21 +1064,21 @@ is the type of the object, encoded as an integer in the following table:
 
 {: #tabobj title="Object type codes"}
 
-| Code  | Name         | Description                             | Reference     |
-|------:|--------------|-----------------------------------------|---------------|
-| 1     | name         | name associated with subject            | {{obj-name}} |
-| 2     | ip6-addr     | IPv6 address of subject                 | {{obj-ip6}} |
-| 3     | ip4-addr     | IPv4 address of subject                 | {{obj-ip4}} |
-| 4     | redirection  | name of zone authority server           | {{obj-redir}} |
-| 5     | delegation   | public key for zone delgation           | {{obj-deleg}} |
-| 6     | nameset      | name set expression for zone            | {{obj-nameset}} | 
-| 7     | cert-info    | certificate information for name        | {{obj-cert}} | 
-| 8     | service-info | service information for srvname         | {{obj-srv}} | 
-| 9     | registrar    | registrar information                   | {{obj-registrar}} | 
-| 10    | registrant   | registrant information                  | {{obj-registrant}} | 
-| 11    | infrakey     | public key for RAINS infrastructure     | {{obj-infrakey}} | 
-| 12    | extrakey     | external public key for subject         | {{obj-extrakey}} | 
-| 13    | nextkey      | next public key for subject             | {{obj-nextkey}} |
+| Code  | Name         | Description                             | Reference          |
+|------:|--------------|-----------------------------------------|--------------------|
+| 1     | name         | name associated with subject            | {{obj-name}}       |
+| 2     | ip6-addr     | IPv6 address of subject                 | {{obj-ip6}}        |
+| 3     | ip4-addr     | IPv4 address of subject                 | {{obj-ip4}}        |
+| 4     | redirection  | name of zone authority server           | {{obj-redir}}      |
+| 5     | delegation   | public key for zone delgation           | {{obj-deleg}}      |
+| 6     | nameset      | name set expression for zone            | {{obj-nameset}}    |
+| 7     | cert-info    | certificate information for name        | {{obj-cert}}       |
+| 8     | service-info | service information for srvname         | {{obj-srv}}        |
+| 9     | registrar    | registrar information                   | {{obj-registrar}}  |
+| 10    | registrant   | registrant information                  | {{obj-registrant}} |
+| 11    | infrakey     | public key for RAINS infrastructure     | {{obj-infrakey}}   |
+| 12    | extrakey     | external public key for subject         | {{obj-extrakey}}   |
+| 13    | nextkey      | next public key for subject             | {{obj-nextkey}}    |
 
 Subsequent elements contain the object content, encoded as described in the
 respective subsection below.
@@ -1118,7 +1118,7 @@ encoded string.
 
 The redirection type is used to point to a "last-resort" server or server from
 which assertions about a zone can be retrieved; it therefore approximately
-replaces theD NS NS RRTYPE.
+replaces the DNS NS RRTYPE.
 
 ### Delegation {#obj-deleg}
 
@@ -1127,9 +1127,8 @@ assertions in a named zone, and by which a delegation of a name within a zone to
 a subordinate zone may be verified. It is represented as an 4-element array. The
 second element is a signature algorithm identifier as in {{signatures}}. The
 third element is a key phase as in {{signatures}}. The fourth element is the
-public key, formatted  
-as defined in {{signatures}} for the given algorithm identifier and RAINS
-delegation chain keyspace.
+public key, formatted as defined in {{signatures}} for the given algorithm
+identifier and RAINS delegation chain keyspace.
 
 Delegations approximately replace the DNS DNSKEY RRTYPE.
 
@@ -1204,10 +1203,10 @@ whose format is defined by the protocol family and hash algorithm.
 
 {: #tabcertproto title="Certificate information protocol families"}
 
-| Code | Name     | Protocol family                            | Certificate format |
-|-----:|----------|--------------------------------------------|--------------------|
-|    0 | unspec   | Unspecified                                | Unspecified        |
-|    1 | tls      | Transport Layer Security (TLS) {{!RFC8446}} | {{!RFC5280}}        |
+| Code | Name     | Protocol family                             | Certificate format |
+|-----:|----------|---------------------------------------------|--------------------|
+|    0 | unspec   | Unspecified                                 | Unspecified        |
+|    1 | tls      | Transport Layer Security (TLS) {{!RFC8446}} | {{!RFC5280}}       |
 
 Protocol family 0 leaves the protocol family unspecified; client validation
 and usage of cert-info assertions, and the protocol used to connect, are up to
@@ -1223,12 +1222,12 @@ secured with PKIX {{!RFC5280}} certificates.
 |    3 | ee   | End-Entity Certificate           |
 
 A trust anchor certificate constraint specifies a certificate that MUST appear
-as the trust anchor for the certificate presented by the subject of the
-assertion on a connection attempt. An end-entity certificate constraint
-specifies a certificate that MUST be presented by the subject of the assertion
-on a connection attempt.
+as the trust anchor for the certificate presented by the subject of the Singular
+Assertion on a connection attempt. An end-entity certificate constraint
+specifies a certificate that MUST be presented by the subject of the Singular
+Assertion on a connection attempt.
 
-Certificate information be hashed using an appropriate hash function described
+Certificate information is hashed using an appropriate hash function described
 in {{hash-functions}}; hash functions are identified by a code as in
 {{tabhash}}. Code 0 is used to store full certificates in RAINS assertions,
 while other codes are used to store hashes for verification.
@@ -1304,56 +1303,60 @@ as in {{signatures}}. See {{public-key-management}} for more.
 Hash algorithms are used in several places in the RAINS data model:
 
 - hashing certificate data in cert-info objects (see {{obj-cert}})
-- hashing assertions into Bloom filters for probabalistic shards (see {{p-shards}})
-- hashing assertion and message data as part of generating a MAC (see {{signatures}})
-- hashing assertion data for a confirmation query (see {{confirmation}})
+- hashing Singular Assertions into Bloom filters and check if a Singular
+  Assertion is present in a Bloom filter (see {{p-shards}})
+- hashing Assertion and Message data as part of generating a MAC (see
+  {{signatures}})
 
-Where they are used in RAINS, hash functions are identified by a code given in
-{{tabhash}}. In this table, applicability "C" means the hash is valid for use
-in a certificate info object, "P" that it can be used for hashing assertions
-for P-shards, "S" that it can be used for hashing assertions and messages for
-signatures, and "Q" that it can be used for hashing assertions for confirmation queries.
+Hash functions are identified by a code given in {{tabhash}}. The Applicability
+column determines where in the RAINS Protocol a specific hash function might be
+used. Applicability "C" means the hash is valid for use in a certificate info
+object, "P" that it can be used for hashing Singular Assertions for P-shards,
+"S" that it can be used for hashing Singular Assertions and Messages for
+signatures.
 
 {: #tabhash title="Hash algorithms"}
 
-| Code | Name       | Reference         | Length | Applicability |
-|-----:|------------|-------------------|--------|---------------|
-| 0    | nohash     | (data not hashed) | var.   | C             |
-| 1    | sha-256    | {{!RFC6234}}      | 32     | CPSQ          |
-| 2    | sha-512    | {{!RFC6234}}      | 64     | CSQ           |
-| 3    | sha-384    | {{!RFC6234}}      | 48     | CSQ           |
-| 4    | shake256   | {{!RFC8419}}      | 32     | PSQ           |
-| 5    | fnv-64     | {{!FNV=I-D.eastlake-fnv}} | 8 | P          |
-| 6    | fnv-128    | {{!FNV=I-D.eastlake-fnv}} | 16 | P         |
+| Code | Name       | Reference                 | Length | Applicability |
+|-----:|------------|---------------------------|--------|---------------|
+| 0    | nohash     | (data not hashed)         | var.   | C             |
+| 1    | sha-256    | {{!RFC6234}}              | 32     | CPS           |
+| 2    | sha-512    | {{!RFC6234}}              | 64     | CS            |
+| 3    | sha-384    | {{!RFC6234}}              | 48     | CS            |
+| 4    | shake256   | {{!RFC8419}}              | 32     | PS            |
+| 5    | fnv-64     | {{!FNV=I-D.eastlake-fnv}} | 8      | P             |
+| 6    | fnv-128    | {{!FNV=I-D.eastlake-fnv}} | 16     | P             |
 
 ## Queries {#queries}
 
 Information about requests for information about names is carried in Queries. A
-Query specifies the name and object type about which information is requested,
+Query specifies the name and object types about which information is requested,
 information about how long the querier is willing to wait for an answer, and
 additional options indicating the querier's preferences about how the query
 should be handled.
 
-In contrast to Assertions, the subject in a Query is given as a fully-qualified
-name - the subject name concatenated to the zone name with a '.', since a
-querier may not know the zone name associated with a fully-qualified name.
+In contrast to Singular Assertions, the subject in a Query is given as a
+fully-qualified name - the subject name concatenated to the zone name with a
+'.', since a querier may not know the zone name associated with a
+fully-qualified name.
 
 There are two kinds of queries supported by the RAINS data model:
 
-- Query (or Normal Query): a request for information of a given type about a
-given subject, about which the querier expresses no prior information.
+- Query (or Normal Query): a request for information about one or several types
+  of a given subject, about which the querier expresses no prior information.
 
-- Confirmation Query: a request for information of a given type about a given
-subject, for which the querier already has a valid cached assertion or a valid
-cached nonexistence proof, but for which the querier would like a new assertion
-if available. Confirmation queries are covered in {{confirmation}}.
+- Confirmation Query: a request for information about one or several types of a
+  given subject, for which the querier already has a valid cached Assertion, but
+  for which the querier would like a new Assertion if available. Confirmation
+  queries are covered in {{confirmation}}.
 
-Both of queries are carried in a Query message section. Each Query section in a
-Message represents a separate query.
+Both queries are carried in a Query message section. Each Query contained in a
+Message represents a separate Query.
 
-A Query body is represented as a CBOR map. Queries MUST contain the query-name (8),
-context (6), query-types (10), and query-expires (12) keys. Queries MAY contain
-the query-opts (13), query-keyphase (17) keys, and/or current-time (14) keys. 
+A Query body is represented as a CBOR map. Queries MUST contain the query-name
+(8), context (6), query-types (10), and query-expires (12) keys. Queries MAY
+contain the query-opts (13), query-keyphases (17) keys, and/or current-time (14)
+keys. 
 
 The value of the query-name (8) key is a UTF-8 encoded string containing the
 name for which the query is issued and MUST end with a '.' (the root zone).
@@ -1363,7 +1366,7 @@ of the context to which a query pertains. A zero-length string indicates that
 assertions will be accepted in any context.
 
 The value of the query-types (10) key is an array of integers encoding the
-type(s) of objects (as in {{obj-types}}) acceptable in answers to the query.
+type(s) of Objects (as in {{obj-types}}) acceptable in answers to the query.
 All values in the query-type array are treated at equal priority: for example,
 \[2,3] means the querier is equally interested in both IPv4 and IPv6 addresses
 for the query-name. An empty query-types array indicates that objects of any
@@ -1374,12 +1377,12 @@ identified with tag value 1 and encoded as in section 2.4.1 of {{!RFC7049}}.
 After the query-expires time, the query will have been considered not answered
 by the original issuer and can be ignored.
 
-The value of the query-keyphase (17) key, if present, is an array of integers
+The value of the query-keyphases (17) key, if present, is an array of integers
 representing all key phases (see {{signatures}}) desired in delegation and
 nextkey answers to queries (see {{obj-deleg}} and {{obj-nextkey}}). The value
-of the query-keyphase key is ignored for all queries where query-types does not
+of the query-keyphases key is ignored for all Queries where query-types does not
 include delegation or nextkey. A query for a delegation or nextkey object that
-does not contain a query-keyphase key should return information for all
+does not contain a query-keyphases key SHOULD return information for all
 available keyphases.
 
 The value of the query-opts (13) key, if present, is an array of integers in
@@ -1388,7 +1391,7 @@ query. See {{query-opts}}.
 
 The value of the current-time (14) key, if present, is the timestamp of the
 latest information available at the querier for the queried subject and object
-type. See {{confirmation}} for details of how confirmation queries work.
+types. See {{confirmation}} for details of how confirmation queries work.
 
 ### Query Options {#query-opts}
 
@@ -1412,21 +1415,21 @@ preferences. Query options are advisory.
 Options 1-5 and 9 specify performance/privacy tradeoffs. Each server is free to
 determine how to minimize each performance metric requested; however, servers
 MUST NOT generate queries to other servers if "no information leakage" is
-specified, and servers MUST NOT return expired assertions unless "expired
+specified, and servers MUST NOT return expired Assertions unless "expired
 assertions acceptable" is specified.
 
 Option 6 specifies that the token on the message containing the query (see
-{{tokens}}) should be used on all queries resulting from a given query,
-allowing traceability through an entire RAINS infrastructure. These resulting
-queries SHOULD also carry Option 6. When Option 6 is not present, queries
-sent by a server in response to an incoming query SHOULD use different tokens.
+{{tokens}}) should be used on all queries resulting from a given query, allowing
+traceability through an entire RAINS infrastructure. The resulting queries
+SHOULD also carry Option 6. When Option 6 is not present, queries sent by a
+server in response to an incoming query SHOULD use different tokens.
 
-By default, a client service will perform verification of negative queries and
-return a 404 No Assertion Exists for queries with a consistent proof of non-
-existence, within a message signed by the query service's infrakey. Option 7
-disables this behavior, and causes the query service to return the shard
-proving nonexistence for verification by the client. It is intended to be used
-with untrusted query services.
+By default, a client service will perform verification on a negative query
+response and return a 404 No Assertion Exists Notification for queries with a
+valid and verified proof of non-existence, within a Message signed by the query
+service's infrakey. Option 7 disables this behavior, and causes the query
+service to return the Shard, P-Shard or Zone for verification by the client. It
+is intended to be used with untrusted query services.
 
 Option 8 specifies that a querier's interest in a query is strictly ephemeral,
 and that future assertions related to this query SHOULD NOT be proactively
@@ -1448,30 +1451,31 @@ that I can see do deal with this: (1) ignore it and deal, (2) try to build a set
 of query options to make queries more, (3) rely on heuristics and/or
 configuration to specify different query answering behavior for trusted servers,
 based on information about the connection itself. Leaning toward (3) now, which
-would go down in the "operational considerations" section]
+would go down in the "operational considerations" section] CFE -> I would also
+prefer option (3). In case we discover that another query option would be
+helpful after having more operational experience, it can still be added.
 
 ### Confirmation Queries {#confirmation}
 
-A Query containing a current-time key is a confirmation query, used by a server
+A Query containing a current-time key is a Confirmation Query, used by a server
 to refresh a cached query result. The querier passes the timestamp of the most
 recent result it has cached, taken from the most recent start time of the
-validity of the signature(s) on the assertion(s) that may answer it. If the
-answer to a confirmation query is not newer than the given timestamp, the server
-may answer with a notification of type 304 instead of with an assertion. answer
-is older or would match the current answer is a notification of type 304 (see
-{{notifications}}).
+validity of the signature(s) on the Assertion(s) that may answer it. If the
+answer to a Confirmation Query is not newer than the given timestamp, the server
+SHOULD answer with a Notification of type 304 (see {{notifications}}).
+Otherwise, the most recent Assertion answering the query is returned.
 
-The value of the current-time key is represented as a CBOR integer epoch timestamp
-identified with tag value 1 and encoded as in section 2.4.1 of {{!RFC7049}}.
+The value of the current-time key is represented as a CBOR integer epoch
+timestamp identified with tag value 1 and encoded as in section 2.4.1 of
+{{!RFC7049}}.
 
 ### Context in Queries {#query-context}
 
-Context is used in queries as it is in assertions (see
-{{assertion-context}}). Assertion contexts in an answer to a query have to
-match the context in the query in order to respond to a query. The Context
-section of a query contains the context of desired assertions; a special "any"
-context (represented by the empty string) indicates that assertions in any
-context will be accepted.
+Context is used in Queries as it is in Assertions (see {{assertion-context}}).
+The Context section of a query contains the context of desired Assertions; a
+special "any" context (represented by the empty string) indicates that
+Assertions in any context will be accepted. Assertion contexts in an answer to a
+Query that is not about the "any" context MUST match the context in the Query.
 
 Query contexts can also be used to provide additional information to RAINS
 servers about the query. For example, context can provide a method for explicit
@@ -1485,10 +1489,10 @@ reflecting the goodness of the zone for the client. Here, a context might be
 'zrh.cx--cdn-zones.some-cdn.com.' for names of servers hosting content in a
 CDN's Zurich data center. A client could represent its desire to find content
 nearby by making queries in the zrh.cx--, fra.cx-- (Frankfurt), and ams.cx--
-(Amsterdam) contexts of the 'cdn-zones.some-cdn.com.' authority. In all cases,
-the assertions themselves will be signed by the authority for
+(Amsterdam) contexts of the 'cdn-zones.some-cdn.com.' Authority. In all cases,
+the Assertions themselves will be signed by the Authority for
 'cdn-zones.some-cdn.com.', accurately representing that it is the CDN, not the
-owner of the related name in the global context, that is making the assertion.
+owner of the related name in the global context, that is making the Assertion.
 
 As with assertion contexts, developing conventions for query contexts for
 different situations will require implementation and deployment experience,
@@ -1504,40 +1508,38 @@ specification, which gives the broad outline of the design, can be found in
 ## Notifications {#notifications}
 
 Notifications contain information about the operation of the RAINS protocol
-itself. A Notification Message Section body is represented as a CBOR map, which
-MUST contain the token (2) and note-type (21) keys, and MAY contain the
-note-data (22) key. 
+itself. A Notification body is represented as a CBOR map, which MUST contain the
+token (2) and note-type (21) keys, and MAY contain the note-data (22) key. 
 
-The value of the token (2) key is a 16-byte array, which
-MUST contain the token of the message or query to which the notification is a
-response. See {{tokens}}.
+The value of the token (2) key is a 16-byte array, which MUST contain the token
+of the Message to which the Notification is a response. See {{tokens}}.
 
 The value of the note-type key is encoded as an integer as in the
 {{tabnotify}}.
 
 {: #tabnotify title="Notification Type Codes"}
 
-| Code | Description                          | Reference        |
-|-----:|--------------------------------------|------------------|
-| 100  | Connection heartbeat                 | {{heartbeat}}    |
-| 304  | Confirmation query has latest answer | {{confirmation}} |
-| 306  | Reply too large, fallback to TCP     | {{errors}}       |
-| 399  | Send full capabilities               | {{capabilities}} |
-| 400  | Bad message received                 | {{errors}}       |
-| 403  | Inconsistent message received        | {{consistency}}  |
-| 404  | No assertion exists                  | {{client-proto}} |
+| Code | Description                          | Reference                                 |
+|-----:|--------------------------------------|-------------------------------------------|
+| 100  | Connection heartbeat                 | {{heartbeat}}                             |
+| 304  | Confirmation query has latest answer | {{confirmation}}                          |
+| 306  | Reply too large, fallback to TCP     | {{errors}}                                |
+| 399  | Send full capabilities               | {{capabilities}}                          |
+| 400  | Bad message received                 | {{errors}}                                |
+| 403  | Inconsistent message received        | {{consistency}}                           |
+| 404  | No assertion exists                  | {{client-proto}}                          |
 | 406  | Message not acceptable for service   | {{errors}} {{client-proto}} {{pub-proto}} | 
-| 413  | Message too large                    | {{errors}}       |
-| 500  | Unspecified server error             | {{errors}}       |
-| 501  | Server not capable                   | {{capabilities}} |
-| 504  | No assertion available               | {{client-proto}} |
+| 413  | Message too large                    | {{errors}}                                |
+| 500  | Unspecified server error             | {{errors}}                                |
+| 501  | Server not capable                   | {{capabilities}}                          |
+| 504  | No assertion available               | {{client-proto}}                          |
 
 Note that the status codes are chosen to be mnemonically similar to status
 codes for HTTP {{?RFC7231}}.
 
 The value of the note-data (22) key, if present, is a UTF-8 encoded string
 with additional information about the notification, intended to be displayed
-to an administrator to help debug the issue identified by the negotiation.
+to an administrator to help debug the issue identified by the Notification.
 
 ## Signatures {#signatures}
 
