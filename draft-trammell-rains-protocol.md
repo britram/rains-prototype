@@ -584,10 +584,10 @@ validity of an assertion is separated from whence the assertion was received.
 This means the RAINS protocol itself is merely a means for moving RAINS
 assertions around, and moving RAINS queries to places where they can be
 answered. This document defines bindings for carrying RAINS messages over TLS
-over TCP and over UDP, but bindings to other transports (e.g. QUIC
+over TCP, but bindings to other transports (e.g. QUIC
 {{?QUIC=I-D.ietf-quic-transport}}) or session layers (e.g. HTTP {{?RFC7540}})
-would be trivial to design, and the protocol provides a capability mechanism
-for discovering alternate transports.
+would be trivial to design, and the protocol provides a capability mechanism for
+discovering alternate transports.
 
 # Information and Data Model {#infomodel}
 
@@ -1743,7 +1743,6 @@ algorithms, and so on.
 | URN                | Meaning                                                |
 |--------------------|--------------------------------------------------------|
 | urn:x-rains:tlssrv | Listens for TLS/TCP connections (see {{transport-tls}} |
-| urn:x-rains:udpsrv | Accepts messages via UDP (see {{transport-udp}})       |
 
 A RAINS server MUST NOT assume that a peer server supports a given capability
 unless it has received a message containing that capability from that server. An
@@ -1767,20 +1766,12 @@ send it.
 
 ## Transport Bindings {#transport}
 
-This document defines two transport bindings for RAINS: TLS-over-TCP in
-{{transport-tls}}, and UDP in {{transport-udp}}. Each of these transport
-bindings offers a different set of tradeoffs. Carrying RAINS Messages over
-persistent TLS 1.3 (or later) connections {{!RFC8446}} over TCP {{!RFC0793}}
-protects query confidentiality and integrity while supporting implementation
-over a ubiquitously-available and well-understood security and transport layer.
-
-RAINS over UDP allows RAINS messages to be exchanged with the same statelessness
-and confidentiality properties as DNS over UDP, reducing state requirements at
-RAINS clients and servers for persistent TLS connection, but without
-confidentiality protection, and with limits on the size of messages which can be
-transferred. RAINS servers MUST support TLS over TCP; other transports can be
-negotiated using the capabilities mechanism (see {{capabilities}}) after
-bootstrapping using TLS 1.3 (or later).
+This document so far defines one transport binding for RAINS: TLS-over-TCP in
+{{transport-tls}}. Each transport binding offers a different set of tradeoffs.
+Carrying RAINS Messages over persistent TLS 1.3 (or later) connections
+{{!RFC8446}} over TCP {{!RFC0793}} protects query confidentiality and integrity
+while supporting implementation over a ubiquitously-available and
+well-understood security and transport layer.
 
 ### TLS over TCP {#transport-tls}
 
@@ -1818,19 +1809,9 @@ grouped into shards that will fit into 65536-byte messages, to allow servers to
 reply using these shards when full-zone transfers are not possible due to
 message size limitations.
 
-### UDP {#transport-udp}
-
-When they accept RAINS messages over UDP, servers MUST accept messages up to
-512 bytes in length, but MAY accept messages of greater length.
-
-When a server has a message to send to a client that contacted via UDP that
-would exceed the UDP message size length, it should send a 306 TCP Fallback
-notification, to cause the client to resend the query via a TCP connection to
-the server.
-
 ### Heartbeat Messages {#heartbeat}
 
-Both TCP and UDP connections between RAINS clients and servers may be associated
+TCP connections between RAINS clients and servers may be associated
 with in-network state (such as firewall pinholes and/or network address
 translation cache entries) with relatively short idle timeouts. RAINS provides a
 simple heartbeat mechanism to refresh this state for long-running connections.
