@@ -1422,7 +1422,7 @@ Option 6 specifies that the token on the message containing the query (see
 {{tokens}}) should be used on all queries resulting from a given query, allowing
 traceability through an entire RAINS infrastructure. The resulting queries
 SHOULD also carry Option 6. When Option 6 is not present, queries sent by a
-server in response to an incoming query SHOULD use different tokens.
+server in response to an incoming query must use different tokens.
 
 By default, a client service will perform verification on a negative query
 response and return a 404 No Assertion Exists Notification for queries with a
@@ -1544,11 +1544,10 @@ to an administrator to help debug the issue identified by the Notification.
 ## Signatures {#signatures}
 
 RAINS supports multiple signature algorithms and hash functions for signing
-assertions for cryptographic algorithm agility {{?RFC7696}}. A RAINS signature
+Assertions for cryptographic algorithm agility {{?RFC7696}}. A RAINS signature
 algorithm identifier specifies the signature algorithm; a hash function for
-generating the HMAC and the format of the encodings of the signature
-values in Assertions, Shards, Zones, and Messages, as well as of public key
-values in delegation objects.
+generating the HMAC and the format of the encodings of the signature values in
+Assertions and Messages, as well as of public key values in delegation objects.
 
 RAINS signatures have five common elements: the algorithm identifier, a keyspace
 identifier, a key phase, a valid-since timestamp, and a valid-until
@@ -1594,8 +1593,8 @@ element to be signed. The signing process is defined as follows:
 - Render the element to be signed into a canonical byte stream as specified in
   {{c14n}}.
 
-- Generate a signature on the resulting byte stream according to the algorithm
-  selected.
+- Generate a signature on the resulting byte stream according to the algorithm,
+  keyspace and key phase selected.
 
 - Add the full signature to the signatures array at the appropriate point in
   the element.
@@ -1608,7 +1607,8 @@ the signature according to the algorithm selected.
 The byte stream representing a data element over which signatures are generated
 and verified is a canonicalized CBOR object representing the data element. 
 
-Signatures may be attached to any form of Assertion, as well as to Messages as a whole.
+Signatures may be attached to any form of Assertion, as well as to Messages as a
+whole.
 
 First, to canonicalize signature metadata to allow it to be protected by the
 signature, regardless of the type of data element:
@@ -1632,26 +1632,22 @@ To generate a canonicalized Singular Assertion:
 
 To generate a canonicalized Shard:
 
-- sort the objects array in each assertion contained in the assertions array as
-  for Singular Assertions, above.
+- sort the objects array in each Singular Assertion contained in the assertions
+  array as, above.
 - sort the assertions array by lexicographic order of the serialized
   canonicalized byte string representing the assertion. Note that this will
   cause the subject array to be sorted in lexicographic order of subject name,
-  as well.
+  as well. [EDITORS's NOTE CFE What is the subject array?]
 - sort the CBOR map by ascending order of its keys ({{tabmkey}}).
 
 To generate a canonicalized Zone:
 
-- sort the objects array in each assertion contained in the assertions array as
-  for Singular Assertions, above.
-- sort each shard contained in the shards array as for Shards, above.
+- sort the objects array in each Singular Assertion contained in the assertions
+  array as, above.
 - sort the assertions array by lexicographic order of the serialized
   canonicalized byte string representing the assertion. Note that this will
-  cause the array to be sorted in lexicographic order of subject name,
-  as well.
-- sort the shards array by lexicographic order of the serialized canonicalized
-  byte string representing the shard. Note that this will
-  cause the array to be sorted in lexicographic order of shard range, as well.
+  cause the subject array to be sorted in lexicographic order of subject name,
+  as well. [EDITORS's NOTE CFE What is the subject array?]
 - sort the CBOR map by ascending order of its keys ({{tabmkey}}).
 
 To generate a canonicalized P-Shard:
@@ -1660,8 +1656,9 @@ To generate a canonicalized P-Shard:
 
 To generate a canonicalized Message:
 
-- preserve the order of Sections within the Message
-- canonicalize each section as appropriate by following the canonicalization
+- preserve the order of the Sections (Assertions, Queries and Notifications)
+  within the Message.
+- canonicalize each Section as appropriate by following the canonicalization
   steps for the appropriate Section type, above.
 
 ### EdDSA signature and public key format {#eddsa-format}
@@ -1692,7 +1689,7 @@ delegation.
 
 ## Tokens {#tokens}
 
-Messages and notifications contain an opaque token (2) key, whose
+Messages and Notifications contain an opaque token (2) key, whose
 content is a 16-byte array, and is used to link Messages to the Queries they
 respond to, and Notifications to the Messages they respond to. Tokens MUST be
 treated as opaque values by RAINS servers.
@@ -1706,24 +1703,21 @@ Message contains a fresh token selected by the server). This allows sending
 multiple Notifications within one Message and the receiving server to respond to
 a Message containing Notifications (e.g. when it is malformed).
 
-Since tokens are used to link queries to replies, and to link notifications to
-messages, regardless of the sender or recipient of a message, they MUST be
+Since tokens are used to link Queries to replies, and to link Notifications to
+Messages, regardless of the sender or recipient of a Message, they MUST be
 chosen by servers to be hard to guess; e.g. generated by a cryptographic random
 number generator.
 
-When a server creates a new query to forward to another server in response to
-a query it received, it MUST NOT use the same token on the delegated query
+When a server creates a new Query to forward to another server in response to
+a Query it received, it MUST NOT use the same token on the delegated query
 as on the received query, unless option 6 Enable Tracing is present in the
-received, in which case it MUST use the same token.
+received query, in which case it MUST use the same token.
 
 ## Capabilities {#capabilities}
 
-The capabilities (1) key in a RAINS message allows a the sender of that message
-to communicate its capabilities to its peer. Capabilities MUST be sent on the
-first message sent from one peer to another. If a peer receives a message from a
-counterpart for which it does not have capabilities, it can ask for the next
-message to contain full capabilities by sending a message containing
-notification 399.
+The capabilities (1) key in a RAINS message allows the sender of that message to
+communicate its capabilities to its peer. Capabilities MUST be sent on the first
+message sent from one peer to another.
 
 A peer's capabilities can be represented in one of two ways:
 
@@ -1733,6 +1727,10 @@ A peer's capabilities can be represented in one of two ways:
 - a SHA-256 hash of the CBOR byte stream derived from normalizing such an
   array by sorting it in lexicographically increasing order, then serializing
   it.
+
+If a peer receives a message from a counterpart for which it does not have the
+hash of the capabilities, it can ask for the next message to contain a list of
+these capabilities by sending a message containing notification 399.
 
 This mechanism is inspired by {{XEP0115}}, and is intended to be used to
 reduce the overhead in exposing common sets of capabilities. Each RAINS server
@@ -1751,8 +1749,8 @@ A RAINS server MUST NOT assume that a peer server supports a given capability
 unless it has received a message containing that capability from that server. An
 exception are the capabilities indicating that a server listens for connections
 using a given transport protocol; servers and clients can also learn this
-information from RAINS itself (given redirection and service-info assertions for
-a named zone) or from external configuration.
+information from RAINS itself (given redirection and service-info Singular
+Assertions for a named zone) or from external configurations.
 
 # RAINS Protocol {#protocol}
 
