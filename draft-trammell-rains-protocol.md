@@ -996,15 +996,15 @@ alternate chain of signatures to use to verify the validity of an Assertion, as
 follows:
 
 - The global context is identified by the special context name '.'. Assertions
-  in the global context are signed by the authority for the subject name. For
+  in the global context are signed by the Authority for the subject zone. For
   example, assertions about the name 'ethz.ch.' in the global context are only
-  valid if signed by the relevant authority which is either 'ethz.ch.', 'ch.',
-  or '.' depending on the value of the subject name of the assertion.
-- A local context is associated with a given authority. The local context's name
+  valid if signed by the relevant Authority which is either 'ethz.ch.', 'ch.',
+  or '.' depending on the value of the subject zone of the Assertion.
+- A local context is associated with a given Authority. The local context's name
   is divided into an  authority-part and a context-part by a context marker
-  ('cx--'). The authority-part directly identifies the authority whose key was
-  used to sign the assertion; assertions within a local context are only valid
-  if signed by the identified authority. Authorities have complete control over
+  ('cx--'). The authority-part directly identifies the Authority whose key was
+  used to sign the Assertion; Assertions within a local context are only valid
+  if signed by the identified Authority. Authorities have complete control over
   how the contexts under their namespaces are arranged, and over the names
   within those contexts. Both the authority-part and the context-part must end
   with a '.'.
@@ -1015,21 +1015,21 @@ Some examples illustrate how context works:
   its local networks within a separate context. E.g., a workstation could be
   named 'simplon.cab.inf.ethz.ch.' within the context
   'staff-workstations.cx--inf.ethz.ch.' Assertions about this name would be
-  signed by the authority for 'inf.ethz.ch.'. Here, the context serves simply as
+  signed by the Authority for 'inf.ethz.ch.'. Here, the context serves simply as
   a marker, without enabling an alternate signature chain: note that the name
   'simplon.cab.inf.ethz.ch' could at the same time be validly signed in the
-  global context by the authority over that name to allow external users access
-  this workstation. The local context simply marks this assertion as internal.
+  global context by the Authority over that name to allow external users access
+  this workstation. The local context simply marks this Assertion as internal.
   This allows a client making requests of local names to know they are local,
-  and for local resolvers to manage visibility of assertions outside the
-  enterprise: explicit context makes accidental leakage of both queries and
-  assertions easier to detect and avoid.
+  and for local resolvers to manage visibility of Assertions outside the
+  enterprise: explicit context makes accidental leakage of both Queries and
+  Assertions easier to detect and avoid.
 - Contexts make captive-portal interactions more explicit: a captive portal
   resolver could respond to a query for a common website (e.g. www.google.ch)
   with a signed response directed at the captive portal, but within a context
   identifying the location as well as the ISP (e.g.
   sihlquai.zurich.ch.cx--starbucks.access.some-isp.net.). This response will be
-  signed by the authority for 'starbucks.access.some-isp.net.'. This signature
+  signed by the Authority for 'starbucks.access.some-isp.net.'. This signature
   achieves two things: first, the client knows the result for www.google.ch is
   not globally valid; second, it can present the user with some indication as to
   the identity of the captive portal it is connected to.
@@ -1041,14 +1041,13 @@ Developing conventions for assertion contexts for different situations will
 require implementation and deployment experience, and is a subject for future
 work.
 
-### Zone-Reflexive Assertions
-
-A zone may make an assertion about itself by using the string "@" as a subject
-name. This facility can be used for any assertion type, but is especially useful
-for self-signing root zones, and for a zone to make a subsequent key assertion
-about itself. If an assertion of a given type about a zone is available both in
-the zone itself and in the superordinate zone, the assertion in the
-superordinate zone will take precedence.
+### Zone-Reflexive Singular Assertions
+A zone may make a Singular Assertion about itself by using the string "@" as a
+subject name. This facility can be used for any object type, but is especially
+useful for self-signing root zones, and for a zone to make a subsequent key
+assertion about itself. If a Singular Assertion for an Object about a zone is
+available both in the zone itself and in the superordinate zone, the assertion
+in the superordinate zone will take precedence.
 
 ### Address Assertions {#revassertions}
 
