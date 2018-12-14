@@ -980,7 +980,7 @@ point in time.
 ### Semantic of nonexistence proofs {#antiassertions}
 
 Shards, P-Shards and Zones can all be used to prove nonexistence during their
-validity. However, real naming systems are dynamic: a Singular Assertion might
+validity. However, real naming systems are dynamic: an Assertion might
 be created, altered, expired or revoked during the validity period of a Shard,
 P-Shard or Zone, leading to an inconsistency. Thus, a section proving
 nonexistence only captures the state at the point in time when it was signed.
