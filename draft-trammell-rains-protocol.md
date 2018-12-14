@@ -1748,7 +1748,7 @@ A RAINS server MUST NOT assume that a peer server supports a given capability
 unless it has received a message containing that capability from that server. An
 exception are the capabilities indicating that a server listens for connections
 using a given transport protocol; servers and clients can also learn this
-information from RAINS itself (given redirection and service-info Singular
+information from RAINS itself (given redirection and service-info 
 Assertions for a named zone) or from external configurations.
 
 # RAINS Protocol {#protocol}
