@@ -436,7 +436,7 @@ include geofencing and DNS-based censorship ordered by a local jurisdiction.
 
 The naming service as a whole is resilient to failures of individual nodes
 providing the naming service, as well as to failures of links among them.
-Intentional prevention of a successful answer to a query by an adversary should
+Intentional prevention by an adversary of a successful answer to a query should
 be as hard as practical.
 
 The DNS protocol was designed to be highly available through the use of
