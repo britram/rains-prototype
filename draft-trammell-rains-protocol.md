@@ -1766,7 +1766,7 @@ send it.
 
 ## Transport Bindings {#transport}
 
-This document so far defines one transport binding for RAINS: TLS-over-TCP in
+This document defines one transport binding for RAINS: TLS-over-TCP in
 {{transport-tls}}. Each transport binding offers a different set of tradeoffs.
 Carrying RAINS Messages over persistent TLS 1.3 (or later) connections
 {{!RFC8446}} over TCP {{!RFC0793}} protects query confidentiality and integrity
