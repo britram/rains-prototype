@@ -747,7 +747,7 @@ negative proof of the lack of such an association, or both):
   association between a subject name and an Object, as well as the absence of
   such an association. Zones are described in detail in {{zones}}. If signed,
   the Singular Assertions within a Zone can also be used on their own, as if they were contained within a Message directly; ```
-  Assertions; in this case they inherit zone and context information from the
+ in this case they inherit zone and context information from the
   containing zone.
 - Shards contain Singular Assertions for every Object associated with every
   subject name in a given lexicographic range of subject names within a given
