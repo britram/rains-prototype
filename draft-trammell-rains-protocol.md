@@ -1222,7 +1222,7 @@ secured with PKIX {{!RFC5280}} certificates.
 |    3 | ee   | End-Entity Certificate           |
 
 A trust anchor certificate constraint specifies a certificate that MUST appear
-as the trust anchor for the certificate presented by the subject of the Singular
+as the trust anchor for the certificate presented by the subject of the 
 Assertion on a connection attempt. An end-entity certificate constraint
 specifies a certificate that MUST be presented by the subject of the Singular
 Assertion on a connection attempt.
