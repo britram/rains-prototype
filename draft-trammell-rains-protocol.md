@@ -132,13 +132,12 @@ defined and implemented:
   signature(s) on it.
 - All assertions have validity within a specific context. A context determines
   the rules for chaining signatures to verify validity of an assertion. The
-  global context is a special case of context, which uses chains from one or
-  several global naming root key(s). The use of context explicitly separates
-  global usage of the DNS from local usage thereof, and allows other
-  application-specific naming constraints to be bound to names; see
-  {{assertion-context}}. Queries are valid in one or more contexts, with
-  specific rules for determining which assertions answer which queries; see
-  {{query-context}}.
+  global context is a special case of context, which uses chains from the global
+  naming root key. The use of context explicitly separates global usage of the
+  DNS from local usage thereof, and allows other application-specific naming
+  constraints to be bound to names; see {{assertion-context}}. Queries are valid
+  in one or more contexts, with specific rules for determining which assertions
+  answer which queries; see {{query-context}}.
 - There is explicit information about registrars and registrants available in
   the naming system at runtime.
 - Sets of valid characters and rules for valid names are defined on a per-zone
@@ -170,6 +169,9 @@ In addition, the following terms are used in this document as defined:
 
 - Subject: A name or address about which Assertions can be made.
 - Object: A type/value pair of information about a name within an Assertion.
+- Assertion: A signed statement about the existence or nonexistence of a
+  mapping from a Subject name and Context to an Object at a given point in time.
+  It is either a Singular Assertion, Shard, or Zone.
 - Singular Assertion: A mapping between a Subject and one or several Objects,
   signed by the Authority for the namespace containing that Subject. See
   {{assertions}}.
@@ -189,12 +191,9 @@ In addition, the following terms are used in this document as defined:
   is valid. See {{assertion-context}} and {{query-context}}.
 - Shard: A group of assertions common to a zone and valid at a given point in
   time, scoped to a lexicographic range of Subject names within the Zone, for
-  purposes of proving non-existence of an Assertion. Shards may be encoded to
-  provide either absolute proof or probabilistic assurance of non-existence. See
+  purposes of proving nonexistence of an Assertion. Shards may be encoded to
+  provide either absolute proof or probabilistic assurance of nonexistence. See
   {{shards}} and {{p-shards}}.
-- Assertion: A signed statement about the existence or non-existence of a
-  mapping from a Subject name and Context to an Object at a given point in time.
-  It is either a Singular Assertion, Shard, or Zone.
 - RAINS Message: Unit of exchange in the RAINS protocol, containing Assertions,
   Queries, and/or Notifications. See {{messages}}.
 - Notification: A RAINS-internal message section carrying information about the
@@ -660,8 +659,7 @@ represent RAINS messages and data structures for debugging purposes. However,
 signatures over messages and assertions need a single canonical representation
 of the object to be signed as a bitstream. For RAINS, this is the CBOR
 representation canonicalized as in {{c14n}}; therefore alternate representations
-are always secondary to the CBOR data model. An alternate representation
-designed for textual manipulation of RAINS data is described in {{zonefiles}}.
+are always secondary to the CBOR data model.
 
 The following subsections describe the information and data model of a RAINS
 message from the top down.
@@ -746,9 +744,9 @@ negative proof of the lack of such an association, or both):
   values. The signature on a Zone can be used to prove both the existence of an
   association between a subject name and an Object, as well as the absence of
   such an association. Zones are described in detail in {{zones}}. If signed,
-  the Singular Assertions within a Zone can also be used on their own, as if they were contained within a Message directly; ```
- in this case they inherit zone and context information from the
-  containing zone.
+  the Singular Assertions within a Zone can also be used on their own, as if
+  they were contained within a Message directly; in this case they inherit zone
+  and context information from the containing zone.
 - Shards contain Singular Assertions for every Object associated with every
   subject name in a given lexicographic range of subject names within a given
   zone in a given context. The signature on a Shard can be used to prove the
@@ -758,7 +756,7 @@ negative proof of the lack of such an association, or both):
   can also be used outside the Shard.
 - P-Shards (or Probabilistic Shards) contain a data structure that can be used
   to demonstrate, within predictable bounds of false-negative probability, the
-  non-existence of an Object for a subject name within a lexicographic range of
+  nonexistence of an Object for a subject name within a lexicographic range of
   subject names within a given zone in a given context. They allow an
   efficiency-accuracy tradeoff for negative proofs. P-Shards are described in
   detail in {{p-shards}}
@@ -822,7 +820,7 @@ context whose subject name falls within a specified lexicographic range. A Shard
 with a valid signature, within which a subject name should fall (i.e. appearing
 within that Shard's range), but within which there is no Singular Assertion for
 the specified subject name and Object, can therefore be taken as a proof of
-non-existence for that subject name and Object. Shards are used exclusively for
+nonexistence for that subject name and Object. Shards are used exclusively for
 negative proof; the individual signatures on their contained Singular Assertions
 are used for positive proof of the existence of an assertion.
 
@@ -896,18 +894,16 @@ Assertions of this zone and context and they MUST be sorted (see {{c14n}}).
 
 ### P-Shards {#p-shards}
 
-[EDITOR's NOTE: use consistently nonexistence or non-existence]
-
 Shards ({{shards}}) can be used as definitive proof of the nonexistence of a
 name within a zone. P-Shards serve the same purpose, but offer only a
-probabilistic guarantee of the non-existence of a name. Specifically, as they
-are based on Bloom filters, a subject name which does not in fact exist may
-appear in the P-Shard; in return for this uncertainty, they offer a much more
-space-efficient way to demonstrate the non-existence of an Object for a subject
+probabilistic guarantee of the nonexistence of a name. Specifically, as they are
+based on Bloom filters, a subject name which does not in fact exist may appear
+in the P-Shard; in return for this uncertainty, they offer a much more
+space-efficient way to demonstrate the nonexistence of an Object for a subject
 name within the zone and context than Shards do. There is a tradeoff between the
-size of the bit string storing the Bloom filter, the number of Assertions
-covered by the P-Shard, and the false positive error rate. The zone Authority
-can determine how to weight them.
+size of the bit string storing the Bloom filter, the number of names covered by
+the P-Shard, and the false positive error rate. The zone Authority can determine
+how to weight them.
 
 A P-Shard is represented as a CBOR map. This map MUST contain the signatures
 (0), subject-zone (4), context (6), and content(23) keys. It MAY contain the
@@ -919,12 +915,12 @@ against the appropriate key for the Zone for which the P-Shard is valid in the
 given context.
 
 The value of the subject-zone (4) key is a UTF-8 encoded string containing the
-name of the zone within which the names represented in the P-Shard are contained, and
-MUST end with '.' (the root zone).
+name of the zone within which the names represented in the P-Shard are
+contained, and MUST end with '.' (the root zone).
 
 The value of the context (6) key is a UTF-8 encoded string containing the name
-of the context in which the Singular Assertions in the P-Shard are valid. Both
-the authority-part and the context-part MUST end with a '.'.
+of the context for which the names represented in the P-Shard are valid.
+Both the authority-part and the context-part MUST end with a '.'.
 
 The value of the range (11) key, if present, is a two element array of strings
 or nulls (subject-name A, subject-name B). A MUST lexicographically sort before
@@ -945,30 +941,29 @@ are given in {{hash-functions}}.
 
 {: #tabpsds title="P-shard generation algorithms"}
 
-| Code  | Name         | Description                                |
-|------:|--------------|--------------------------------------------|
-| 1     | bloom-km-2   | KM-optimized bloom filter with nh=2        |
-| 2     | bloom-km-4   | KM-optimized bloom filter with nh=4        |
-| 3     | bloom-km-8   | KM-optimized bloom filter with nh=8        |
+| Code  | Name         | Description                                 |
+|------:|--------------|---------------------------------------------|
+| 1     | bloom-km-12  | KM-optimized bloom filter with nh=12        |
+| 2     | bloom-km-16  | KM-optimized bloom filter with nh=16        |
+| 3     | bloom-km-20  | KM-optimized bloom filter with nh=20        |
+| 4     | bloom-km-24  | KM-optimized bloom filter with nh=24        |
 
-The bloom-km-2, bloom-km-4 and bloom-km-8 datastructures generate a bitstring
-using a Bloom filter and the Kirsch-Mitzenmacher optimization
-{{BETTER-BLOOM-FILTER}}.
+These datastructures generate a bitstring using a Bloom filter and the
+Kirsch-Mitzenmacher optimization {{BETTER-BLOOM-FILTER}}.
 
-To add or verify a Singular Assertion to a bloom-km structure, the Singular
-Assertion is first encoded as a four-element CBOR array. The first element is
-the subject name. The second element is the subject zone. The third element is
-the subject context. The fourth element is the type code as in {{tabobj}} in
-{{obj-types}}. This encoded object is then hashed according to the specified
-hash algorithm. The hash algorithm's output is then split into nh equal length
-parts (2 for bloom-km-2, 4 for bloom-km-4, 8 for bloom-km-8), and these parts
-are used as indexes into the bitstring modulo the bitstring length. To add the
-Singular Assertion, all bits at the given indices are set to 1. To verify the
-Singular Assertion, all bits at the given indices are checked, and the Singular
-Assertion is taken to be in the filter if all bits are 1.
+To add a subject-object mapping for a name to a bloom-km structure, the mapping
+is first encoded as a four-element CBOR array. The first element is the subject
+name. The second element is the subject zone. The third element is the subject
+context. The fourth element is the type code as in {{tabobj}} in {{obj-types}}.
+This encoded object is then hashed according to the specified hash algorithm.
+The hash algorithm's output is then split into two parts of equal length x and
+y. To obtain the nh indexes into the bitstring, the following equation is used:
 
-[EDITOR's NOTE CFE: This is not how it is described in the km-paper 
-(https://www.eecs.harvard.edu/~michaelm/postscripts/rsa2008.pdf)]
+- (x + i*y) mod bsl, where bsl is the bitstring length and i ∈ \[1,nh]
+
+To add a subject-object mapping, all bits at the calculated indices are set to
+one. To check wether such a mapping exists, all bits at the calculated indices
+are checked, and the mapping is taken to be in the filter if all bits are one.
 
 ### Dynamic Assertion Validity {#assertion-dynamics}
 
@@ -1303,17 +1298,17 @@ as in {{signatures}}. See {{public-key-management}} for more.
 Hash algorithms are used in several places in the RAINS data model:
 
 - hashing certificate data in cert-info objects (see {{obj-cert}})
-- hashing Singular Assertions into Bloom filters and check if a Singular
-  Assertion is present in a Bloom filter (see {{p-shards}})
+- hashing assertions into Bloom filters and checking if a subject-object mapping
+  within a zone for the given context and type is present in a Bloom filter (see
+  {{p-shards}})
 - hashing Assertion and Message data as part of generating a MAC (see
   {{signatures}})
 
 Hash functions are identified by a code given in {{tabhash}}. The Applicability
 column determines where in the RAINS Protocol a specific hash function might be
 used. Applicability "C" means the hash is valid for use in a certificate info
-object, "P" that it can be used for hashing Singular Assertions for P-shards,
-"S" that it can be used for hashing Singular Assertions and Messages for
-signatures.
+object, "P" that it can be used for hashing assertions for P-shards, "S" that it
+can be used for hashing Assertions and Messages for signatures.
 
 {: #tabhash title="Hash algorithms"}
 
@@ -1426,7 +1421,7 @@ server in response to an incoming query must use different tokens.
 
 By default, a client service will perform verification on a negative query
 response and return a 404 No Assertion Exists Notification for queries with a
-valid and verified proof of non-existence, within a Message signed by the query
+valid and verified proof of nonexistence, within a Message signed by the query
 service's infrakey. Option 7 disables this behavior, and causes the query
 service to return the Shard, P-Shard or Zone for verification by the client. It
 is intended to be used with untrusted query services.
@@ -1656,8 +1651,7 @@ To generate a canonicalized P-Shard:
 
 To generate a canonicalized Message:
 
-- preserve the order of the Sections (Assertions, Queries and Notifications)
-  within the Message.
+- preserve the order of the Message Sections within the Message.
 - canonicalize each Section as appropriate by following the canonicalization
   steps for the appropriate Section type, above.
 
