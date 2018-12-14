@@ -1593,7 +1593,7 @@ element to be signed. The signing process is defined as follows:
 - Render the element to be signed into a canonical byte stream as specified in
   {{c14n}}.
 
-- Generate a signature on the resulting byte stream according to the algorithm,
+- Generate a signature on the resulting byte stream according to the algorithm
   keyspace and key phase selected.
 
 - Add the full signature to the signatures array at the appropriate point in
