@@ -919,7 +919,7 @@ against the appropriate key for the Zone for which the P-Shard is valid in the
 given context.
 
 The value of the subject-zone (4) key is a UTF-8 encoded string containing the
-name of the zone in which the Singular Assertions in the P-Shard are made and
+name of the zone within which the names represented in the P-Shard are contained, and
 MUST end with '.' (the root zone).
 
 The value of the context (6) key is a UTF-8 encoded string containing the name
