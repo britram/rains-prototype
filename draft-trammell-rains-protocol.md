@@ -753,7 +753,7 @@ negative proof of the lack of such an association, or both):
   subject name in a given lexicographic range of subject names within a given
   zone in a given context. The signature on a Shard can be used to prove the
   nonexistence of an Object for a subject name within its range. Shards are
-  described in detail in {{shards}}. If a Singular Assertions within a Shard is
+  described in detail in {{shards}}. If a Singular Assertion within a Shard is
   signed, it inherits zone and context information from the containing shard and
   can also be used outside the Shard.
 - P-Shards (or Probabilistic Shards) contain a data structure that can be used
