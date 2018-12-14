@@ -292,7 +292,7 @@ are easily distinguishable from each other by its human users.
 
 A naming service should impose as little structure on the names it supports as
 practical in order to be universally applicable. Naming services that impose a
-given organizational structure on the names will not translate well to societies
+given organizational structure on names will not translate well to societies
 where that organizational structure is not prevalent.
 
 ### Federation of Authority
