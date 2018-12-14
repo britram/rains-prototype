@@ -930,7 +930,7 @@ The value of the range (11) key, if present, is a two element array of strings
 or nulls (subject-name A, subject-name B). A MUST lexicographically sort before
 B. If A is null, the P-Shard begins at the beginning of the zone. If B is null,
 the P-Shard ends at the end of the zone. The P-Shard MUST NOT be used to check
-the existence of any Singular Assertions whose subject names are equal to or
+the existence of Assertions about subject names equal to or
 sort before A, or are equal to or sort after B. If the range (11) key is not
 present, the P-Shard covers then entire zone.
 
