@@ -1636,7 +1636,7 @@ To generate a canonicalized Shard:
   array as, above.
 - sort the assertions array by lexicographic order of the serialized
   canonicalized byte string representing the assertion. Note that this will
-  cause the subject array to be sorted in lexicographic order of subject name,
+  cause the assertions array to be sorted in lexicographic order of subject name,
   as well. [EDITORS's NOTE CFE What is the subject array?]
 - sort the CBOR map by ascending order of its keys ({{tabmkey}}).
 
