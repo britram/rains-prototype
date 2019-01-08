@@ -362,7 +362,6 @@ ul.toc li {
 <link href="#rfc.section.6.3" rel="Chapter" title="6.3 Client Protocol">
 <link href="#rfc.section.6.4" rel="Chapter" title="6.4 Publication Protocol">
 <link href="#rfc.section.6.5" rel="Chapter" title="6.5 Enforcing Assertion Consistency">
-<link href="#rfc.section.6.6" rel="Chapter" title="6.6 Error Handling">
 <link href="#rfc.section.7" rel="Chapter" title="7 Operational Considerations">
 <link href="#rfc.section.7.1" rel="Chapter" title="7.1 Discovering RAINS servers">
 <link href="#rfc.section.7.2" rel="Chapter" title="7.2 Bootstrapping RAINS Services">
@@ -375,8 +374,6 @@ ul.toc li {
 <link href="#rfc.section.8" rel="Chapter" title="8 Experimental Design and Evaluation">
 <link href="#rfc.section.9" rel="Chapter" title="9 Security Considerations">
 <link href="#rfc.section.9.1" rel="Chapter" title="9.1 Integrity and Confidentiality Protection">
-<link href="#rfc.section.9.2" rel="Chapter" title="9.2 Server state exhaustion">
-<link href="#rfc.section.9.3" rel="Chapter" title="9.3 Query relay attacks">
 <link href="#rfc.section.10" rel="Chapter" title="10 IANA Considerations">
 <link href="#rfc.section.11" rel="Chapter" title="11 Acknowledgments">
 <link href="#rfc.references" rel="Chapter" title="12 References">
@@ -395,7 +392,7 @@ ul.toc li {
 
   <meta name="dct.creator" content="Trammell, B. and C. Fehlmann" />
   <meta name="dct.identifier" content="urn:ietf:id:draft-trammell-rains-protocol-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2018-12-10" />
+  <meta name="dct.issued" scheme="ISO8601" content="2019-01-08" />
   <meta name="dct.abstract" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design DNS knowing what we do now,&#8221; on the background of a set of properties of an idealized Internet naming service." />
   <meta name="description" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design DNS knowing what we do now,&#8221; on the background of a set of properties of an idealized Internet naming service." />
 
@@ -419,8 +416,8 @@ ul.toc li {
 <td class="right">ETH Zurich</td>
 </tr>
 <tr>
-<td class="left">Expires: June 13, 2019</td>
-<td class="right">December 10, 2018</td>
+<td class="left">Expires: July 12, 2019</td>
+<td class="right">January 08, 2019</td>
 </tr>
 
     	
@@ -436,9 +433,9 @@ ul.toc li {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at https://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on June 13, 2019.</p>
+<p>This Internet-Draft will expire on July 12, 2019.</p>
 <h1 id="rfc.copyrightnotice"><a href="#rfc.copyrightnotice">Copyright Notice</a></h1>
-<p>Copyright (c) 2018 IETF Trust and the persons identified as the document authors.  All rights reserved.</p>
+<p>Copyright (c) 2019 IETF Trust and the persons identified as the document authors.  All rights reserved.</p>
 <p>This document is subject to BCP 78 and the IETF Trust's Legal Provisions Relating to IETF Documents (https://trustee.ietf.org/license-info) in effect on the date of publication of this document.  Please review these documents carefully, as they describe your rights and restrictions with respect to this document.  Code Components extracted from this document must include Simplified BSD License text as described in Section 4.e of the Trust Legal Provisions and are provided without warranty as described in the Simplified BSD License.</p>
 
   
@@ -608,8 +605,6 @@ ul.toc li {
 </li>
 <li>6.5.   <a href="#rfc.section.6.5">Enforcing Assertion Consistency</a>
 </li>
-<li>6.6.   <a href="#rfc.section.6.6">Error Handling</a>
-</li>
 </ul><li>7.   <a href="#rfc.section.7">Operational Considerations</a>
 </li>
 <ul><li>7.1.   <a href="#rfc.section.7.1">Discovering RAINS servers</a>
@@ -633,10 +628,6 @@ ul.toc li {
 <li>9.   <a href="#rfc.section.9">Security Considerations</a>
 </li>
 <ul><li>9.1.   <a href="#rfc.section.9.1">Integrity and Confidentiality Protection</a>
-</li>
-<li>9.2.   <a href="#rfc.section.9.2">Server state exhaustion</a>
-</li>
-<li>9.3.   <a href="#rfc.section.9.3">Query relay attacks</a>
 </li>
 </ul><li>10.   <a href="#rfc.section.10">IANA Considerations</a>
 </li>
@@ -1083,7 +1074,6 @@ ul.toc li {
 <li>P-Shards (or Probabalistic Shards) contain a data structure that can be used to demonstrate, within predictable bounds of false-negative probability, the non-existence of an object of a given type for a name within a lexicographic range of subjet names within a given zone in a given context. They allow an efficiency-accuracy tradeoff for negative proofs. P-Shards are described in detail in <a href="#p-shards" class="xref">Section 5.2.4</a>
 </li>
 </ul>
-<p id="rfc.section.5.2.p.7">[EDITOR&#8217;S NOTE: fix this up, give it context: Assertions are sorted lexicographically by their cbor encoded byte string in ascending order. That means, they are sorted by the following elements in the mentioned order: fully qualified name, context, type, object value(s), signature meta data.]</p>
 <h1 id="rfc.section.5.2.1">
 <a href="#rfc.section.5.2.1">5.2.1.</a> <a href="#singular-assertions" id="singular-assertions">Singular Assertions</a>
 </h1>
@@ -1575,7 +1565,6 @@ ul.toc li {
 <p id="rfc.section.5.5.1.p.4">By default, a client service will perform verification of negative queries and return a 404 No Assertion Exists for queries with a consistent proof of non- existence, within a message signed by the query service&#8217;s infrakey. Option 7 disables this behavior, and causes the query service to return the shard proving nonexistence for verification by the client. It is intended to be used with untrusted query services.</p>
 <p id="rfc.section.5.5.1.p.5">Option 8 specifies that a querier&#8217;s interest in a query is strictly ephemeral, and that future assertions related to this query SHOULD NOT be proactively pushed to the querier.</p>
 <p id="rfc.section.5.5.1.p.6">Option 9 specifies that the querier would prefer a fresh result to one from the server&#8217;s cache. If the server is not running an authority service for the queried subject, it can honor this request by issuing a query toward the authority. As this could be used for denial-of-service-attacks, a server honoring Option 9 SHOULD limit the rate of &#8220;freshness&#8221; queries it issues.</p>
-<p id="rfc.section.5.5.1.p.7">[EDITOR&#8217;S NOTE: RAINS is missing a facility for &#8220;trusted&#8221; interserver communication. Queries are meant to be as disjoint from their possible answers as is specified in this document, since this allows maximum flexibility in implementation in the query / but when two servers are configured to be more closely coupled to each other, the query/assertion interface really doesn&#8217;t support the full expressiveness of this tight coupling. There are three ways that I can see do deal with this: (1) ignore it and deal, (2) try to build a set of query options to make queries more, (3) rely on heuristics and/or configuration to specify different query answering behavior for trusted servers, based on information about the connection itself. Leaning toward (3) now, which would go down in the &#8220;operational considerations&#8221; section]</p>
 <h1 id="rfc.section.5.5.2">
 <a href="#rfc.section.5.5.2">5.5.2.</a> <a href="#confirmation" id="confirmation">Confirmation Queries</a>
 </h1>
@@ -1604,7 +1593,7 @@ ul.toc li {
 <thead><tr>
 <th class="right">Code</th>
 <th class="left">Description</th>
-<th class="left">Reference</th>
+<th class="left">See Also</th>
 </tr></thead>
 <tbody>
 <tr>
@@ -1619,8 +1608,8 @@ ul.toc li {
 </tr>
 <tr>
 <td class="right">306</td>
-<td class="left">Reply too large, fallback to TCP</td>
-<td class="left"><a href="#errors" class="xref">Section 6.6</a></td>
+<td class="left">Message too large for UDP</td>
+<td class="left"><a href="#transport-udp" class="xref">Section 6.1.2</a></td>
 </tr>
 <tr>
 <td class="right">399</td>
@@ -1630,7 +1619,7 @@ ul.toc li {
 <tr>
 <td class="right">400</td>
 <td class="left">Bad message received</td>
-<td class="left"><a href="#errors" class="xref">Section 6.6</a></td>
+<td class="left"></td>
 </tr>
 <tr>
 <td class="right">403</td>
@@ -1646,23 +1635,20 @@ ul.toc li {
 <td class="right">406</td>
 <td class="left">Message not acceptable for service</td>
 <td class="left">
-<a href="#errors" class="xref">Section 6.6</a> <a href="#client-proto" class="xref">Section 6.3</a> <a href="#pub-proto" class="xref">Section 6.4</a>
+<a href="#client-proto" class="xref">Section 6.3</a> <a href="#pub-proto" class="xref">Section 6.4</a>
 </td>
 </tr>
 <tr>
 <td class="right">413</td>
 <td class="left">Message too large</td>
-<td class="left"><a href="#errors" class="xref">Section 6.6</a></td>
+<td class="left">
+<a href="#transport-tls" class="xref">Section 6.1.1</a> <a href="#transport-udp" class="xref">Section 6.1.2</a>
+</td>
 </tr>
 <tr>
 <td class="right">500</td>
 <td class="left">Unspecified server error</td>
-<td class="left"><a href="#errors" class="xref">Section 6.6</a></td>
-</tr>
-<tr>
-<td class="right">501</td>
-<td class="left">Server not capable</td>
-<td class="left"><a href="#capabilities" class="xref">Section 5.9</a></td>
+<td class="left"></td>
 </tr>
 <tr>
 <td class="right">504</td>
@@ -1673,6 +1659,7 @@ ul.toc li {
 </table>
 <p id="rfc.section.5.6.p.4">Note that the status codes are chosen to be mnemonically similar to status codes for HTTP <a href="#RFC7231" class="xref">[RFC7231]</a>.</p>
 <p id="rfc.section.5.6.p.5">The value of the note-data (22) key, if present, is a UTF-8 encoded string with additional information about the notification, intended to be displayed to an administrator to help debug the issue identified by the negotiation.</p>
+<p id="rfc.section.5.6.p.6">Notification codes 400 and 500 signal error conditions. 400 is a general message noting that a client or server could not parse a message, and 500 notes that the server failed to process a message due to some internal error. Sending these notifications is optional, according to server policy and configuration.</p>
 <h1 id="rfc.section.5.7">
 <a href="#rfc.section.5.7">5.7.</a> <a href="#signatures" id="signatures">Signatures</a>
 </h1>
@@ -1781,6 +1768,7 @@ ul.toc li {
 <li>preserve the order of Sections within the Message</li>
 <li>canonicalize each section as appropriate by following the canonicalization steps for the appropriate Section type, above.</li>
 </ul>
+<p id="rfc.section.5.7.1.p.16">It is RECOMMENDED that RAINS implementations generate and send only Messages whose contents are sorted according to the canonicalization rules in this section, since the sorting operation is in any case necessary to generate and verify signatures. However, an implementation MUST NOT assume that a Message it receives is sorted according to these rules.</p>
 <h1 id="rfc.section.5.7.2">
 <a href="#rfc.section.5.7.2">5.7.2.</a> <a href="#eddsa-format" id="eddsa-format">EdDSA signature and public key format</a>
 </h1>
@@ -1839,7 +1827,7 @@ ul.toc li {
 <h1 id="rfc.section.6.1.1">
 <a href="#rfc.section.6.1.1">6.1.1.</a> <a href="#transport-tls" id="transport-tls">TLS over TCP</a>
 </h1>
-<p id="rfc.section.6.1.1.p.1">RAINS servers listen on port 7753 by default [EDITOR&#8217;S NOTE: no effort has yet been made to assign this port at IANA; should RAINS be standardized, another port may be chosen], but servers may listen on other TCP ports subject to local configuration. Methods for discovering servers and configuring clients MUST allow for the specification of an alternate port. Servers providing authority service should use service information records (<a href="#obj-srv" class="xref">Section 5.3.8</a>) to specify a port on a service name specified by redirection object(s) for the zone; see <a href="#bootstrapping" class="xref">Section 7.2</a>.</p>
+<p id="rfc.section.6.1.1.p.1">RAINS servers listen on port 55553 by default. Note that no effort has yet been made to assign this port at IANA; should RAINS be standardized, another port may be chosen. Servers may listen on other TCP ports subject to local configuration. Methods for discovering servers and configuring clients MUST allow for the specification of an alternate port. Servers providing authority service should use service information records (<a href="#obj-srv" class="xref">Section 5.3.8</a>) to specify a port on a service name specified by redirection object(s) for the zone; see <a href="#bootstrapping" class="xref">Section 7.2</a>.</p>
 <p id="rfc.section.6.1.1.p.2">RAINS servers should strive to keep connections open to peer servers, unless it is clear that no future messages will be exchanged with those peers, or in the face of resource limitations at either peer. If a RAINS server needs to send a message to another RAINS server to which it does not have an open connection, it attempts to open a connection with that server.</p>
 <p id="rfc.section.6.1.1.p.3">A RAINS client configured to use one or more servers for query service should strive to keep connections open to those servers.</p>
 <p id="rfc.section.6.1.1.p.4">RAINS servers MUST accept Messages over TCP up to 65536 bytes in length, but MAY accept messages of greater length, subject to resource limitations of the server. A server with resource limitations MUST respond to a message rejected due to length restrictions with a notification of type 413 (Message Too Large).  A server that receives a type 413 notification must note that the peer sending the message only accepts messages smaller than the largest message it&#8217;s successfully sent that peer, or cap messages to that peer to 65536 bytes in length.</p>
@@ -1855,9 +1843,9 @@ ul.toc li {
 <p id="rfc.section.6.1.3.p.1">Both TCP and UDP connections between RAINS clients and servers may be associated with in-network state (such as firewall pinholes and/or network address translation cache entries) with relatively short idle timeouts. RAINS provides a simple heartbeat mechanism to refresh this state for long-running connections.</p>
 <p id="rfc.section.6.1.3.p.2">A RAINS peer may send its peer a 100 Connection Heartbeat notification at any time. This message is ignored by the receiving peer.</p>
 <h1 id="rfc.section.6.2">
-<a href="#rfc.section.6.2">6.2.</a> <a href="#base-proto" id="base-proto">Protocol Dynamics</a>
+<a href="#rfc.section.6.2">6.2.</a> <a href="#dynamics" id="dynamics">Protocol Dynamics</a>
 </h1>
-<p id="rfc.section.6.2.p.1">[EDITOR&#8217;S NOTE frontmatter here please. better prosify the following: this section describes one possible set of rules for handling messages at servers and clients in order to illustrate the typical operation of a RAINS peer. It is not intended as a normative reference or to prescribe behavior for RAINS peers.]</p>
+<p id="rfc.section.6.2.p.1">This section illustrates how the RAINS protocol works with one possible set of rules for handling incoming messages and sending outgoing messages as a RAINS server; however, the actions here and the sequence in which they are applied are meant only as one possibility for implementors, and are not normative.</p>
 <h1 id="rfc.section.6.2.1">
 <a href="#rfc.section.6.2.1">6.2.1.</a> <a href="#proto-processing" id="proto-processing">Message Processing</a>
 </h1>
@@ -1867,11 +1855,12 @@ ul.toc li {
 <p></p>
 
 <ul>
-<li>notes the token on the message. This token MUST be present on any messages sent in reply to this message.</li>
-<li>processes any capabilities present, replacing the set of capabilities known for the peer with the set present in the message. If the present capabilities are represented by a hash that the server does not have in its cache, it prepares a notification of type 399 &#8220;Capability hash not understood&#8221; to send to its peer.</li>
-<li>splits the contents into its constituent message sections, and verifies that each is acceptable. Specifically, queries are not accepted by clients (see <a href="#client-proto" class="xref">Section 6.3</a>), and 404 No Assertion Exists notifications are not accepted by servers. If a message contains an unacceptable section, the server or client returns a 400 Bad Message notification to its peer, and ceases processing of the message.</li>
+<li>notes the token on the message to send on any message generated in reply to the message.</li>
+<li>processes any capabilities present, replacing the set of capabilities known for the peer with the set present in the message. If the present capabilities are represented by a hash that the server does not have in its cache, it prepares a notification of type 399 (&#8220;Capability hash not understood&#8221;) to send to its peer.</li>
+<li>splits the contents into its constituent message sections, and verifies that each is acceptable. Specifically, queries are not accepted by clients (see <a href="#client-proto" class="xref">Section 6.3</a>), and 404 No Assertion Exists notifications are not accepted by servers. If a message contains an unacceptable section, the server or client returns a 406 Message Not Acceptable for Service notification to its peer, and ceases processing of the message.</li>
 </ul>
-<p id="rfc.section.6.2.1.p.5">On receipt of an assertion, shard, P-Shard, or zone message section, a server:</p>
+<p id="rfc.section.6.2.1.p.5">It then processes each sections acoording to the rules below.</p>
+<p id="rfc.section.6.2.1.p.6">On receipt of an Assertion (Singular Assertion, Shard, P-Shard, or Zone) section, a server:</p>
 <p></p>
 
 <ul>
@@ -1879,38 +1868,28 @@ ul.toc li {
 <li>determines whether it answers an outstanding query; if so, it prepares to forward the section to the server that issued the query.</li>
 <li>determines whether it is likely to answer a future query, according to its configuration, policy, and query history; if so, it caches the section.</li>
 </ul>
-<p id="rfc.section.6.2.1.p.7">On receipt of an assertion, shard, P-Shard or zone message section, a client:</p>
+<p id="rfc.section.6.2.1.p.8">On receipt of an Assertion (Singular Assertion, Shard, P-Shard, or Zone) section, a client:</p>
 <p></p>
 
 <ul>
 <li>determines whether it answers an outstanding query; if so, it considers the query answered. It then:</li>
 <li>determines whether it is likely to answer a future query, according to its configuration, policy, and query history; if so, it caches the section.</li>
 </ul>
-<p id="rfc.section.6.2.1.p.9">On receipt of a query, a server:</p>
-<p id="rfc.section.6.2.1.p.10">[EDITOR&#8217;S NOTE: add positive and negative proof, shards and p-shards here. MUST check that a P-Shard provides a negative proof for a query before returning it.  also, note that a server may refuse to take delegated queries.]</p>
+<p id="rfc.section.6.2.1.p.10">On receipt of a query, a server:</p>
 <p></p>
 
 <ol>
-<li>determines whether it has expired by checking the query-expires value. If so, it drops the query silently. If not, it:</li>
-<li>determines whether it has at least one stored assertion answering the query.  If so, it checks to see if the assertion is newer than the current-time value in the query, if present. If the assertion is not newer, it prepares to send a notification of type 304 Querier Has Latest Answer to the peer. Otherwise, it returns the assertion(s) with the longest validUntil value that is already valid. If no stored assertion is available, it:</li>
-<li>checks whether the query specifies option 1 and/or 9. If so, it: <ul><li>determines whether the chosen option is in compliance with the server&#8217;s configuration and policy. If so, and: <ul>
-<li>option 9 is set and option 1 is not, it continues with step 4.</li>
-<li>option 1 is set, it checks whether it has a cached section to proof nonexistence. If so: <ul>
-<li>and option 9 is not set, it returns the section with the shortest size or the signature of the longest remaining validity to the peer that issued the query depending on the server&#8217;s policy. [EDITOR&#8217;S NOTE: Add a query option for this decision?]</li>
-<li>and option 9 is set, it might send a 211 notification back to the client, depending on the server&#8217;s configuration. Independent of the previous decision it then continues with step 4.  If not, the server overwrites the query&#8217;s option according to its configuration and policy and processes it as above with the adapted option.  If not, it:</li>
-</ul>
-</li>
-</ul>
-</li></ul>
-</li>
-<li>checks to see whether the query specifies option 4 (cached answers only). If so, and if option 5 (expired assertions acceptable) is also specified, it then checks to see if it has any cached sections that answer the query on which signatures are expired; otherwise, processing stops, and the server returns a 504 No Assertion Available notification, as if the query had instantly expired. If the query does not specify option 4, delegation proceeds, and the server:</li>
+<li>determines whether it has expired by checking the query-expires value. If so, it drops the query silently. If not, it</li>
+<li>determines whether it has at least one stored assertion containing a positive answer to the query. If so, it checks to see if the assertion is newer than the current-time value in the query, if present. If the assertion is not newer, it prepares to send a notification of type 304 (&#8220;Querier Has Latest Answer&#8221;) to the peer. Otherwise, it prepares a message containing the stored assertion(s) positively answering the query. If no positive assertion is available, it</li>
+<li>checks to see whether it has at least one stored proof of nonexistence (shard or p-shard) for the query. If so, it prepares a message containing the negative proof to the peer. It prefers P-Shards to Shards for reasons of efficiency, but must verify that any P-shard does indeed function as a negative proof before sending it.</li>
 <li>determines whether it has other non-authoritative servers it can forward the query to, according to its configuration and policy, and in compliance with any query options (see <a href="#query-opts" class="xref">Section 5.5.1</a>). If so, it prepares to forward the query to those servers, noting the reply for the received query depends on the replies for the forwarded query. If not, it:</li>
 <li>determines the responsible authority servers for the zone containing the query name in the query for the context requested, and forwards the query to those authority servers, noting the reply for the received query depends on the reply for the forwarded query.</li>
 </ol>
-<p id="rfc.section.6.2.1.p.12">If query delegation fails to return an answer within the maximum of the valid-until time in the received query and a configured maximum timeout for a delegated query, the server prepares to send a 504 No assertion available response to the peer from which it received the query.</p>
-<p id="rfc.section.6.2.1.p.13">When a server creates a new query to forward to another server in response to a query it received, it SHOULD NOT use the same token on the delegated query as on the received query, unless option 6 Enable Tracing is present in the received, in which case it MUST use the same token. The Enable Tracing option is designed to allow debugging of query processing across multiple servers, It SHOULD only be enabled by clients designed explicitly for debugging RAINS itself, and MUST NOT be enabled by default by client resolvers.</p>
-<p id="rfc.section.6.2.1.p.14">When a server creates a new query to forward to another server in response to a query it received, and the received query contains a query-expires time, the delegated query MUST NOT have a query-expires time after that in the received query. If the received query contains no query-expires time, the delegated query MAY contain a query- expires time of the server&#8217;s choosing, according to its configuration.</p>
-<p id="rfc.section.6.2.1.p.15">On receipt of a notification, a server&#8217;s behavior depends on the notification type:</p>
+<p id="rfc.section.6.2.1.p.12">Query options (see <a href="#query-opts" class="xref">Section 5.5.1</a>) change this handling. If query option 4 (&#8220;cached answers only&#8221;) is set, steps 4 and 5 above are skipped, and the server returns a 504 (&#8220;No Assertion Available&#8221;) notification instead. If query option 9 (&#8220;Maximize Freshness&#8221;) is set, the server might forward a query even if it has a cached answer.</p>
+<p id="rfc.section.6.2.1.p.13">If query delegation fails to return an answer within the maximum of the valid-until time in the received query and a configured maximum timeout for a delegated query, the server prepares to send a 504 No assertion available response to the peer from which it received the query.</p>
+<p id="rfc.section.6.2.1.p.14">When a server creates a new query to forward to another server in response to a query it received, it does not use the same token on the delegated query as on the received query, unless option 6 (&#8220;Enable Tracing&#8221;) is present in the received query, in which case it does use the same token. The Enable Tracing option is designed to allow debugging of query processing across multiple servers.</p>
+<p id="rfc.section.6.2.1.p.15">When a server creates a new query to forward to another server in response to a query it received, and the received query contains a query-expires time, the delegated query MUST NOT have a query-expires time after that in the received query. If the received query contains no query-expires time, the delegated query MAY contain a query- expires time of the server&#8217;s choosing, according to its configuration.</p>
+<p id="rfc.section.6.2.1.p.16">On receipt of a notification, a server&#8217;s behavior depends on the notification type:</p>
 <p></p>
 
 <ul>
@@ -1918,9 +1897,9 @@ ul.toc li {
 <li>For type 399 &#8220;Capability hash not understood&#8221;, the server prepares to send a full capabilities list on the next message it sends to the peer.</li>
 <li>For type 504 &#8220;No assertion available&#8221;, the server checks the token on the message, and prepares to forward the assertion to the associated query.</li>
 <li>For type 413 &#8220;Message too large&#8221; the server notes that large messages may not be sent to a peer and tries again, or logs the error along with the note-data content.</li>
-<li>For type 400 &#8220;Bad message&#8221;, type 403 &#8220;Inconsistent message&#8221;, type 500 &#8220;Server error&#8221;, or type 501 &#8220;Server not capable&#8221;, the server logs the error along with the note-data content, as these notifications generally represent implementation or configuration error conditions which will require human intervention to mitigate.</li>
+<li>For type 400 &#8220;Bad message&#8221;, type 403 &#8220;Inconsistent message&#8221;, type 406 &#8220;not supported for service&#8221;, or type 500 &#8220;Server error&#8221;, the server logs the error along with the note-data content, as these notifications generally represent implementation or configuration error conditions which will require human intervention to mitigate.</li>
 </ul>
-<p id="rfc.section.6.2.1.p.17">On receipt of a notification, a client&#8217;s behavior depends on the notification type:</p>
+<p id="rfc.section.6.2.1.p.18">On receipt of a notification, a client&#8217;s behavior depends on the notification type:</p>
 <p></p>
 
 <ul>
@@ -1929,11 +1908,10 @@ ul.toc li {
 <li>For type 399 &#8220;Capability hash not understood&#8221;, the client prepares to send a full capabilities list on the next message it sends to the peer.</li>
 <li>For type 404 &#8220;No assertion exists&#8221;, the client takes the query to be unanswerable. It may reissue the query with query option 7 to do the verification of nonexistence again, if the server from which it received the notification is untrusted.</li>
 <li>For type 413 &#8220;Message too large&#8221; the client notes that large messages may not be sent to a peer and tries again, or logs the error along with the note-data content.</li>
-<li>For type 400 &#8220;Bad message&#8221;, type 403 &#8220;Inconsistent message&#8221;, type 500 &#8220;Server error&#8221;, or type 501 &#8220;Server not capable&#8221;, the client logs the error along with the note-data content, as these notifications generally represent implementation or configuration error conditions which will require human intervention to mitigate.</li>
+<li>For type 400 &#8220;Bad message&#8221;, type 403 &#8220;Inconsistent message&#8221;, type 406 &#8220;not acceptable for service&#8221;, of type 500 &#8220;Server error&#8221;, the client logs the error along with the note-data content, as these notifications generally represent implementation or configuration error conditions which will require human intervention to mitigate.</li>
 </ul>
-<p id="rfc.section.6.2.1.p.19">The first message a server or client sends to a peer after a new connection is established SHOULD contain a capabilities section, if the server or client supports any optional capabilities. See <a href="#capabilities" class="xref">Section 5.9</a>.</p>
-<p id="rfc.section.6.2.1.p.20">If the server is configured to keep long-running connections open, due to the presence of network behaviors that may drop state for idle connections, it SHOULD send a message containing a type 100 Connection Heartbeat notification after a configured idle time without any messages containing other content being sent.</p>
-<p id="rfc.section.6.2.1.p.21">In general, servers should follow the principles laid out in <a href="#I-D.iab-protocol-maintenance" class="xref">[I-D.iab-protocol-maintenance]</a>. A malformed message section, or a message section with any invalid (but not expired) signature, should be dropped and logged. A malformed message section or invalid signature should not, however, result in other sections in the same message being dropped, except as explicitly noted above.</p>
+<p id="rfc.section.6.2.1.p.20">The first message a server or client sends to a peer after a new connection is established SHOULD contain a capabilities section, if the server or client supports any optional capabilities. See <a href="#capabilities" class="xref">Section 5.9</a>.</p>
+<p id="rfc.section.6.2.1.p.21">If the server is configured to keep long-running connections open, due to the presence of network behaviors that may drop state for idle connections, it sends a message containing a type 100 Connection Heartbeat notification after a configured idle time without any messages containing other content being sent.</p>
 <h1 id="rfc.section.6.2.2">
 <a href="#rfc.section.6.2.2">6.2.2.</a> <a href="#message-transmission" id="message-transmission">Message Transmission</a>
 </h1>
@@ -1969,34 +1947,19 @@ ul.toc li {
 <h1 id="rfc.section.6.5">
 <a href="#rfc.section.6.5">6.5.</a> <a href="#consistency" id="consistency">Enforcing Assertion Consistency</a>
 </h1>
-<p id="rfc.section.6.5.p.1">[EDITOR&#8217;S NOTE: inconsistency is only unequivocal when P ^ !P for a given assertion at the same instant T &#8211; check and fix up the following]</p>
-<p id="rfc.section.6.5.p.2">The data model used by the RAINS protocol allows inconsistent information to be asserted, all resulting from misconfigured or misbehaving authority servers. The following types of inconsistency are possible:</p>
+<p id="rfc.section.6.5.p.1">The data model used by the RAINS protocol allows inconsistent information to be asserted, all resulting from misconfigured or misbehaving authority servers. The following types of inconsistency are possible:</p>
 <p></p>
 
 <ul>
-<li>A shard omits an assertion within its range which is valid at the same time as the shard.</li>
-<li>A zone omits an assertion within its zone which is valid at the same time as the zone.</li>
-<li>An address assertion contains an object that is not allowed (see <a href="#cbor-revassert" class="xref">Appendix A.2</a>)</li>
-<li>An assertion prohibited by its zone&#8217;s nameset is valid at the same time as the zone&#8217;s nameset assertion.</li>
-<li>A zone contains a valid reflexive assertion of a given object type at the same time that its superordinate zone contains a valid assertion of the same type.</li>
+<li>A Zone omits an Assertion which has the same validity start time as said Assertion.</li>
+<li>A Shard omits an Assertion within its range which has the same validity start time as said Assertion.</li>
+<li>A P-Shard with a given validity start time proves nonexistence of an Assertion with the same validity start time.</li>
+<li>An Assertion prohibited by its Aone&#8217;s nameset has the same validity start time as the prohibiting nameset Assertion.</li>
+<li>A zone contains a valid reflexive assertion of a given object type with the same validity start time as a valid assertion of the same type for the same name within a supordinate zone, but with a different object value.</li>
 <li>Delegations to more than one key are simultaneously valid for a given context, zone, signature algorithm, and key phase.</li>
 </ul>
-<p id="rfc.section.6.5.p.4">RAINS relies on runtime consistency checking to mitigate inconsistency: each server receiving an assertion, shard, or zone SHOULD, subject to resource constraints, ensure that it is consistent with other information it has, and if not, discard all inconsistent assertions, shards, and zones in its cache, log the error, and send a 403 Inconsistent Message to the source of the message.</p>
-<p id="rfc.section.6.5.p.5">For RAINS to work in a highly dynamic environment, some time-bounded inconsistencies are allowed to occur. On the one hand, an authority wants to prove nonexistence of a name for a duration of time to make caching possible to reduce query latency and reduce load on its naming servers. On the other hand, an authority wants to add the name of a new delegation as quickly as possible and also allow its customers to make changes available quickly. Assuming an authority resigns sections every x seconds, then any inconcistency can occur at most x seconds. At the point in time a section is signed, its content MUST represent the state of the zone at that point in time. The following actions result in allowed inconsistencies:</p>
-<p></p>
-
-<ul>
-<li>Creation of a new assertion: Shards and P-Shards in range, and zones signed before this assertion was created and which are still valid, prove that this assertion is nonexistent, although it does now.</li>
-<li>Changed object value of an assertion: Shards in range and zones signed before this assertion was created and which are still valid, prove that this assertion is nonexistent, althoug it does now.</li>
-<li>Expiration of an assertion: Shards and P-Shards in range, and zones signed before this assertion has expired and which are still valid, prove that this assertion exists, although it does not anymore.</li>
-<li>Revocation of an assertion: Same inconsistencies as for expiration of an assertion with the addition, that the assertion itself might still be cached and served although it has been revoked.</li>
-</ul>
-<p id="rfc.section.6.5.p.7">Two sections for proving nonexistence (shard, P-Shard or zone) which have an overlapping range and validity time where in between the signing of the two sections any of the above mentioned actions leading to inconsistencies happend, become inconsistent as well. One of them has the old view, while the newer one has the updated view about the assertion. Note that there is no inconsistency between a P-Shard and any other section proving nonexistence if only the object value of the assertion has changed (a P-Shard does not store this information).</p>
-<p id="rfc.section.6.5.p.8">Note that most assertions are consistent between each other as the union of them is considered to be the valid state. However, there are few exceptions mentioned in <a href="#consistency" class="xref">Section 6.5</a>.</p>
-<h1 id="rfc.section.6.6">
-<a href="#rfc.section.6.6">6.6.</a> <a href="#errors" id="errors">Error Handling</a>
-</h1>
-<p id="rfc.section.6.6.p.1">[EDITOR&#8217;S NOTE: content please?]</p>
+<p id="rfc.section.6.5.p.3">RAINS relies on runtime consistency checking to mitigate inconsistency: each server receiving an assertion, shard, or zone SHOULD, subject to resource constraints, ensure that it is consistent with other information it has, and if not, discard all inconsistent assertions, shards, and zones in its cache, log the error, and send a 403 Inconsistent Message to the source of the message.</p>
+<p id="rfc.section.6.5.p.4">For RAINS to work in a highly dynamic environment, some time-bounded inconsistencies are allowed to occur. On the one hand, the authority wants to prove nonexistence of a name for a duration of time to make caching possible to reduce query latency and reduce load on its naming servers. On the other hand, the authority would like the flexibility to issue new assertions about previously nonexistent names without waiting for a previous negative proof to expire. Therefore, the defintions of inconsistency above are strictly limited to identical (and therefore non-orderable) validity start times.</p>
 <h1 id="rfc.section.7">
 <a href="#rfc.section.7">7.</a> <a href="#operational-considerations" id="operational-considerations">Operational Considerations</a>
 </h1>
@@ -2059,15 +2022,6 @@ ul.toc li {
 <p id="rfc.section.9.1.p.1">Assertions are not valid unless they contain at least one signature that can be verified from the chain of authorities specified by the name and context on the assertion; integrity protection is built into the information model. The infrastructure key object type allows keys to be associated with RAINS servers in addition to zone authorities, which allows a client to delegate integrity verification of assertions to a trusted query service (see <a href="#client-proto" class="xref">Section 6.3</a>).</p>
 <p id="rfc.section.9.1.p.2">Since the job of an Internet naming service is to provide publicly-available information mapping names to information needed to connect to the services they name, confidentiality protection for assertions is not a goal of the system. Specifically, the information model and the mechanism for proving nonexistence of an assertion is not designed to provide resistance against zone enumeration.</p>
 <p id="rfc.section.9.1.p.3">On the other hand, confidentiality protection of query information is crucial.  Linking naming queries to a specific user can be nearly as useful to build a profile of that user for surveillance purposes as full access to the clear text of that client&#8217;s communications <a href="#RFC7624" class="xref">[RFC7624]</a>. In this revision, RAINS uses TLS to protect communications between servers and between servers and clients, with certificate information for RAINS infrastructure stored in RAINS itself.  Together with hop-by-hop confidentiality protection, query options, proactive caching, default use of non-persistent tokens, and redirection among servers can be used to mix queries and reduce the linkability of query information to specific clients.</p>
-<p id="rfc.section.9.1.p.4">With respect to the resistance of the protocol itself to various attacks, we consider a few potential attacks against RAINS servers and RAINS clients in the subsections below:</p>
-<h1 id="rfc.section.9.2">
-<a href="#rfc.section.9.2">9.2.</a> <a href="#server-state-exhaustion" id="server-state-exhaustion">Server state exhaustion</a>
-</h1>
-<p id="rfc.section.9.2.p.1">[EDITOR&#8217;S NOTE: detail this attack: attacker can create domain, use long-validity queries to exhaust state at server. defense: server can consider shorter validity time than that requested, but not longer. attack: attacker can push garbage assertions proactively. defense: server doesn&#8217;t accept assertions it&#8217;s never seen a query for. how to handle an attacker that pushes assertions and queries? attack: attacker can push garbage delegations, exhausting delegation chain cache. defense: server doesn&#8217;t accept sigs for domains it doesn&#8217;t know about, but what about a domain with hundreds of valid delegations? in all cases, blacklisting both clients and domains seems like a good idea.]</p>
-<h1 id="rfc.section.9.3">
-<a href="#rfc.section.9.3">9.3.</a> <a href="#query-relay-attacks" id="query-relay-attacks">Query relay attacks</a>
-</h1>
-<p id="rfc.section.9.3.p.1">[EDITOR&#8217;S NOTE: detail this attack: attacker can cause traffic overload at a targeted intermediate or authority service by crafting queries and sending them via multiple query services. There is no amplification here, but a concentration, with indirection that makes tracing difficult.]</p>
 <h1 id="rfc.section.10">
 <a href="#rfc.section.10">10.</a> <a href="#iana-considerations" id="iana-considerations">IANA Considerations</a>
 </h1>
@@ -2092,7 +2046,7 @@ ul.toc li {
 <tr>
 <td class="reference"><b id="FNV">[FNV]</b></td>
 <td class="top">
-<a>Fowler, G.</a>, <a>Noll, L.</a>, <a>Vo, K.</a>, <a>Eastlake, D.</a> and <a>T. Hansen</a>, "<a href="https://tools.ietf.org/html/draft-eastlake-fnv-15">The FNV Non-Cryptographic Hash Algorithm</a>", Internet-Draft draft-eastlake-fnv-15, June 2018.</td>
+<a>Fowler, G.</a>, <a>Noll, L.</a>, <a>Vo, K.</a>, <a>Eastlake, D.</a> and <a>T. Hansen</a>, "<a href="https://tools.ietf.org/html/draft-eastlake-fnv-16">The FNV Non-Cryptographic Hash Algorithm</a>", Internet-Draft draft-eastlake-fnv-16, December 2018.</td>
 </tr>
 <tr>
 <td class="reference"><b id="RFC0793">[RFC0793]</b></td>
@@ -2164,11 +2118,6 @@ ul.toc li {
 <a>Adam Kirsch, .</a> and <a>. Michael Mitzenmacher</a>, "<a>Building a Better Bloom Filter</a>", May 2008.</td>
 </tr>
 <tr>
-<td class="reference"><b id="I-D.iab-protocol-maintenance">[I-D.iab-protocol-maintenance]</b></td>
-<td class="top">
-<a>Thomson, M.</a>, "<a href="https://tools.ietf.org/html/draft-iab-protocol-maintenance-01">The Harmful Consequences of the Robustness Principle</a>", Internet-Draft draft-iab-protocol-maintenance-01, October 2018.</td>
-</tr>
-<tr>
 <td class="reference"><b id="I-D.ietf-dprive-dns-over-tls">[I-D.ietf-dprive-dns-over-tls]</b></td>
 <td class="top">
 <a>Zi, Z.</a>, <a>Zhu, L.</a>, <a>Heidemann, J.</a>, <a>Mankin, A.</a>, <a>Wessels, D.</a> and <a>P. Hoffman</a>, "<a href="https://tools.ietf.org/html/draft-ietf-dprive-dns-over-tls-09">Specification for DNS over TLS</a>", Internet-Draft draft-ietf-dprive-dns-over-tls-09, March 2016.</td>
@@ -2201,7 +2150,7 @@ ul.toc li {
 <tr>
 <td class="reference"><b id="QUIC">[QUIC]</b></td>
 <td class="top">
-<a>Iyengar, J.</a> and <a>M. Thomson</a>, "<a href="https://tools.ietf.org/html/draft-ietf-quic-transport-16">QUIC: A UDP-Based Multiplexed and Secure Transport</a>", Internet-Draft draft-ietf-quic-transport-16, October 2018.</td>
+<a>Iyengar, J.</a> and <a>M. Thomson</a>, "<a href="https://tools.ietf.org/html/draft-ietf-quic-transport-17">QUIC: A UDP-Based Multiplexed and Secure Transport</a>", Internet-Draft draft-ietf-quic-transport-17, December 2018.</td>
 </tr>
 <tr>
 <td class="reference"><b id="RFC4033">[RFC4033]</b></td>
