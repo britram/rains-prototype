@@ -1855,7 +1855,7 @@ simple heartbeat mechanism to refresh this state for long-running connections.
 A RAINS peer may send its peer a 100 Connection Heartbeat notification at any
 time. This message is ignored by the receiving peer.
 
-## Protocol Dynamics {#base-proto}
+## Protocol Dynamics {#dynamics}
 
 This section illustrates how the RAINS protocol works with one possible set of
 rules for handling incoming messages and sending outgoing messages as a RAINS
