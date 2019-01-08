@@ -37,7 +37,7 @@ normative:
 
 informative:
     XEP0115:
-      title: XEP-0115 Entity Capababilities
+      title: XEP-0115 Entity Capabilities
       author:
         -
           ins: J. Hildebrand
@@ -122,25 +122,24 @@ Its architecture ({{architecture}}) and information model
 System. However, it does take several radical departures from DNS as presently
 defined and implemented:
 
-- Delegation from a superordinate zone to a subordinate zone is done solely
-  with cryptography: a superordinate defines the key(s) that are valid for
-  signing assertions in the subordinate during a particular time interval.
-  Assertions about names can therefore safely be served from any infrastructure.
+- Delegation from a superordinate zone to a subordinate zone is done solely with
+  cryptography: a superordinate defines the key(s), created by the subordinate,
+  that are valid for signing assertions in the subordinate during a particular
+  time interval. Assertions about names can therefore safely be served from any
+  infrastructure.
 - All time references in RAINS are absolute: instead of a time to live, each
   assertion's temporal validity is defined by the temporal validity of the
   signature(s) on it.
 - All assertions have validity within a specific context. A context determines
   the rules for chaining signatures to verify validity of an assertion. The
-  global context is a special case of context, which uses chains from the
-  global naming root key. The use of context explicitly separates global usage
-  of the DNS from local usage thereof, and allows other application-specific
-  naming constraints to be bound to names; see {{assertion-context}}.
-  Queries are valid in one or more contexts, with specific rules for
-  determining which assertions answer which queries; see
-  {{query-context}}.
-- There is an explicit separation between registrant-level names and
-  sub-registrant-level names, and explicit information about registrars and
-  registrants available in the naming system at runtime.
+  global context is a special case of context, which uses chains from the global
+  naming root key. The use of context explicitly separates global usage of the
+  DNS from local usage thereof, and allows other application-specific naming
+  constraints to be bound to names; see {{assertion-context}}. Queries are valid
+  in one or more contexts, with specific rules for determining which assertions
+  answer which queries; see {{query-context}}.
+- There is explicit information about registrars and registrants available in
+  the naming system at runtime.
 - Sets of valid characters and rules for valid names are defined on a per-zone
   basis, and can be verified at runtime.
 - Reverse lookups are done using a completely separate tree, supporting
@@ -152,7 +151,7 @@ Object Representation {{!RFC7049}}, partially in an effort to make
 implementations easier to verify and less likely to contain potentially
 dangerous parser bugs {{PARSER-BUGS}}. As with DNS, CBOR messages can be
 carried atop any number of substrate protocols. RAINS is presently defined to
-use TLS over persistent TCP connections (see {{protocol}}) as well as over UDP.
+use TLS over persistent TCP connections (see {{protocol}}).
 
 ## About This Document
 
@@ -170,14 +169,18 @@ In addition, the following terms are used in this document as defined:
 
 - Subject: A name or address about which Assertions can be made.
 - Object: A type/value pair of information about a name within an Assertion.
-- Assertion: A mapping between a Subject and an Object, signed by the Authority
-  for the namespace containing that Subject. See {{assertions}}.
+- Assertion: A signed statement about the existence or nonexistence of a
+  mapping from a Subject name and Context to an Object at a given point in time.
+  It is either a Singular Assertion, Shard, or Zone.
+- Singular Assertion: A mapping between a Subject and one or several Objects,
+  signed by the Authority for the namespace containing that Subject. See
+  {{assertions}}.
 - Authority: An entity that has the right to determine which Assertions exist
   within its Zone
-- Delegation: An Assertion that an Authority has given the right to make
-  assertions about the Assertions within the part of a namespace identified by a
-  Subject to a subordinate Authority, by virtue of holding a secret key which
-  can generate signatures verifiable using a public key associated with a
+- Delegation: An Assertion proving that an Authority has given the right to make
+  Assertions about names within the part of a namespace identified by a Subject
+  to a subordinate Authority. This subordinate Authority holds a secret key
+  which can generate signatures verifiable using a public key associated with a
   delegation to the Zone.
 - Zone: A portion of a namespace rooted at a given point in the namespace
   hierarchy. A Zone contains all the Assertions about Subjects tha exist within
@@ -187,27 +190,27 @@ In addition, the following terms are used in this document as defined:
 - Context: Additional information about the scope in which an Assertion or Query
   is valid. See {{assertion-context}} and {{query-context}}.
 - Shard: A group of assertions common to a zone and valid at a given point in
-  time, scoped to a lexicographic range of Subject names with in the Zone, for
-  purposes of proving non-existence of an Assertion. Shards may be encoded to
-  provide either absolute proof or probabalistic assurance of non-existence. See
+  time, scoped to a lexicographic range of Subject names within the Zone, for
+  purposes of proving nonexistence of an Assertion. Shards may be encoded to
+  provide either absolute proof or probabilistic assurance of nonexistence. See
   {{shards}} and {{p-shards}}.
-- RAINS Message: Unit of exchange in the RAINS protocol, containing assertions,
-  shards, zones, queries, and notifications. See {{messages}}.
+- RAINS Message: Unit of exchange in the RAINS protocol, containing Assertions,
+  Queries, and/or Notifications. See {{messages}}.
 - Notification: A RAINS-internal message section carrying information about the
   operation of the protocol itself. See {{notifications}}.
 - Authority Service: A service provided by a RAINS Server for publishing
-  assertions by an authority. See {{architecture}}.
-- Query Service: A service provided by a RAINS Server for answering queries on
+  Assertions by an Authority. See {{architecture}}.
+- Query Service: A service provided by a RAINS Server for answering Queries on
   behalf of a RAINS Client. See {{architecture}}.
 - Intermediary Service: A service provided by a RAINS Server for answering
-  queries and providing temporary storage for assertions on behalf of other
+  Queries and providing temporary storage for Assertions on behalf of other
   RAINS Servers. See {{architecture}}.
-- RAINS Server: A server that speaks the RAINS Protocol, and provides on or more
-  services on behalf of other RAINS Servers and/or RAINS Clients. See
+- RAINS Server: A server that supports the RAINS Protocol, and provides one or
+  more services on behalf of other RAINS Servers and/or RAINS Clients. See
   {{architecture}}.
 - RAINS Client: A client that uses the Query Service of one or more RAINS
-  Servers to retrieve assertions on behalf of applications that wish to connect
-  to named services in the Internet.
+  Servers to retrieve Assertions on behalf of applications that e.g. wish to
+  connect to named services in the Internet.
 
 # An Ideal Internet Naming Service {#pins}
 
@@ -228,23 +231,21 @@ examines implications of these properties.
 
 ## Interfaces {#pins-interfaces}
 
-At its core, a naming service must provide a few basic functions for queriers,
-associating a Subject of a query with information about that subject. The
-information available from a naming service is that which is necessary for a
-querier to establish a connection with some other entity in the Internet,
-given a name identifying it.
+At its core, a naming service must provide a few basic functions for queriers
+that associate the subject of a query with information about that subject. The
+naming service provides the information necessary for a querier to establish a
+connection with some other entity in the Internet, given a name identifying it.
 
 - Name to Address: given a Subject name, the naming service returns a set of
-  addresses associated with that name, if such an association exists, where the
+  addresses associated with that name, if such an association exists. The
   association is determined by the authority for that name. Names may be
   associated with addresses in one or more address families (e.g. IP version 4,
   IP version 6). A querier may specify which address families it is interested
-  in receiving addresses for, and the naming system treats all address families
-  equally. This mapping is implemented in the DNS protocol via the A and AAAA
-  RRTYPES.
+  in. All address families are treated equally by the naming system. This
+  mapping is implemented in the DNS protocol via the A and AAAA RRTYPES.
 
 - Address to Name: given an Subject address, the naming service returns a set of
-  names associated with that address, if such an association exists, where the
+  names associated with that address, if such an association exists. The
   association is determined by the authority for that address. This mapping is
   implemented in the DNS protocol via the PTR RRTYPE. IPv4 mappings exist within
   the in-addr.arpa. zone, and IPv6 mappings in the ip6.arpa. zone. These
@@ -252,7 +253,7 @@ given a name identifying it.
   (octet boundaries for IPv4, nybble boundaries for IPv6).
 
 - Name to Name: given a Subject name, the naming service returns a set of object
-  names associated with that name, if such an association exists, where the
+  names associated with that name, if such an association exists. The
   association is determined by the authority for the subject name. This mapping
   is implemented in the DNS protocol via the CNAME RRTYPE. CNAME does not allow
   the association of multiple object names with a single subject, and CNAME may
@@ -264,13 +265,12 @@ given a name identifying it.
   with that name. Most of the other RRTYPES in the DNS protocol implement these
   sort of mappings.
 
-The query interface is not the only interface to the naming service: the
-interface a naming service presents to an Authority allows updates to the set
-of Assertions and Delegations in that Authority's namespace. Updates consist
-of additions of, changes to, and deletions of Assertions and Delegations. In
-the present DNS, this interface consists of the publication of a new zone file
-with an incremented version number, but other authority interfaces are
-possible.
+A naming service also provides other interfaces besides the query interface. The
+interface it presents to an Authority allows updates to the set of Assertions
+and Delegations in that Authority's namespace. Updates consist of additions of,
+changes to, and deletions of Assertions and Delegations. In the present DNS,
+this interface consists of the publication of a new zone file with an
+incremented version number, but other authority interfaces are possible.
 
 ## Properties {#pins-properties}
 
@@ -291,9 +291,8 @@ are easily distinguishable from each other by its human users.
 
 A naming service should impose as little structure on the names it supports as
 practical in order to be universally applicable. Naming services that impose a
-given organizational structure on the names expressible using the service will
-not translate well to societies where that organizational structure is not
-prevalent.
+given organizational structure on names will not translate well to societies
+where that organizational structure is not prevalent.
 
 ### Federation of Authority
 
@@ -354,8 +353,7 @@ the subordinates of those Delegations.
 ### Authenticity of Delegation
 
 Given a Delegation from a superordinate to a subordinate Authority, a querier
-can verify that the superordinate Authority authorized the
-Delegation.
+can verify that the superordinate Authority authorized the Delegation.
 
 Authenticity of delegation in DNS is provided by DNSSEC {{?RFC4033}}.
 
@@ -385,7 +383,7 @@ bandwidth tradeoffs.
 When an Authority makes changes to an Assertion, every query for a given
 Subject returns either the new valid result or a previously valid result,
 with known and/or predictable bounds on "how previously". Given that additions
-of, changes to, and deletions of Asseretion may have different operational
+of, changes to, and deletions of Assertions may have different operational
 causes, different bounds may apply to different operations.
 
 The time-to-live (TTL) on a resource record in DNS provides a mechanism for
@@ -397,8 +395,8 @@ implicitly inconsistent views of an Assertion may be persistent.
 
 ### Explicit Inconsistency
 
-Some techniques require giving different answers to different queries, even in
-the absence of changes: the stable state of the namespace is not globally
+Some techniques require giving different answers to the same query, even in the
+absence of changes: the stable state of the namespace is not globally
 consistent. This inconsistency should be explicit: a querier can know that an
 answer might be dependent on its identity, network location, or other factors.
 
@@ -411,9 +409,8 @@ Another is the common practice of DNS-based content distribution, in which an
 authoritative name server gives different answers for the same query depending
 on the network location from which the query was received, or depending on the
 subnet in which the end client originating a query is located (via the EDNS
-Client Subnet extension {RFC7871}}). Such
-inconsistency based on client identity or network address may increase query
-linkability (see {{query-linkability}}).
+Client Subnet extension {RFC7871}}). Such inconsistency based on client identity
+or network address may increase query linkability (see {{query-linkability}}).
 
 These forms of inconsistency are implicit, not explicit, in the current DNS. We
 note that while DNS can be deployed to allow essentially unlimited kinds of
@@ -430,20 +427,19 @@ An Assertion which is not intended to be explicitly inconsistent by the
 Authority issuing it must return the same result for every Query for it,
 regardless of the identity or location of the querier.
 
-This property is not provided by DNS, as it depends on the robust support on
-the Explicit Inconsistency property above. Examples of global invariance
-failures include geofencing and DNS-based censorship ordered by a local
-jurisdiction.
+This property is not provided by DNS, as it depends on the robust support of the
+Explicit Inconsistency property above. Examples of global invariance failures
+include geofencing and DNS-based censorship ordered by a local jurisdiction.
 
 ### Availability
 
-The naming service as a whole is resilient to failures of individual
-nodes providing the naming service, as well as to failures of links among
-them. Intentional prevention of successful, authenticated query by an
-adversary should be as hard as practical.
+The naming service as a whole is resilient to failures of individual nodes
+providing the naming service, as well as to failures of links among them.
+Intentional prevention by an adversary of a successful answer to a query should
+be as hard as practical.
 
 The DNS protocol was designed to be highly available through the use of
-secondary nameservers. Operational practices (e.g. anycast deployment) also
+secondary name servers. Operational practices (e.g. anycast deployment) also
 increase the availability of DNS as currently deployed.
 
 ### Lookup Latency
@@ -505,16 +501,16 @@ that might inform future work.
 
 ### Delegation and redirection are separate operations
 
-Any system which can provide the authenticity properties enumerated above
-is freed from one of the design characteristics of the present domain name
-system: the requirement to bind a zone of authority to a specific set of
-authoritative servers. Since the authenticity of delegation must be a
-protected by a chain of signatures back to the root of authority, the location
-within the infrastructure where an authoritative mapping "lives" is no longer
-bound to a specific name server. While the present design of DNS does have its
-own scalability advantages, this implication allows a much larger design space
-to be explored for future name service work, as a Delegation need not always
-be implemented via redirection to another name server.
+Any system which can provide the authenticity properties enumerated above is
+freed from one of the design characteristics of the present domain name system:
+the requirement to bind a zone of authority to a specific set of authoritative
+servers. Since the authenticity of a delegation must be protected by a chain of
+signatures back to the root authority, the location within the infrastructure
+where an authoritative mapping "lives" is no longer bound to a specific name
+server. While the present design of DNS does have its own scalability
+advantages, this implication allows a much larger design space to be explored
+for future name service work, as a Delegation need not always be implemented via
+redirection to another name server.
 
 ### Unicode alone may not be sufficient for distinguishable names
 
@@ -540,12 +536,12 @@ https://ooni.torproject.org/nettest/dns-consistency/.
 
 # RAINS Protocol Architecture {#architecture}
 
-The RAINS architecture is simple, and vaguely resembles the architecture of
-DNS. A RAINS Server is an entity that provides transient and/or permanent
-storage for assertions about names, and a lookup function that finds assertions
-for a given query about a name, either by searching local storage or by
-delegating to another RAINS server. RAINS servers can take on any or all of
-three roles:
+The RAINS architecture is simple, and vaguely resembles the architecture of DNS.
+A RAINS Server is an entity that provides transient and/or permanent storage for
+assertions about names and addresses, and a lookup function that finds
+assertions for a given query about a name or address, either by searching local
+storage or by delegating to another RAINS server. RAINS servers can take on any
+or all of three roles:
 
 - authority service, acting on behalf of an authority to ensure properly
   signed assertions are made available to the system (equivalent to an
@@ -587,10 +583,10 @@ validity of an assertion is separated from whence the assertion was received.
 This means the RAINS protocol itself is merely a means for moving RAINS
 assertions around, and moving RAINS queries to places where they can be
 answered. This document defines bindings for carrying RAINS messages over TLS
-over TCP and over UDP, but bindings to other transports (e.g. QUIC
+over TCP, but bindings to other transports (e.g. QUIC
 {{?QUIC=I-D.ietf-quic-transport}}) or session layers (e.g. HTTP {{?RFC7540}})
-would be trivial to design, and the protocol provides a capability mechanism
-for discovering alternate transports.
+would be trivial to design, and the protocol provides a capability mechanism for
+discovering alternate transports.
 
 # Information and Data Model {#infomodel}
 
@@ -605,53 +601,56 @@ capabilities-based versioning of the protocol, and for recognition of a chunk of
 CBOR-encoded binary data at rest to be recognized as a RAINS message.
 
 The RAINS data model is a relatively straightforward mapping of the information
-model to the Concise Binary Object Representation (CBOR) {{!RFC7049}}, such
-that Assertions are split into four subtypes of assertion depending on their
-scope and purpose: singular Assertions and Zones for positive proof of the
-existence of an association between a name and an object, Shards and P-Shards
-for negative proof. Messages, singular Assertions, Shards, P-Shards, Zones,
-Queries, and Notifications are each represented as a CBOR map of integer keys
-to values, which allows each of these types to be extended in the future, as
-well as the addition of non- standard, application-specific information to
-RAINS messages and data items. A common registry of map keys is given in
-{{tabmkey}}. RAINS implementations MUST ignore any data objects associated with
-map keys they do not understand. Integer map keys in the range -22 to +23 are
-reserved for the use of future versions or extensions to the RAINS protocol,
-due to the efficiency of representation of these values in CBOR.
+model to the Concise Binary Object Representation (CBOR) {{!RFC7049}}, such that
+Assertions are split into four subtypes depending on their scope and purpose:
 
-Message contents, signatures and object values are implemented as type-
-prefixed CBOR arrays with fixed meanings of each array element; the structure
-of these lower-level elements can therefore not be extended. Message section
-types are given in {{tabsection}}, object types in {{tabobj}}, and signature
-algorithms in {{tabsig}}.
+- Singular Assertions and Zones for a positive proof of the existence of an
+  association between a name and an Object;
+- Shards and P-Shards for negative proof thereof. 
+
+Messages, Singular Assertions, Shards, P-Shards, Zones, Queries, and
+Notifications are each represented as a CBOR map of integer keys to values,
+which allows each of these types to be extended in the future, as well as the
+addition of non-standard, application-specific information to RAINS messages
+and data items. A common registry of map keys is given in {{tabmkey}}. RAINS
+implementations MUST ignore any data objects associated with map keys they do
+not understand. Integer map keys in the range -22 to +23 are reserved for the
+use of future versions or extensions to the RAINS protocol, due to the
+efficiency of representation of these values in CBOR.
+
+Message and Assertion contents, signatures and object values are implemented as
+type- prefixed CBOR arrays with fixed meanings of each array element; the
+structure of these lower-level elements can therefore not be extended. Message
+section types are given in {{tabsection}}, object types in {{tabobj}}, and
+signature algorithms in {{tabsig}}.
 
 {: #tabmkey title="CBOR Map Keys used in RAINS"}
 
-| Code | Name           | Description                                            |
-|-----:|----------------|------------------------------------------------        |
-| 0    | signatures     | Signatures on a message or section                     |
-| 1    | capabilities   | Capabilities of server sending message                 |
-| 2    | token          | Token for referring to a data item                     |
-| 3    | subject-name   | Subject name in an Assertion, Shard, P-Shard or Zone   |
-| 4    | subject-zone   | Zone name in an Assertion, Shard, P-Shard or Zone      |
-| 5    | subject-addr   | Subject address in address assertion                   |
-| 6    | context        | Context of an Assertion, Shard, P-Shard, Zone or Query |
-| 7    | objects        | Objects of an Assertion                                |
-| 8    | query-name     | Fully qualified name for a Query                       |
-| 9    | reserved       | Reserved for future use                                |
-| 10   | query-types    | Acceptable object types for a Query                    |
-| 11   | range          | Lexical range of Assertions in Shard or P-Shard        |
-| 12   | query-expires  | Absolute timestamp for query expiration                |
-| 13   | query-opts     | Set of query options requested                         |
-| 14   | current-time   | Querier's latest assertion timestamp for a query       |
-| 15   | reserved       | Reserved for future use                                |
-| 16   | reserved       | Reserved for future use                                |
-| 17   | query-keyphase | All requested key phases of a Query                    |
-| 19   | shards         | Shard content of a zone                                |
-| 20   | assertions     | Singular Assertion content of a Shard or Zone          |
-| 21   | note-type      | Notification type                                      |
-| 22   | note-data      | Additional notification data                           |
-| 23   | content        | Content of a Message or a P-Shard                     |
+| Code | Name            | Description                                            |
+|-----:|-----------------|------------------------------------------------        |
+| 0    | signatures      | Signatures on a message or section                     |
+| 1    | capabilities    | Capabilities of server sending message                 |
+| 2    | token           | Token for referring to a data item                     |
+| 3    | subject-name    | Subject name in an Assertion, Shard, P-Shard or Zone   |
+| 4    | subject-zone    | Zone name in an Assertion, Shard, P-Shard or Zone      |
+| 5    | subject-addr    | Subject address in address assertion                   |
+| 6    | context         | Context of an Assertion, Shard, P-Shard, Zone or Query |
+| 7    | objects         | Objects of an Assertion                                |
+| 8    | query-name      | Fully qualified name for a Query                       |
+| 9    | reserved        | Reserved for future use                                |
+| 10   | query-types     | Acceptable object types for a Query                    |
+| 11   | range           | Lexical range of Assertions in Shard or P-Shard        |
+| 12   | query-expires   | Absolute timestamp for query expiration                |
+| 13   | query-opts      | Set of query options requested                         |
+| 14   | current-time    | Querier's latest assertion timestamp for a query       |
+| 15   | reserved        | Reserved for future use                                |
+| 16   | reserved        | Reserved for future use                                |
+| 17   | query-keyphases | All requested key phases of a Query                    |
+| 19   | reserved        | Reserved for future use                                |
+| 20   | assertions      | Singular Assertion content of a Shard or Zone          |
+| 21   | note-type       | Notification type                                      |
+| 22   | note-data       | Additional notification data                           |
+| 23   | content         | Content of a Message or a P-Shard                      |
 
 The information model is designed to be representation-independent, and can be
 rendered using alternate structured-data representations that support the
@@ -659,8 +658,8 @@ concepts of maps and arrays. For example, YAML or JSON could be used to
 represent RAINS messages and data structures for debugging purposes. However,
 signatures over messages and assertions need a single canonical representation
 of the object to be signed as a bitstream. For RAINS, this is the CBOR
-representation canonicalized as in {{c14n}}; therefore alternate
-representations are always secondary to the CBOR data model. 
+representation canonicalized as in {{c14n}}; therefore alternate representations
+are always secondary to the CBOR data model.
 
 The following subsections describe the information and data model of a RAINS
 message from the top down.
@@ -688,17 +687,10 @@ the entire Message, generated as in {{signatures}}, and to be verified against
 an infrastructure key (see {{obj-infrakey}}) for the RAINS Server originating
 the message.
 
-A Message map MAY contain a capabilities (1) key, for exposing capabilties of
-the message sender. The first Message sent from one peer to another MUST contain
+The value of the capabilities key, when present, is an array of Capabilities or
+the hash thereof. The first Message sent from one peer to another MUST contain
 the capabilities key. The capabilities mechanism is described in
 {{capabilities}}.
-
-A Message map MUST contain a token (2) key, whose value is a 16-byte array.
-See {{tokens}} for details.
-
-A Message map MUST contain a content (23) key, whose value is an array of
-Message Sections; a Message Section is either an Assertion, Shard, Zone, Query,
-or Notification.
 
 ### Message Section structure {#message-sections}
 
@@ -714,18 +706,18 @@ message section body, a CBOR map defined as in the subsections {{assertions}},
 |-----:|--------------|---------------------------------------------------|
 | 1    | assertion    | Singular Assertion (see {{singular-assertions}})  |
 | 2    | shard        | Shard (see {{shards}})                            |
-| 3    | zone         | Zone (see {{zones}})                              |
-| 4    | query        | Query (see {{queries}})                           |
-| 5    | p-shard      | P-Shard (see {{p-shards}})                        |
+| 3    | p-shard      | P-Shard (see {{p-shards}})                        |
+| 4    | zone         | Zone (see {{zones}})                              |
+| 5    | query        | Query (see {{queries}})                           |
 | 23   | notification | Notification (see {{notifications}})              |
 
 ## Assertions {#assertions}
 
 Information about names in RAINS is carried by Assertions. An Assertion is a
-statement about a mapping from a subject name to one or several object values of
-the same type, signed by some authority for the namespace containing the
-assertion, with a temporal validity determined by the lifetime of the
-signature(s) on the Assertion.
+statement about a mapping from a Subject name to one or several Object values,
+signed by some Authority for the namespace containing the Assertion, with a
+temporal validity determined by the lifetime of the signature(s) on the
+Assertion.
 
 The subject of an Assertion is identified by a name in three parts:
 
@@ -735,65 +727,65 @@ The subject of an Assertion is identified by a name in three parts:
 - the subject context, as in {{assertion-context}}, identifying the context for
   purposes of explicit inconsistency.
 
-The types of objects that can be associated with a subject are of several types,
-described in {{obj-types}}.
+The types of Objects that can be associated with a Subject are described in
+{{obj-types}}.
 
-There are four kinds of assertions, distinguished by their scope (how many
-subjects are covered by a single Assertion) and their utility (whether the
-assertion can be used for positive proof of a subject-object association, for
+There are four kinds of Assertions, distinguished by their scope (how many
+Subjects are covered by a single Assertion) and their utility (whether the
+Assertion can be used for positive proof of a Subject-Object association, for
 negative proof of the lack of such an association, or both):
 
-- Singular Assertions contain a set of objects associated with a single given
+- Singular Assertions contain a set of Objects associated with a single given
   subject name in a given zone in a given context. The signature on a Singular
-  Assertion can be used to prove the existance of an association between the
-  subject name and the objects within the Assertion. Singular assertions are
+  Assertion can be used to prove the existence of an association between the
+  subject name and the Objects within the Assertion. Singular Assertions are
   described in detail in {{singular-assertions}}.
-- Zones contain Assertions for every object associated with every subject name
-  within a given zone in a given context. The signature on a Zone can be used to
-  prove both the existence of an association between a subject name and an
-  object of a given type, as well as the absence of such an association. Zones
-  are described in detail in {{zones}}. If signed, the assertions within a Zone
-  can also be treated as Singular Assertions; in this case they inherit zone and
-  context information from the containing zone.
-- Shards contain Singular Assertions for every object associated with every
+- Zones contain all Singular Assertions that have the same zone and context
+  values. The signature on a Zone can be used to prove both the existence of an
+  association between a subject name and an Object, as well as the absence of
+  such an association. Zones are described in detail in {{zones}}. If signed,
+  the Singular Assertions within a Zone can also be used on their own, as if
+  they were contained within a Message directly; in this case they inherit zone
+  and context information from the containing zone.
+- Shards contain Singular Assertions for every Object associated with every
   subject name in a given lexicographic range of subject names within a given
   zone in a given context. The signature on a Shard can be used to prove the
-  nonexistance of an object of a given type for a name within its range. Shards
-  are described in detail in {{shards}}. If signed, the assertions within a
-  Shard can also be treated as Singular Assertions; in this case they inherit
-  zone and context information from the containing shard.
-- P-Shards (or Probabalistic Shards) contain a data structure that can be used
+  nonexistence of an Object for a subject name within its range. Shards are
+  described in detail in {{shards}}. If a Singular Assertion within a Shard is
+  signed, it inherits zone and context information from the containing shard and
+  can also be used outside the Shard.
+- P-Shards (or Probabilistic Shards) contain a data structure that can be used
   to demonstrate, within predictable bounds of false-negative probability, the
-  non-existence of an object of a given type for a name within a lexicographic
-  range of subjet names within a given zone in a given context. They allow an
+  nonexistence of an Object for a subject name within a lexicographic range of
+  subject names within a given zone in a given context. They allow an
   efficiency-accuracy tradeoff for negative proofs. P-Shards are described in
   detail in {{p-shards}}
  
 ### Singular Assertions {#singular-assertions}
 
-A Singular Assertion contains the set of objects associated with a single given
+A Singular Assertion contains a set of Objects associated with a single given
 subject name in a given zone in a given context. A Singular Assertion with a
 valid signature can be used as a positive answer to a query for a name. It is
 represented as a CBOR map. The keys present in this map depend on whether the
 Singular Assertion is contained in a Message, Shard or Zone.
 
-Assertions contained directly within a Message's content value cannot inherit any
-values from their containers, and therefore MUST contain the signatures (0),
-subject-name (3), subject-zone (4), context (6), and objects (7) keys.
+Singular Assertions contained directly within a Message's content value cannot
+inherit any values from their containers, and therefore MUST contain the
+signatures (0), subject-name (3), subject-zone (4), context (6), and objects (7)
+keys.
 
-Assertions within a Shard or Zone can inherit values from their containers. A
-contained Assertion MUST contain the subject-name (3), objects (7) keys. The
-subject-zone (4) and context (6) keys MUST NOT be present. They are assumed to
-have the same value as the corresponding values in the containing Shard or Zone
-for signature generation and signature verification purposes; see
-{{signatures}}.
+Singular Assertions within a Shard or Zone can inherit values from their
+containers. A contained Singular Assertion MUST contain the subject-name (3),
+and objects (7) keys. It MAY contain the signatures (0) key. The subject-zone
+(4) and context (6) keys MUST NOT be present. They are assumed to have the same
+value as the corresponding values in the containing Shard or Zone for signature
+generation and signature verification purposes; see {{signatures}}. 
 
 The value of the signatures (0) key, if present, is an array of one or more
 Signatures as defined in {{signatures}}. Signatures on a contained Assertion are
 generated as if the inherited subject-zone and context values are present in the
-Assertion, whether actually present or not. The signatures on the Assertion are
-to be verified against the appropriate key for the Zone containing the Assertion
-in the given context.
+Assertion. The signatures on the Assertion are to be verified against the
+appropriate key for the Zone containing the Assertion in the given context.
 
 The value of the subject-name (3) key is a UTF-8 encoded {{!RFC3629}} string
 containing the name of the subject of the assertion. The subject name may cover
@@ -818,82 +810,67 @@ The value of the objects (7) key is an array of objects, as defined in
 
 ### Shards {#shards}
 
-A Shard contain Singular Assertions for every object within a zone in a given
+A Shard contains Singular Assertions for every Object within a zone in a given
 context whose subject name falls within a specified lexicographic range. A Shard
 with a valid signature, within which a subject name should fall (i.e. appearing
 within that Shard's range), but within which there is no Singular Assertion for
-the specified subject name and object type, can therefore be taken as proof of a
-negative query result for that subject name. Shards are used exclusively for
+the specified subject name and Object, can therefore be taken as a proof of
+nonexistence for that subject name and Object. Shards are used exclusively for
 negative proof; the individual signatures on their contained Singular Assertions
 are used for positive proof of the existence of an assertion.
 
 The content of a Shard (in terms of the number of Singular Assertions it covers)
-is chosen by the authority of the zone for which the Shard is valid. There is an
-inherent tradeoff between the number of Assertions within a Shard and the size
-of the Shard, and therefore the size of the Message that must be presented as
-negative proof. P-Shards ("Probabalistic Shards", see {{p-shards}}) allow a
-different tradeoff, gaining space efficiency and coverage for a fixed,
+is chosen by the Authority of the zone for which the Shard is valid. There is an
+inherent tradeoff between the number of Singular Assertions within a Shard and
+the size of the Shard, and therefore the size of the Message that must be
+presented as negative proof. P-Shards ("Probabalistic Shards", see {{p-shards}})
+allow a different tradeoff, gaining space efficiency and coverage for a fixed,
 predictable probability of a false positive (i.e., the possibility that the
 P-Shard cannot be used to prove the nonexistence of a subject which does not, in
 fact, exist).
 
-A Shard is represented as a CBOR map. The keys present in this map depend on
-whether the Shard is contained in a Message or Zone.
-
-Shards contained in a Message's content value cannot inherit any values from a
-contained Zone, and therefore MUST contain the  signatures (0),
+A Shard is represented as a CBOR map. Shards MUST contain the  signatures (0),
 subject-zone (4), context (6), range (11), and assertions (20) keys.
 
-Shards contained within a Zone's shards value inherit zone and context values
-from their containing Zone, and therefore  MUST contain the signatures (0),
-range(11), and assertions (20) keys. The subject-zone (4) and context (6) keys
-MUST NOT be present.
-
 The value of the signatures (0) key is an array of one or more Signatures as
-defined in {{signatures}}. If not present, the containing Zone MUST be signed.
-Signatures on a Shard contained within a Zone are generated as if the inherited
-subject-zone and context values are present in the Shard. The signatures on the
-Shard are to be verified against the appropriate key for the Zone containing the
-Shard in the given context.
+defined in {{signatures}}. Signatures on the Shard are to be verified
+against the appropriate key for the Shard in the given context.
 
-The value of the subject-zone (4) key, if present, is a UTF-8 encoded string
-containing the name of the zone in which the Assertions within the Shard is made
-and MUST end with '.' (the root zone). If not present, the zone of the assertion
-is inherited from the containing Zone.
+The value of the subject-zone (4) key is a UTF-8 encoded string containing the
+name of the zone in which the Singular Assertions within the Shard are made and
+MUST end with '.' (the root zone).
 
-The value of the context (6) key, if present, is a UTF-8 encoded string
-containing the name of the context in which the Assertions within the Shard are
-valid. Both the authority-part and the context-part MUST end with a '.'. If not
-present, the context of the assertion is inherited from the containing Zone.
+The value of the context (6) key is a UTF-8 encoded string containing the name
+of the context in which the Singular Assertions within the Shard are valid. Both
+the authority-part and the context-part MUST end with a '.'.
 
 The value of the range (11) key is a two element array of strings or nulls
 (subject-name A, subject-name B). A MUST lexicographically sort before B. If A
 is null, the shard begins at the beginning of the zone. If B is null, the shard
-ends at the end of the zone. The shard MUST NOT contain any assertions whose
-subject names are equal to or sort before A, or are equal to or sort after B.
+ends at the end of the zone. The shard MUST NOT contain any Singular Assertions
+whose subject names are equal to or sort before A, or are equal to or sort after
+B.
 
-The value of the assertions (20) key is an array of Singular Assertions as
-defined in {{assertions}}. These Singular Assertions MUST be sorted within the
-in lexicographic order by subject name; the set of allowable Singular Assertions
-is restricted by the range, as above.
+The value of the assertions (20) key is a CBOR array of Singular Assertions as
+defined in {{singular-assertions}}. These Singular Assertions MUST be sorted (see
+{{c14n}}); the set of allowable Singular Assertions is restricted by the range,
+as above.
 
 ### Zones {#zones}
 
-A Zone contains Assertions for every object associated with every subject name
-within a given zone in a given context, organized into Shards or singular
-Assertions. A Zone with a valid signature can be used either as a positive
-answer for a query about a name (when its contained assertions are not signed),
-or as a negative answer to prove that a given object does not exist for a given
-name.
+A Zone contains Singular Assertions for every Object associated with every
+subject name within a given zone in a given context. A Zone with a valid
+signature can be used either as a positive answer for a query about a name (when
+its contained Singular Assertions are not signed), or as a negative answer to
+prove that a given Object does not exist for a given name.
 
-Organizing Assertions into Zones allows operators of zones with few subject
-names (e.g., used only for simple web hosting, as is the case with many zones in
-the current Internet naming system) to minimize signing and zone management
-overhead.
+Organizing Singular Assertions into Zones allows operators of zones with few
+subject names (e.g., used only for simple web hosting, as is the case with many
+zones in the current Internet naming system) to minimize signing and zone
+management overhead.
 
 A Zone is represented as a CBOR map. Zones MUST contain the signatures (0),
-subject-zone (4), and context (6) keys, and MUST contain one of the
-shards (19) or assertions (20) keys.
+subject-zone (4), context (6), and assertions (20) keys.
 
 The value of the signatures (0) key is an array of one or more Signatures on the
 Zone as defined in {{signatures}}. Signatures on the Zone are to be verified
@@ -906,31 +883,22 @@ The value of the context (6) key is a UTF-8 encoded string containing the name
 of the context for which the Zone is valid. Both the authority-part and the
 context-part MUST end with a '.'. See {{assertion-context}}
 
-The contents of the Zone are contained in the values of the shards (19) or
-assertions (20) key. The value of the shards key is a CBOR array of Shards as
-defined in {{shards}}. The value of the assertions key is a CBOR array of
-Singular Assertions as defined in {{singular-assertions}}. A Zone may either be
-organized into Shards, in which case the Shards within the Zone must cover the
-entire lexicographic space of subject names within the Zone, or it may be
-organized as Singular Assertions. 
-
-Within the shards array, if present, the contained Shards MUST be sorted in
-lexicographic order by shard range start. Within the assertions array, if
-present, the contained Singular Assertions MUST be sorted in lexicographic order
-by subject name.
+The value of the assertions (20) key is a CBOR array of Singular Assertions as
+defined in {{singular-assertions}}. The CBOR array contains all Singular
+Assertions of this zone and context and they MUST be sorted (see {{c14n}}).
 
 ### P-Shards {#p-shards}
 
 Shards ({{shards}}) can be used as definitive proof of the nonexistence of a
 name within a zone. P-Shards serve the same purpose, but offer only a
-probabalistic guarantee of the non-existence of the name. Specifically, as they
-are based on Bloom filters, a subject name which does not in fact exist may
-appear in the P-Shard; in return for this uncertainty, they offer a much more
-space-efficient way to demonstrate the non-existence of a subject within the
-zone than Shards do. There is a tradeoff between the size of the bit string
-storing the Bloom filter, the number of Assertions covered by the P-Shard, and
-the false positive error rate. The zone authority can determine how to weight
-them.
+probabilistic guarantee of the nonexistence of a name. Specifically, as they are
+based on Bloom filters, a subject name which does not in fact exist may appear
+in the P-Shard; in return for this uncertainty, they offer a much more
+space-efficient way to demonstrate the nonexistence of an Object for a subject
+name within the zone and context than Shards do. There is a tradeoff between the
+size of the bit string storing the Bloom filter, the number of names covered by
+the P-Shard, and the false positive error rate. The zone Authority can determine
+how to weight them.
 
 A P-Shard is represented as a CBOR map. This map MUST contain the signatures
 (0), subject-zone (4), context (6), and content(23) keys. It MAY contain the
@@ -938,24 +906,24 @@ range(11) key.
 
 The value of the signatures (0) key is an array of one or more Signatures as
 defined in {{signatures}}. The signatures on the P-Shard are to be verified
-against the appropriate key for the Zone for which the P-Shard is cvalid in the
+against the appropriate key for the Zone for which the P-Shard is valid in the
 given context.
 
 The value of the subject-zone (4) key is a UTF-8 encoded string containing the
-name of the zone in which the Assertions in the P-Shard is made and MUST end
-with '.' (the root zone).
+name of the zone within which the names represented in the P-Shard are
+contained, and MUST end with '.' (the root zone).
 
 The value of the context (6) key is a UTF-8 encoded string containing the name
-of the context in which the Assertions in the P-Shard are valid. Both the
-authority-part and the context-part MUST end with a '.'.
+of the context for which the names represented in the P-Shard are valid.
+Both the authority-part and the context-part MUST end with a '.'.
 
 The value of the range (11) key, if present, is a two element array of strings
 or nulls (subject-name A, subject-name B). A MUST lexicographically sort before
 B. If A is null, the P-Shard begins at the beginning of the zone. If B is null,
-the shard ends at the end of the zone. The P-Shard MUST NOT be used to check
-the existence of any assertions whose subject names are equal to or sort before
-A, or are equal to or sort after B. If the range (11) key is not present, the
-P-shard covers then entire zone.
+the P-Shard ends at the end of the zone. The P-Shard MUST NOT be used to check
+the existence of Assertions about subject names equal to or
+sort before A, or are equal to or sort after B. If the range (11) key is not
+present, the P-Shard covers then entire zone.
 
 The value of the content (23) key is a three-element array. The first element
 identifies the algorithm used for generating the bitstring. The second element
@@ -968,39 +936,43 @@ are given in {{hash-functions}}.
 
 {: #tabpsds title="P-shard generation algorithms"}
 
-| Code  | Name         | Description                                |
-|------:|--------------|--------------------------------------------|
-| 1     | bloom-km-2   | KM-optimized bloom filter with nh=2        |
-| 2     | bloom-km-4   | KM-optimized bloom filter with nh=4        |
-| 3     | bloom-km-8   | KM-optimized bloom filter with nh=8        |
+| Code  | Name         | Description                                 |
+|------:|--------------|---------------------------------------------|
+| 1     | bloom-km-12  | KM-optimized bloom filter with nh=12        |
+| 2     | bloom-km-16  | KM-optimized bloom filter with nh=16        |
+| 3     | bloom-km-20  | KM-optimized bloom filter with nh=20        |
+| 4     | bloom-km-24  | KM-optimized bloom filter with nh=24        |
 
-The bloom-km-2 and bloom-km-4 datastructures generates a bitstring using a
-Bloom filter and the Kirsch-Mitzenmacher optimization {{BETTER-BLOOM-FILTER}}.
+These datastructures generate a bitstring using a Bloom filter and the
+Kirsch-Mitzenmacher optimization {{BETTER-BLOOM-FILTER}}.
 
-To add or verify an assertion to a bloom-km structure, the assertion is first
-encoded as a four-element CBOR array. The first element is the subject name.
-The second element is the subject zone. The third element is the subject
+To add a subject-object mapping for a name to a bloom-km structure, the mapping
+is first encoded as a four-element CBOR array. The first element is the subject
+name. The second element is the subject zone. The third element is the subject
 context. The fourth element is the type code as in {{tabobj}} in {{obj-types}}.
 This encoded object is then hashed according to the specified hash algorithm.
-The hash algorithm's output is then split into nh equal length parts (2 for
-bloom-km-2, 4 for bloom-km-4, 8 for bloom-km-8), and these parts are used as
-indexes into the bitstring modulo the bitstring length. To add the assertion,
-all bits at the given indices are set to 1. To verify the assertion, all bits
-at the given indices are checked, and the assertion is taken to be in the
-filter if all bits are 1.
+The hash algorithm's output is then split into two parts of equal length x and
+y. To obtain the nh indexes into the bitstring, the following equation is used:
+
+- (x + i*y) mod bsl, where bsl is the bitstring length and i ∈ \[1,nh]
+
+To add a subject-object mapping, all bits at the calculated indices are set to
+one. To check wether such a mapping exists, all bits at the calculated indices
+are checked, and the mapping is taken to be in the filter if all bits are one.
 
 ### Dynamic Assertion Validity {#assertion-dynamics}
 
-For a given {subject, zone, context, type} tuple, multiple assertions can be
-valid at a given point in time; the union of the object values of all of these
-assertions is considered to be the set of valid values at that point in time.
+For a given {subject, zone, context, type} tuple, multiple Singular Assertions
+can be valid at a given point in time; the union of the object values of all of
+these Singular Assertions is considered to be the set of valid values at that
+point in time.
 
 ### Semantic of nonexistence proofs {#antiassertions}
 
 Shards, P-Shards and Zones can all be used to prove nonexistence during their
-validity. However, real naming systems are dynamic: an assertion might be
-created, altered, expired or revoked during the validity period of a shard,
-P-Shard or zone, leading to an inconsistency. Thus, a section proving
+validity. However, real naming systems are dynamic: an Assertion might
+be created, altered, expired or revoked during the validity period of a Shard,
+P-Shard or Zone, leading to an inconsistency. Thus, a section proving
 nonexistence only captures the state at the point in time when it was signed.
 
 ### Context in Assertions {#assertion-context}
@@ -1014,15 +986,15 @@ alternate chain of signatures to use to verify the validity of an Assertion, as
 follows:
 
 - The global context is identified by the special context name '.'. Assertions
-  in the global context are signed by the authority for the subject name. For
+  in the global context are signed by the Authority for the subject zone. For
   example, assertions about the name 'ethz.ch.' in the global context are only
-  valid if signed by the relevant authority which is either 'ethz.ch.', 'ch.',
-  or '.' depending on the value of the subject name of the assertion.
-- A local context is associated with a given authority. The local context's name
+  valid if signed by the relevant Authority which is either 'ethz.ch.', 'ch.',
+  or '.' depending on the value of the subject zone of the Assertion.
+- A local context is associated with a given Authority. The local context's name
   is divided into an  authority-part and a context-part by a context marker
-  ('cx--'). The authority-part directly identifies the authority whose key was
-  used to sign the assertion; assertions within a local context are only valid
-  if signed by the identified authority. Authorities have complete control over
+  ('cx--'). The authority-part directly identifies the Authority whose key was
+  used to sign the Assertion; Assertions within a local context are only valid
+  if signed by the identified Authority. Authorities have complete control over
   how the contexts under their namespaces are arranged, and over the names
   within those contexts. Both the authority-part and the context-part must end
   with a '.'.
@@ -1033,21 +1005,21 @@ Some examples illustrate how context works:
   its local networks within a separate context. E.g., a workstation could be
   named 'simplon.cab.inf.ethz.ch.' within the context
   'staff-workstations.cx--inf.ethz.ch.' Assertions about this name would be
-  signed by the authority for 'inf.ethz.ch.'. Here, the context serves simply as
+  signed by the Authority for 'inf.ethz.ch.'. Here, the context serves simply as
   a marker, without enabling an alternate signature chain: note that the name
   'simplon.cab.inf.ethz.ch' could at the same time be validly signed in the
-  global context by the authority over that name to allow external users access
-  this workstation. The local context simply marks this assertion as internal.
+  global context by the Authority over that name to allow external users access
+  this workstation. The local context simply marks this Assertion as internal.
   This allows a client making requests of local names to know they are local,
-  and for local resolvers to manage visibility of assertions outside the
-  enterprise: explicit context makes accidental leakage of both queries and
-  assertions easier to detect and avoid.
+  and for local resolvers to manage visibility of Assertions outside the
+  enterprise: explicit context makes accidental leakage of both Queries and
+  Assertions easier to detect and avoid.
 - Contexts make captive-portal interactions more explicit: a captive portal
   resolver could respond to a query for a common website (e.g. www.google.ch)
   with a signed response directed at the captive portal, but within a context
   identifying the location as well as the ISP (e.g.
   sihlquai.zurich.ch.cx--starbucks.access.some-isp.net.). This response will be
-  signed by the authority for 'starbucks.access.some-isp.net.'. This signature
+  signed by the Authority for 'starbucks.access.some-isp.net.'. This signature
   achieves two things: first, the client knows the result for www.google.ch is
   not globally valid; second, it can present the user with some indication as to
   the identity of the captive portal it is connected to.
@@ -1059,14 +1031,13 @@ Developing conventions for assertion contexts for different situations will
 require implementation and deployment experience, and is a subject for future
 work.
 
-### Zone-Reflexive Assertions
-
-A zone may make an assertion about itself by using the string "@" as a subject
-name. This facility can be used for any assertion type, but is especially useful
-for self-signing root zones, and for a zone to make a subsequent key assertion
-about itself. If an assertion of a given type about a zone is available both in
-the zone itself and in the superordinate zone, the assertion in the
-superordinate zone will take precedence.
+### Zone-Reflexive Singular Assertions
+A zone may make a Singular Assertion about itself by using the string "@" as a
+subject name. This facility can be used for any object type, but is especially
+useful for self-signing root zones, and for a zone to make a subsequent key
+assertion about itself. If a Singular Assertion for an Object about a zone is
+available both in the zone itself and in the superordinate zone, the assertion
+in the superordinate zone will take precedence.
 
 ### Address Assertions {#revassertions}
 
@@ -1083,21 +1054,21 @@ is the type of the object, encoded as an integer in the following table:
 
 {: #tabobj title="Object type codes"}
 
-| Code  | Name         | Description                             | Reference     |
-|------:|--------------|-----------------------------------------|---------------|
-| 1     | name         | name associated with subject            | {{obj-name}} |
-| 2     | ip6-addr     | IPv6 address of subject                 | {{obj-ip6}} |
-| 3     | ip4-addr     | IPv4 address of subject                 | {{obj-ip4}} |
-| 4     | redirection  | name of zone authority server           | {{obj-redir}} |
-| 5     | delegation   | public key for zone delgation           | {{obj-deleg}} |
-| 6     | nameset      | name set expression for zone            | {{obj-nameset}} | 
-| 7     | cert-info    | certificate information for name        | {{obj-cert}} | 
-| 8     | service-info | service information for srvname         | {{obj-srv}} | 
-| 9     | registrar    | registrar information                   | {{obj-registrar}} | 
-| 10    | registrant   | registrant information                  | {{obj-registrant}} | 
-| 11    | infrakey     | public key for RAINS infrastructure     | {{obj-infrakey}} | 
-| 12    | extrakey     | external public key for subject         | {{obj-extrakey}} | 
-| 13    | nextkey      | next public key for subject             | {{obj-nextkey}} |
+| Code  | Name         | Description                             | Reference          |
+|------:|--------------|-----------------------------------------|--------------------|
+| 1     | name         | name associated with subject            | {{obj-name}}       |
+| 2     | ip6-addr     | IPv6 address of subject                 | {{obj-ip6}}        |
+| 3     | ip4-addr     | IPv4 address of subject                 | {{obj-ip4}}        |
+| 4     | redirection  | name of zone authority server           | {{obj-redir}}      |
+| 5     | delegation   | public key for zone delgation           | {{obj-deleg}}      |
+| 6     | nameset      | name set expression for zone            | {{obj-nameset}}    |
+| 7     | cert-info    | certificate information for name        | {{obj-cert}}       |
+| 8     | service-info | service information for srvname         | {{obj-srv}}        |
+| 9     | registrar    | registrar information                   | {{obj-registrar}}  |
+| 10    | registrant   | registrant information                  | {{obj-registrant}} |
+| 11    | infrakey     | public key for RAINS infrastructure     | {{obj-infrakey}}   |
+| 12    | extrakey     | external public key for subject         | {{obj-extrakey}}   |
+| 13    | nextkey      | next public key for subject             | {{obj-nextkey}}    |
 
 Subsequent elements contain the object content, encoded as described in the
 respective subsection below.
@@ -1137,7 +1108,7 @@ encoded string.
 
 The redirection type is used to point to a "last-resort" server or server from
 which assertions about a zone can be retrieved; it therefore approximately
-replaces theD NS NS RRTYPE.
+replaces the DNS NS RRTYPE.
 
 ### Delegation {#obj-deleg}
 
@@ -1146,9 +1117,8 @@ assertions in a named zone, and by which a delegation of a name within a zone to
 a subordinate zone may be verified. It is represented as an 4-element array. The
 second element is a signature algorithm identifier as in {{signatures}}. The
 third element is a key phase as in {{signatures}}. The fourth element is the
-public key, formatted  
-as defined in {{signatures}} for the given algorithm identifier and RAINS
-delegation chain keyspace.
+public key, formatted as defined in {{signatures}} for the given algorithm
+identifier and RAINS delegation chain keyspace.
 
 Delegations approximately replace the DNS DNSKEY RRTYPE.
 
@@ -1223,10 +1193,10 @@ whose format is defined by the protocol family and hash algorithm.
 
 {: #tabcertproto title="Certificate information protocol families"}
 
-| Code | Name     | Protocol family                            | Certificate format |
-|-----:|----------|--------------------------------------------|--------------------|
-|    0 | unspec   | Unspecified                                | Unspecified        |
-|    1 | tls      | Transport Layer Security (TLS) {{!RFC8446}} | {{!RFC5280}}        |
+| Code | Name     | Protocol family                             | Certificate format |
+|-----:|----------|---------------------------------------------|--------------------|
+|    0 | unspec   | Unspecified                                 | Unspecified        |
+|    1 | tls      | Transport Layer Security (TLS) {{!RFC8446}} | {{!RFC5280}}       |
 
 Protocol family 0 leaves the protocol family unspecified; client validation
 and usage of cert-info assertions, and the protocol used to connect, are up to
@@ -1242,12 +1212,12 @@ secured with PKIX {{!RFC5280}} certificates.
 |    3 | ee   | End-Entity Certificate           |
 
 A trust anchor certificate constraint specifies a certificate that MUST appear
-as the trust anchor for the certificate presented by the subject of the
-assertion on a connection attempt. An end-entity certificate constraint
-specifies a certificate that MUST be presented by the subject of the assertion
+as the trust anchor for the certificate presented by the subject of the 
+Assertion on a connection attempt. An end-entity certificate constraint
+specifies a certificate that MUST be presented by the subject
 on a connection attempt.
 
-Certificate information be hashed using an appropriate hash function described
+Certificate information is hashed using an appropriate hash function described
 in {{hash-functions}}; hash functions are identified by a code as in
 {{tabhash}}. Code 0 is used to store full certificates in RAINS assertions,
 while other codes are used to store hashes for verification.
@@ -1323,56 +1293,60 @@ as in {{signatures}}. See {{public-key-management}} for more.
 Hash algorithms are used in several places in the RAINS data model:
 
 - hashing certificate data in cert-info objects (see {{obj-cert}})
-- hashing assertions into Bloom filters for probabalistic shards (see {{p-shards}})
-- hashing assertion and message data as part of generating a MAC (see {{signatures}})
-- hashing assertion data for a confirmation query (see {{confirmation}})
+- hashing assertions into Bloom filters and checking if a subject-object mapping
+  within a zone for the given context and type is present in a Bloom filter (see
+  {{p-shards}})
+- hashing Assertion and Message data as part of generating a MAC (see
+  {{signatures}})
 
-Where they are used in RAINS, hash functions are identified by a code given in
-{{tabhash}}. In this table, applicability "C" means the hash is valid for use
-in a certificate info object, "P" that it can be used for hashing assertions
-for P-shards, "S" that it can be used for hashing assertions and messages for
-signatures, and "Q" that it can be used for hashing assertions for confirmation queries.
+Hash functions are identified by a code given in {{tabhash}}. The Applicability
+column determines where in the RAINS Protocol a specific hash function might be
+used. Applicability "C" means the hash is valid for use in a certificate info
+object, "P" that it can be used for hashing assertions for P-shards, "S" that it
+can be used for hashing Assertions and Messages for signatures.
 
 {: #tabhash title="Hash algorithms"}
 
-| Code | Name       | Reference         | Length | Applicability |
-|-----:|------------|-------------------|--------|---------------|
-| 0    | nohash     | (data not hashed) | var.   | C             |
-| 1    | sha-256    | {{!RFC6234}}      | 32     | CPSQ          |
-| 2    | sha-512    | {{!RFC6234}}      | 64     | CSQ           |
-| 3    | sha-384    | {{!RFC6234}}      | 48     | CSQ           |
-| 4    | shake256   | {{!RFC8419}}      | 32     | PSQ           |
-| 5    | fnv-64     | {{!FNV=I-D.eastlake-fnv}} | 8 | P          |
-| 6    | fnv-128    | {{!FNV=I-D.eastlake-fnv}} | 16 | P         |
+| Code | Name       | Reference                 | Length | Applicability |
+|-----:|------------|---------------------------|--------|---------------|
+| 0    | nohash     | (data not hashed)         | var.   | C             |
+| 1    | sha-256    | {{!RFC6234}}              | 32     | CPS           |
+| 2    | sha-512    | {{!RFC6234}}              | 64     | CS            |
+| 3    | sha-384    | {{!RFC6234}}              | 48     | CS            |
+| 4    | shake256   | {{!RFC8419}}              | 32     | PS            |
+| 5    | fnv-64     | {{!FNV=I-D.eastlake-fnv}} | 8      | P             |
+| 6    | fnv-128    | {{!FNV=I-D.eastlake-fnv}} | 16     | P             |
 
 ## Queries {#queries}
 
 Information about requests for information about names is carried in Queries. A
-Query specifies the name and object type about which information is requested,
+Query specifies the name and object types about which information is requested,
 information about how long the querier is willing to wait for an answer, and
 additional options indicating the querier's preferences about how the query
 should be handled.
 
-In contrast to Assertions, the subject in a Query is given as a fully-qualified
-name - the subject name concatenated to the zone name with a '.', since a
-querier may not know the zone name associated with a fully-qualified name.
+In contrast to Singular Assertions, the subject in a Query is given as a
+fully-qualified name - the subject name concatenated to the zone name with a
+'.', since a querier may not know the zone name associated with a
+fully-qualified name.
 
 There are two kinds of queries supported by the RAINS data model:
 
-- Query (or Normal Query): a request for information of a given type about a
-given subject, about which the querier expresses no prior information.
+- Query (or Normal Query): a request for information about one or several types
+  of a given subject, about which the querier expresses no prior information.
 
-- Confirmation Query: a request for information of a given type about a given
-subject, for which the querier already has a valid cached assertion or a valid
-cached nonexistence proof, but for which the querier would like a new assertion
-if available. Confirmation queries are covered in {{confirmation}}.
+- Confirmation Query: a request for information about one or several types of a
+  given subject, for which the querier already has a valid cached Assertion, but
+  for which the querier would like a new Assertion if available. Confirmation
+  queries are covered in {{confirmation}}.
 
-Both of queries are carried in a Query message section. Each Query section in a
-Message represents a separate query.
+Both queries are carried in a Query message section. Each Query contained in a
+Message represents a separate Query.
 
-A Query body is represented as a CBOR map. Queries MUST contain the query-name (8),
-context (6), query-types (10), and query-expires (12) keys. Queries MAY contain
-the query-opts (13), query-keyphase (17) keys, and/or current-time (14) keys. 
+A Query body is represented as a CBOR map. Queries MUST contain the query-name
+(8), context (6), query-types (10), and query-expires (12) keys. Queries MAY
+contain the query-opts (13), query-keyphases (17) keys, and/or current-time (14)
+keys. 
 
 The value of the query-name (8) key is a UTF-8 encoded string containing the
 name for which the query is issued and MUST end with a '.' (the root zone).
@@ -1382,7 +1356,7 @@ of the context to which a query pertains. A zero-length string indicates that
 assertions will be accepted in any context.
 
 The value of the query-types (10) key is an array of integers encoding the
-type(s) of objects (as in {{obj-types}}) acceptable in answers to the query.
+type(s) of Objects (as in {{obj-types}}) acceptable in answers to the query.
 All values in the query-type array are treated at equal priority: for example,
 \[2,3] means the querier is equally interested in both IPv4 and IPv6 addresses
 for the query-name. An empty query-types array indicates that objects of any
@@ -1393,12 +1367,12 @@ identified with tag value 1 and encoded as in section 2.4.1 of {{!RFC7049}}.
 After the query-expires time, the query will have been considered not answered
 by the original issuer and can be ignored.
 
-The value of the query-keyphase (17) key, if present, is an array of integers
+The value of the query-keyphases (17) key, if present, is an array of integers
 representing all key phases (see {{signatures}}) desired in delegation and
 nextkey answers to queries (see {{obj-deleg}} and {{obj-nextkey}}). The value
-of the query-keyphase key is ignored for all queries where query-types does not
+of the query-keyphases key is ignored for all Queries where query-types does not
 include delegation or nextkey. A query for a delegation or nextkey object that
-does not contain a query-keyphase key should return information for all
+does not contain a query-keyphases key SHOULD return information for all
 available keyphases.
 
 The value of the query-opts (13) key, if present, is an array of integers in
@@ -1407,7 +1381,7 @@ query. See {{query-opts}}.
 
 The value of the current-time (14) key, if present, is the timestamp of the
 latest information available at the querier for the queried subject and object
-type. See {{confirmation}} for details of how confirmation queries work.
+types. See {{confirmation}} for details of how confirmation queries work.
 
 ### Query Options {#query-opts}
 
@@ -1431,21 +1405,21 @@ preferences. Query options are advisory.
 Options 1-5 and 9 specify performance/privacy tradeoffs. Each server is free to
 determine how to minimize each performance metric requested; however, servers
 MUST NOT generate queries to other servers if "no information leakage" is
-specified, and servers MUST NOT return expired assertions unless "expired
+specified, and servers MUST NOT return expired Assertions unless "expired
 assertions acceptable" is specified.
 
 Option 6 specifies that the token on the message containing the query (see
-{{tokens}}) should be used on all queries resulting from a given query,
-allowing traceability through an entire RAINS infrastructure. These resulting
-queries SHOULD also carry Option 6. When Option 6 is not present, queries
-sent by a server in response to an incoming query SHOULD use different tokens.
+{{tokens}}) should be used on all queries resulting from a given query, allowing
+traceability through an entire RAINS infrastructure. The resulting queries
+SHOULD also carry Option 6. When Option 6 is not present, queries sent by a
+server in response to an incoming query must use different tokens.
 
-By default, a client service will perform verification of negative queries and
-return a 404 No Assertion Exists for queries with a consistent proof of non-
-existence, within a message signed by the query service's infrakey. Option 7
-disables this behavior, and causes the query service to return the shard
-proving nonexistence for verification by the client. It is intended to be used
-with untrusted query services.
+By default, a client service will perform verification on a negative query
+response and return a 404 No Assertion Exists Notification for queries with a
+valid and verified proof of nonexistence, within a Message signed by the query
+service's infrakey. Option 7 disables this behavior, and causes the query
+service to return the Shard, P-Shard or Zone for verification by the client. It
+is intended to be used with untrusted query services.
 
 Option 8 specifies that a querier's interest in a query is strictly ephemeral,
 and that future assertions related to this query SHOULD NOT be proactively
@@ -1459,26 +1433,25 @@ honoring Option 9 SHOULD limit the rate of "freshness" queries it issues.
 
 ### Confirmation Queries {#confirmation}
 
-A Query containing a current-time key is a confirmation query, used by a server
+A Query containing a current-time key is a Confirmation Query, used by a server
 to refresh a cached query result. The querier passes the timestamp of the most
 recent result it has cached, taken from the most recent start time of the
-validity of the signature(s) on the assertion(s) that may answer it. If the
-answer to a confirmation query is not newer than the given timestamp, the server
-may answer with a notification of type 304 instead of with an assertion. answer
-is older or would match the current answer is a notification of type 304 (see
-{{notifications}}).
+validity of the signature(s) on the Assertion(s) that may answer it. If the
+answer to a Confirmation Query is not newer than the given timestamp, the server
+SHOULD answer with a Notification of type 304 (see {{notifications}}).
+Otherwise, the most recent Assertion answering the query is returned.
 
-The value of the current-time key is represented as a CBOR integer epoch timestamp
-identified with tag value 1 and encoded as in section 2.4.1 of {{!RFC7049}}.
+The value of the current-time key is represented as a CBOR integer epoch
+timestamp identified with tag value 1 and encoded as in section 2.4.1 of
+{{!RFC7049}}.
 
 ### Context in Queries {#query-context}
 
-Context is used in queries as it is in assertions (see
-{{assertion-context}}). Assertion contexts in an answer to a query have to
-match the context in the query in order to respond to a query. The Context
-section of a query contains the context of desired assertions; a special "any"
-context (represented by the empty string) indicates that assertions in any
-context will be accepted.
+Context is used in Queries as it is in Assertions (see {{assertion-context}}).
+The Context section of a query contains the context of desired Assertions; a
+special "any" context (represented by the empty string) indicates that
+Assertions in any context will be accepted. Assertion contexts in an answer to a
+Query that is not about the "any" context MUST match the context in the Query.
 
 Query contexts can also be used to provide additional information to RAINS
 servers about the query. For example, context can provide a method for explicit
@@ -1492,10 +1465,10 @@ reflecting the goodness of the zone for the client. Here, a context might be
 'zrh.cx--cdn-zones.some-cdn.com.' for names of servers hosting content in a
 CDN's Zurich data center. A client could represent its desire to find content
 nearby by making queries in the zrh.cx--, fra.cx-- (Frankfurt), and ams.cx--
-(Amsterdam) contexts of the 'cdn-zones.some-cdn.com.' authority. In all cases,
-the assertions themselves will be signed by the authority for
+(Amsterdam) contexts of the 'cdn-zones.some-cdn.com.' Authority. In all cases,
+the Assertions themselves will be signed by the Authority for
 'cdn-zones.some-cdn.com.', accurately representing that it is the CDN, not the
-owner of the related name in the global context, that is making the assertion.
+owner of the related name in the global context, that is making the Assertion.
 
 As with assertion contexts, developing conventions for query contexts for
 different situations will require implementation and deployment experience,
@@ -1511,13 +1484,11 @@ specification, which gives the broad outline of the design, can be found in
 ## Notifications {#notifications}
 
 Notifications contain information about the operation of the RAINS protocol
-itself. A Notification Message Section body is represented as a CBOR map, which
-MUST contain the token (2) and note-type (21) keys, and MAY contain the
-note-data (22) key. 
+itself. A Notification body is represented as a CBOR map, which MUST contain the
+token (2) and note-type (21) keys, and MAY contain the note-data (22) key. 
 
-The value of the token (2) key is a 16-byte array, which
-MUST contain the token of the message or query to which the notification is a
-response. See {{tokens}}.
+The value of the token (2) key is a 16-byte array, which MUST contain the token
+of the Message to which the Notification is a response. See {{tokens}}.
 
 The value of the note-type key is encoded as an integer as in the
 {{tabnotify}}.
@@ -1543,7 +1514,7 @@ codes for HTTP {{?RFC7231}}.
 
 The value of the note-data (22) key, if present, is a UTF-8 encoded string
 with additional information about the notification, intended to be displayed
-to an administrator to help debug the issue identified by the negotiation.
+to an administrator to help debug the issue identified by the Notification.
 
 Notification codes 400 and 500 signal error conditions. 400 is a general message
 noting that a client or server could not parse a message, and 500 notes that the
@@ -1553,11 +1524,10 @@ notifications is optional, according to server policy and configuration.
 ## Signatures {#signatures}
 
 RAINS supports multiple signature algorithms and hash functions for signing
-assertions for cryptographic algorithm agility {{?RFC7696}}. A RAINS signature
+Assertions for cryptographic algorithm agility {{?RFC7696}}. A RAINS signature
 algorithm identifier specifies the signature algorithm; a hash function for
-generating the HMAC and the format of the encodings of the signature
-values in Assertions, Shards, Zones, and Messages, as well as of public key
-values in delegation objects.
+generating the HMAC and the format of the encodings of the signature values in
+Assertions and Messages, as well as of public key values in delegation objects.
 
 RAINS signatures have five common elements: the algorithm identifier, a keyspace
 identifier, a key phase, a valid-since timestamp, and a valid-until
@@ -1604,7 +1574,7 @@ element to be signed. The signing process is defined as follows:
   {{c14n}}.
 
 - Generate a signature on the resulting byte stream according to the algorithm
-  selected.
+selected.
 
 - Add the full signature to the signatures array at the appropriate point in
   the element.
@@ -1617,7 +1587,8 @@ the signature according to the algorithm selected.
 The byte stream representing a data element over which signatures are generated
 and verified is a canonicalized CBOR object representing the data element. 
 
-Signatures may be attached to any form of Assertion, as well as to Messages as a whole.
+Signatures may be attached to any form of Assertion, as well as to Messages as a
+whole.
 
 First, to canonicalize signature metadata to allow it to be protected by the
 signature, regardless of the type of data element:
@@ -1641,26 +1612,22 @@ To generate a canonicalized Singular Assertion:
 
 To generate a canonicalized Shard:
 
-- sort the objects array in each assertion contained in the assertions array as
-  for Singular Assertions, above.
+- sort the objects array in each Singular Assertion contained in the assertions
+  array as, above.
 - sort the assertions array by lexicographic order of the serialized
   canonicalized byte string representing the assertion. Note that this will
-  cause the subject array to be sorted in lexicographic order of subject name,
-  as well.
+  cause the assertions array to be sorted in lexicographic order of subject name,
+  as well. [EDITORS's NOTE CFE What is the subject array?]
 - sort the CBOR map by ascending order of its keys ({{tabmkey}}).
 
 To generate a canonicalized Zone:
 
-- sort the objects array in each assertion contained in the assertions array as
-  for Singular Assertions, above.
-- sort each shard contained in the shards array as for Shards, above.
+- sort the objects array in each Singular Assertion contained in the assertions
+  array as, above.
 - sort the assertions array by lexicographic order of the serialized
   canonicalized byte string representing the assertion. Note that this will
-  cause the array to be sorted in lexicographic order of subject name,
-  as well.
-- sort the shards array by lexicographic order of the serialized canonicalized
-  byte string representing the shard. Note that this will
-  cause the array to be sorted in lexicographic order of shard range, as well.
+  cause the assertions array to be sorted in lexicographic order of subject name,
+  as well. [EDITORS's NOTE CFE What is the subject array?]
 - sort the CBOR map by ascending order of its keys ({{tabmkey}}).
 
 To generate a canonicalized P-Shard:
@@ -1669,8 +1636,8 @@ To generate a canonicalized P-Shard:
 
 To generate a canonicalized Message:
 
-- preserve the order of Sections within the Message
-- canonicalize each section as appropriate by following the canonicalization
+- preserve the order of the Message Sections within the Message.
+- canonicalize each Section as appropriate by following the canonicalization
   steps for the appropriate Section type, above.
 
 It is RECOMMENDED that RAINS implementations generate and send only Messages
@@ -1707,7 +1674,7 @@ delegation.
 
 ## Tokens {#tokens}
 
-Messages and notifications contain an opaque token (2) key, whose
+Messages and Notifications contain an opaque token (2) key, whose
 content is a 16-byte array, and is used to link Messages to the Queries they
 respond to, and Notifications to the Messages they respond to. Tokens MUST be
 treated as opaque values by RAINS servers.
@@ -1721,24 +1688,21 @@ Message contains a fresh token selected by the server). This allows sending
 multiple Notifications within one Message and the receiving server to respond to
 a Message containing Notifications (e.g. when it is malformed).
 
-Since tokens are used to link queries to replies, and to link notifications to
-messages, regardless of the sender or recipient of a message, they MUST be
+Since tokens are used to link Queries to replies, and to link Notifications to
+Messages, regardless of the sender or recipient of a Message, they MUST be
 chosen by servers to be hard to guess; e.g. generated by a cryptographic random
 number generator.
 
-When a server creates a new query to forward to another server in response to
-a query it received, it MUST NOT use the same token on the delegated query
+When a server creates a new Query to forward to another server in response to
+a Query it received, it MUST NOT use the same token on the delegated query
 as on the received query, unless option 6 Enable Tracing is present in the
-received, in which case it MUST use the same token.
+received query, in which case it MUST use the same token.
 
 ## Capabilities {#capabilities}
 
-The capabilities (1) key in a RAINS message allows a the sender of that message
-to communicate its capabilities to its peer. Capabilities MUST be sent on the
-first message sent from one peer to another. If a peer receives a message from a
-counterpart for which it does not have capabilities, it can ask for the next
-message to contain full capabilities by sending a message containing
-notification 399.
+The capabilities (1) key in a RAINS message allows the sender of that message to
+communicate its capabilities to its peer. Capabilities MUST be sent on the first
+message sent from one peer to another.
 
 A peer's capabilities can be represented in one of two ways:
 
@@ -1748,6 +1712,10 @@ A peer's capabilities can be represented in one of two ways:
 - a SHA-256 hash of the CBOR byte stream derived from normalizing such an
   array by sorting it in lexicographically increasing order, then serializing
   it.
+
+If a peer receives a message from a counterpart for which it does not have the
+hash of the capabilities, it can ask for the next message to contain a list of
+these capabilities by sending a message containing notification 399.
 
 This mechanism is inspired by {{XEP0115}}, and is intended to be used to
 reduce the overhead in exposing common sets of capabilities. Each RAINS server
@@ -1760,14 +1728,13 @@ algorithms, and so on.
 | URN                | Meaning                                                |
 |--------------------|--------------------------------------------------------|
 | urn:x-rains:tlssrv | Listens for TLS/TCP connections (see {{transport-tls}} |
-| urn:x-rains:udpsrv | Accepts messages via UDP (see {{transport-udp}})       |
 
 A RAINS server MUST NOT assume that a peer server supports a given capability
 unless it has received a message containing that capability from that server. An
 exception are the capabilities indicating that a server listens for connections
 using a given transport protocol; servers and clients can also learn this
-information from RAINS itself (given redirection and service-info assertions for
-a named zone) or from external configuration.
+information from RAINS itself (given redirection and service-info 
+Assertions for a named zone) or from external configurations.
 
 # RAINS Protocol {#protocol}
 
@@ -1784,20 +1751,12 @@ send it.
 
 ## Transport Bindings {#transport}
 
-This document defines two transport bindings for RAINS: TLS-over-TCP in
-{{transport-tls}}, and UDP in {{transport-udp}}. Each of these transport
-bindings offers a different set of tradeoffs. Carrying RAINS Messages over
-persistent TLS 1.3 (or later) connections {{!RFC8446}} over TCP {{!RFC0793}}
-protects query confidentiality and integrity while supporting implementation
-over a ubiquitously-available and well-understood security and transport layer.
-
-RAINS over UDP allows RAINS messages to be exchanged with the same statelessness
-and confidentiality properties as DNS over UDP, reducing state requirements at
-RAINS clients and servers for persistent TLS connection, but without
-confidentiality protection, and with limits on the size of messages which can be
-transferred. RAINS servers MUST support TLS over TCP; other transports can be
-negotiated using the capabilities mechanism (see {{capabilities}}) after
-bootstrapping using TLS 1.3 (or later).
+This document defines one transport binding for RAINS: TLS-over-TCP in
+{{transport-tls}}. Each transport binding offers a different set of tradeoffs.
+Carrying RAINS Messages over persistent TLS 1.3 (or later) connections
+{{!RFC8446}} over TCP {{!RFC0793}} protects query confidentiality and integrity
+while supporting implementation over a ubiquitously-available and
+well-understood security and transport layer.
 
 ### TLS over TCP {#transport-tls}
 
@@ -1835,19 +1794,9 @@ grouped into shards that will fit into 65536-byte messages, to allow servers to
 reply using these shards when full-zone transfers are not possible due to
 message size limitations.
 
-### UDP {#transport-udp}
-
-When they accept RAINS messages over UDP, servers MUST accept messages up to
-512 bytes in length, but MAY accept messages of greater length.
-
-When a server has a message to send to a client that contacted via UDP that
-would exceed the UDP message size length, it should send a 306 TCP Fallback
-notification, to cause the client to resend the query via a TCP connection to
-the server.
-
 ### Heartbeat Messages {#heartbeat}
 
-Both TCP and UDP connections between RAINS clients and servers may be associated
+TCP connections between RAINS clients and servers may be associated
 with in-network state (such as firewall pinholes and/or network address
 translation cache entries) with relatively short idle timeouts. RAINS provides a
 simple heartbeat mechanism to refresh this state for long-running connections.
