@@ -1,7 +1,7 @@
 ---
 title: RAINS Parameters for SCION
 abbrev: RAINS
-docname: draft-trammell-rains-scion-00
+docname: draft-trammell-rains-scion-latest
 date: 
 category: exp
 
@@ -21,10 +21,6 @@ author:
     code: 8092
     country: Switzerland
     email: ietf@trammell.ch
-
-normative:
-    I-D.trammell-inip-pins:
-    I-D.trammell-rains-protocol:
 
 informative:
     SCION:
@@ -50,10 +46,12 @@ specific to the SCION Internet architecture.
 
 # Introduction
 
-RAINS, Another Internet Naming Service (RAINS) {{I-D.trammell-rains-protocol}}
-is a clean-slate Internet naming service defined to meet a set of identified
-properties of an ideal Internet naming service {{I-D.trammell-inip-pins}}. RAINS
-was defined in the context of the SCION {{SCION}} architecture. This document updates the RAINS protocol specification with SCION-specific extstions.
+RAINS, Another Internet Naming Service (RAINS)
+{{!RAINS=I-D.trammell-rains-protocol}} is a clean-slate Internet naming service
+defined to meet a set of identified properties of an ideal Internet naming
+service. RAINS was defined in the context of the SCION {{SCION}} architecture.
+This document updates the RAINS protocol specification with SCION-specific
+extstions.
 
 # SCION Address Objects
 
