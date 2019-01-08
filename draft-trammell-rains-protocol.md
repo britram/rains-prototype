@@ -1499,13 +1499,12 @@ The value of the note-type key is encoded as an integer as in the
 |-----:|--------------------------------------|------------------|
 | 100  | Connection heartbeat                 | {{heartbeat}}    |
 | 304  | Confirmation query has latest answer | {{confirmation}} |
-| 306  | Message too large for UDP            | {{transport-udp}}
 | 399  | Send full capabilities               | {{capabilities}} |
 | 400  | Bad message received                 | |
 | 403  | Inconsistent message received        | {{consistency}}  |
 | 404  | No assertion exists                  | {{client-proto}} |
 | 406  | Message not acceptable for service   | {{client-proto}} {{pub-proto}} | 
-| 413  | Message too large                    | {{transport-tls}} {{transport-udp}} |
+| 413  | Message too large                    | {{transport-tls}} |
 | 500  | Unspecified server error             |                  |
 | 504  | No assertion available               | {{client-proto}} |
 
@@ -1617,7 +1616,7 @@ To generate a canonicalized Shard:
 - sort the assertions array by lexicographic order of the serialized
   canonicalized byte string representing the assertion. Note that this will
   cause the assertions array to be sorted in lexicographic order of subject name,
-  as well. [EDITORS's NOTE CFE What is the subject array?]
+  as well. 
 - sort the CBOR map by ascending order of its keys ({{tabmkey}}).
 
 To generate a canonicalized Zone:
@@ -1627,7 +1626,7 @@ To generate a canonicalized Zone:
 - sort the assertions array by lexicographic order of the serialized
   canonicalized byte string representing the assertion. Note that this will
   cause the assertions array to be sorted in lexicographic order of subject name,
-  as well. [EDITORS's NOTE CFE What is the subject array?]
+  as well. 
 - sort the CBOR map by ascending order of its keys ({{tabmkey}}).
 
 To generate a canonicalized P-Shard:
