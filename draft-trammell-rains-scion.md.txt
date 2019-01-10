@@ -24,7 +24,7 @@ author:
 
 informative:
     SCION:
-      title: SCION Five Years Later - Revisiting Scalability, Control, and Isolation Next-Generation Networks (arXiv:1508.01651v1)
+      title: SCION Five Years Later - Revisiting Scalability, Control, and Isolation Next-Generation Networks (arXiv 1508.01651v1)
       author: 
         -
           ins: D. Barrera 
@@ -108,7 +108,7 @@ delegatable.
 
 # ARPKI certificates in RAINS Certificate objects
 
-[EDITOR'S NOTE: write me, discuss which types we need here. At least two: a PBC
+\[EDITOR'S NOTE: write me, discuss which types we need here. At least two: a PBC
 for a domain, or a proof of absence of a PBC.)]
 
 {: #tabcertusage title="Additional certificate information usage values for SCION"}
@@ -120,7 +120,7 @@ for a domain, or a proof of absence of a PBC.)]
 
 # ARPKI keyspace
 
-[EDITOR'S NOTE: write me, define how to do an SCP validation]
+\[EDITOR'S NOTE: write me, define how to do an SCP validation]
 
 {: #tabkeyspace title="Additional keyspace for SCION"}
 
@@ -130,4 +130,4 @@ for a domain, or a proof of absence of a PBC.)]
 
 # RAINS servers over native SCION multipath transport
 
-[EDITOR'S NOTE: write me, once SSP is defined to the point we have something to cite.]
+\[EDITOR'S NOTE: write me, once SSP is defined to the point we have something to cite.]
