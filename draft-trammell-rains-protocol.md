@@ -1039,13 +1039,6 @@ assertion about itself. If a Singular Assertion for an Object about a zone is
 available both in the zone itself and in the superordinate zone, the assertion
 in the superordinate zone will take precedence.
 
-### Address Assertions {#revassertions}
-
-Reverse naming services in RAINS will be covered in a future revision of this
-document; a non-normative, older version of the reverse naming service
-specification, which gives the broad outline of the design, can be found in
-{{reverse}}.
-
 ## Object Types and Encodings {#obj-types}
 
 Each Object associated with a given subject name in a Singular Assertion (see
@@ -1473,13 +1466,6 @@ owner of the related name in the global context, that is making the Assertion.
 As with assertion contexts, developing conventions for query contexts for
 different situations will require implementation and deployment experience,
 and is a subject for future work.
-
-### Address Queries {#revqueries}
-
-Reverse naming services in RAINS will be covered in a future revision of this
-document; a non-normative, older version of the reverse naming service
-specification, which gives the broad outline of the design, can be found in
-{{reverse}}.
 
 ## Notifications {#notifications}
 
