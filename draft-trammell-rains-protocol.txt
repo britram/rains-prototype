@@ -1179,8 +1179,8 @@ Internet-Draft                    RAINS                     January 2019
 
 
    The value of the objects (7) key is an array of objects, as defined
-   in Section 5.3.  Note that this array MAY be empty; see {assertion-
-   dynamics}.
+   in Section 5.3.  Note that this array MAY be empty; see
+   Section 5.2.5.
 
 5.2.2.  Shards
 
