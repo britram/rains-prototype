@@ -806,7 +806,7 @@ context of the assertion is inherited from the containing Shard or Zone. See
 {{assertion-context}} for more.
 
 The value of the objects (7) key is an array of objects, as defined in
-{{obj-types}}. Note that this array MAY be empty; see {assertion-dynamics}.
+{{obj-types}}. Note that this array MAY be empty; see {{assertion-dynamics}}.
 
 ### Shards {#shards}
 
