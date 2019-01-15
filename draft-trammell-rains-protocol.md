@@ -806,7 +806,7 @@ context of the assertion is inherited from the containing Shard or Zone. See
 {{assertion-context}} for more.
 
 The value of the objects (7) key is an array of objects, as defined in
-{{obj-types}}.
+{{obj-types}}. Note that this array MAY be empty; see {assertion-dynamics}.
 
 ### Shards {#shards}
 
@@ -964,8 +964,13 @@ are checked, and the mapping is taken to be in the filter if all bits are one.
 
 For a given {subject, zone, context, type} tuple, multiple Singular Assertions
 can be valid at a given point in time; the union of the object values of all of
-these Singular Assertions is considered to be the set of valid values at that
-point in time.
+these Singular Assertions is considered to be the set of valid values for that
+type at that point in time.
+
+A Singular Assertion's objects array MAY be empty. If the only assertion valid
+for a given {subject, zone, context} tuple at a given point in time is such a
+Singular Assertion, this is to be interpreted as a statement that a name exists
+at that point in time, but that it is not mapped to any object.
 
 ### Semantic of nonexistence proofs {#antiassertions}
 
