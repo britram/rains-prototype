@@ -5,7 +5,7 @@
 Network Working Group                                        B. Trammell
 Internet-Draft                                               C. Fehlmann
 Intended status: Experimental                                 ETH Zurich
-Expires: July 12, 2019                                  January 08, 2019
+Expires: July 19, 2019                                  January 15, 2019
 
 
      RAINS (Another Internet Naming Service) Protocol Specification
@@ -35,7 +35,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on July 12, 2019.
+   This Internet-Draft will expire on July 19, 2019.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                 [Page 1]
+Trammell & Fehlmann       Expires July 19, 2019                 [Page 1]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -70,7 +70,7 @@ Table of Contents
      3.1.  Interfaces  . . . . . . . . . . . . . . . . . . . . . . .   7
      3.2.  Properties  . . . . . . . . . . . . . . . . . . . . . . .   8
        3.2.1.  Meaningfulness  . . . . . . . . . . . . . . . . . . .   8
-       3.2.2.  Distinguishability  . . . . . . . . . . . . . . . . .   9
+       3.2.2.  Distinguishability  . . . . . . . . . . . . . . . . .   8
        3.2.3.  Minimal Structure . . . . . . . . . . . . . . . . . .   9
        3.2.4.  Federation of Authority . . . . . . . . . . . . . . .   9
        3.2.5.  Uniqueness of Authority . . . . . . . . . . . . . . .   9
@@ -86,7 +86,7 @@ Table of Contents
        3.2.15. Availability  . . . . . . . . . . . . . . . . . . . .  12
        3.2.16. Lookup Latency  . . . . . . . . . . . . . . . . . . .  12
        3.2.17. Bandwidth Efficiency  . . . . . . . . . . . . . . . .  12
-       3.2.18. Query Linkability . . . . . . . . . . . . . . . . . .  13
+       3.2.18. Query Linkability . . . . . . . . . . . . . . . . . .  12
        3.2.19. Explicit Tradeoff . . . . . . . . . . . . . . . . . .  13
        3.2.20. Trust in Infrastructure . . . . . . . . . . . . . . .  13
      3.3.  Observations  . . . . . . . . . . . . . . . . . . . . . .  13
@@ -109,14 +109,13 @@ Table of Contents
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                 [Page 2]
+Trammell & Fehlmann       Expires July 19, 2019                 [Page 2]
 
 Internet-Draft                    RAINS                     January 2019
 
 
        5.2.7.  Context in Assertions . . . . . . . . . . . . . . . .  26
        5.2.8.  Zone-Reflexive Singular Assertions  . . . . . . . . .  27
-       5.2.9.  Address Assertions  . . . . . . . . . . . . . . . . .  27
      5.3.  Object Types and Encodings  . . . . . . . . . . . . . . .  27
        5.3.1.  Name Alias  . . . . . . . . . . . . . . . . . . . . .  29
        5.3.2.  IPv6 Address  . . . . . . . . . . . . . . . . . . . .  29
@@ -136,7 +135,6 @@ Internet-Draft                    RAINS                     January 2019
        5.5.1.  Query Options . . . . . . . . . . . . . . . . . . . .  37
        5.5.2.  Confirmation Queries  . . . . . . . . . . . . . . . .  38
        5.5.3.  Context in Queries  . . . . . . . . . . . . . . . . .  38
-       5.5.4.  Address Queries . . . . . . . . . . . . . . . . . . .  39
      5.6.  Notifications . . . . . . . . . . . . . . . . . . . . . .  39
      5.7.  Signatures  . . . . . . . . . . . . . . . . . . . . . . .  40
        5.7.1.  Canonicalization  . . . . . . . . . . . . . . . . . .  42
@@ -162,28 +160,23 @@ Internet-Draft                    RAINS                     January 2019
      7.6.  Public Key Management . . . . . . . . . . . . . . . . . .  55
        7.6.1.  Key Phase and Key Rotation  . . . . . . . . . . . . .  56
        7.6.2.  Next Key Assertions . . . . . . . . . . . . . . . . .  56
+   8.  Experimental Design and Evaluation  . . . . . . . . . . . . .  57
+   9.  Security Considerations . . . . . . . . . . . . . . . . . . .  57
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                 [Page 3]
+Trammell & Fehlmann       Expires July 19, 2019                 [Page 3]
 
 Internet-Draft                    RAINS                     January 2019
 
 
-   8.  Experimental Design and Evaluation  . . . . . . . . . . . . .  57
-   9.  Security Considerations . . . . . . . . . . . . . . . . . . .  57
      9.1.  Integrity and Confidentiality Protection  . . . . . . . .  57
    10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  58
    11. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  58
    12. References  . . . . . . . . . . . . . . . . . . . . . . . . .  58
      12.1.  Normative References . . . . . . . . . . . . . . . . . .  58
      12.2.  Informative References . . . . . . . . . . . . . . . . .  60
-   Appendix A.  Reverse Name Service in RAINS  . . . . . . . . . . .  62
-     A.1.  Address to Object Mapping . . . . . . . . . . . . . . . .  63
-       A.1.1.  Context in Address Assertions . . . . . . . . . . . .  64
-     A.2.  Address Assertion body  . . . . . . . . . . . . . . . . .  64
-     A.3.  Address Query body  . . . . . . . . . . . . . . . . . . .  65
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  66
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  62
 
 1.  Introduction
 
@@ -218,19 +211,20 @@ Internet-Draft                    RAINS                     January 2019
       determines the rules for chaining signatures to verify validity of
       an assertion.  The global context is a special case of context,
       which uses chains from the global naming root key.  The use of
-
-
-
-Trammell & Fehlmann       Expires July 12, 2019                 [Page 4]
-
-Internet-Draft                    RAINS                     January 2019
-
-
       context explicitly separates global usage of the DNS from local
       usage thereof, and allows other application-specific naming
       constraints to be bound to names; see Section 5.2.7.  Queries are
       valid in one or more contexts, with specific rules for determining
       which assertions answer which queries; see Section 5.5.3.
+
+
+
+
+
+Trammell & Fehlmann       Expires July 19, 2019                 [Page 4]
+
+Internet-Draft                    RAINS                     January 2019
+
 
    o  There is explicit information about registrars and registrants
       available in the naming system at runtime.
@@ -274,20 +268,19 @@ Internet-Draft                    RAINS                     January 2019
 
    o  Assertion: A signed statement about the existence or nonexistence
       of a mapping from a Subject name and Context to an Object at a
-
-
-
-Trammell & Fehlmann       Expires July 12, 2019                 [Page 5]
-
-Internet-Draft                    RAINS                     January 2019
-
-
       given point in time.  It is either a Singular Assertion, Shard, or
       Zone.
 
    o  Singular Assertion: A mapping between a Subject and one or several
       Objects, signed by the Authority for the namespace containing that
       Subject.  See Section 5.2.
+
+
+
+Trammell & Fehlmann       Expires July 19, 2019                 [Page 5]
+
+Internet-Draft                    RAINS                     January 2019
+
 
    o  Authority: An entity that has the right to determine which
       Assertions exist within its Zone
@@ -330,14 +323,6 @@ Internet-Draft                    RAINS                     January 2019
    o  Query Service: A service provided by a RAINS Server for answering
       Queries on behalf of a RAINS Client.  See Section 4.
 
-
-
-
-Trammell & Fehlmann       Expires July 12, 2019                 [Page 6]
-
-Internet-Draft                    RAINS                     January 2019
-
-
    o  Intermediary Service: A service provided by a RAINS Server for
       answering Queries and providing temporary storage for Assertions
       on behalf of other RAINS Servers.  See Section 4.
@@ -345,6 +330,13 @@ Internet-Draft                    RAINS                     January 2019
    o  RAINS Server: A server that supports the RAINS Protocol, and
       provides one or more services on behalf of other RAINS Servers
       and/or RAINS Clients.  See Section 4.
+
+
+
+Trammell & Fehlmann       Expires July 19, 2019                 [Page 6]
+
+Internet-Draft                    RAINS                     January 2019
+
 
    o  RAINS Client: A client that uses the Query Service of one or more
       RAINS Servers to retrieve Assertions on behalf of applications
@@ -387,13 +379,6 @@ Internet-Draft                    RAINS                     January 2019
       system.  This mapping is implemented in the DNS protocol via the A
       and AAAA RRTYPES.
 
-
-
-Trammell & Fehlmann       Expires July 12, 2019                 [Page 7]
-
-Internet-Draft                    RAINS                     January 2019
-
-
    o  Address to Name: given an Subject address, the naming service
       returns a set of names associated with that address, if such an
       association exists.  The association is determined by the
@@ -401,6 +386,14 @@ Internet-Draft                    RAINS                     January 2019
       DNS protocol via the PTR RRTYPE.  IPv4 mappings exist within the
       in-addr.arpa. zone, and IPv6 mappings in the ip6.arpa. zone.
       These mappings imply a limited set of boundaries on which
+
+
+
+Trammell & Fehlmann       Expires July 19, 2019                 [Page 7]
+
+Internet-Draft                    RAINS                     January 2019
+
+
       delegations may be made (octet boundaries for IPv4, nybble
       boundaries for IPv6).
 
@@ -439,22 +432,23 @@ Internet-Draft                    RAINS                     January 2019
    A naming service must provide the ability to name objects that its
    human users find more meaningful than the objects themselves.
 
-
-
-
-
-
-
-Trammell & Fehlmann       Expires July 12, 2019                 [Page 8]
-
-Internet-Draft                    RAINS                     January 2019
-
-
 3.2.2.  Distinguishability
 
    A naming service must make it possible to guarantee that two
    different names are easily distinguishable from each other by its
    human users.
+
+
+
+
+
+
+
+
+Trammell & Fehlmann       Expires July 19, 2019                 [Page 8]
+
+Internet-Draft                    RAINS                     January 2019
+
 
 3.2.3.  Minimal Structure
 
@@ -497,15 +491,6 @@ Internet-Draft                    RAINS                     January 2019
    responsibilities with respect to a subject without that Delegation
    being exposed to the querier.
 
-
-
-
-
-Trammell & Fehlmann       Expires July 12, 2019                 [Page 9]
-
-Internet-Draft                    RAINS                     January 2019
-
-
    In DNS, the authoritative name server(s) to which a query is
    delegated via the NS RRTYPE are known.  However, we note that in the
    case of authorities which delegate the ability to write to the zone
@@ -513,6 +498,14 @@ Internet-Draft                    RAINS                     January 2019
    current DNS provides no facility for a querier to understand on whose
    behalf an authoritative assertion is being made; this information is
    instead available via WHOIS.  To our knowledge, no present DNS name
+
+
+
+Trammell & Fehlmann       Expires July 19, 2019                 [Page 9]
+
+Internet-Draft                    RAINS                     January 2019
+
+
    servers use WHOIS information retrieved out of band to make policy
    decisions.
 
@@ -555,14 +548,19 @@ Internet-Draft                    RAINS                     January 2019
    In this case, the querier can confirm that the Authority for the
    Subject of the query asserts this lack of Assertion.
 
+   Authenticity of negative response in DNS is provided by DNSSEC.
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 10]
+
+
+
+
+
+
+Trammell & Fehlmann       Expires July 19, 2019                [Page 10]
 
 Internet-Draft                    RAINS                     January 2019
 
-
-   Authenticity of negative response in DNS is provided by DNSSEC.
 
 3.2.12.  Dynamic Consistency
 
@@ -610,16 +608,16 @@ Internet-Draft                    RAINS                     January 2019
    These forms of inconsistency are implicit, not explicit, in the
    current DNS.  We note that while DNS can be deployed to allow
    essentially unlimited kinds of inconsistency in its responses, there
+   is no protocol support for a query to express the kind of consistency
+   it desires, or for a response to explicitly note that it is
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 11]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 11]
 
 Internet-Draft                    RAINS                     January 2019
 
 
-   is no protocol support for a query to express the kind of consistency
-   it desires, or for a response to explicitly note that it is
    inconsistent.  [RFC7871] does allow a querier to note that it would
    specifically like the view of the state of the namespace offered to a
    certain part of the network, and as such can be seen as inchoate
@@ -663,21 +661,18 @@ Internet-Draft                    RAINS                     January 2019
    connections, should not significantly impact total bandwidth demand
    for an application.
 
-
-
-
-
-
-
-Trammell & Fehlmann       Expires July 12, 2019                [Page 12]
-
-Internet-Draft                    RAINS                     January 2019
-
-
 3.2.18.  Query Linkability
 
    It should be costly for an adversary to monitor the infrastructure in
    order to link specific queries to specific queriers.
+
+
+
+
+Trammell & Fehlmann       Expires July 19, 2019                [Page 12]
+
+Internet-Draft                    RAINS                     January 2019
+
 
    DNS over TLS [RFC7858] and DNS over DTLS [RFC8094] provide this
    property between a querier and a recursive resolver; mixing by the
@@ -722,16 +717,18 @@ Internet-Draft                    RAINS                     January 2019
    service can be met, or could be met, by the present DNS protocol or
    extensions thereto.  We note that there are further possibilities for
    the future evolution of naming services meeting these properties.
+   This section contains random observations that might inform future
+   work.
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 13]
+
+
+
+Trammell & Fehlmann       Expires July 19, 2019                [Page 13]
 
 Internet-Draft                    RAINS                     January 2019
 
-
-   This section contains random observations that might inform future
-   work.
 
 3.3.1.  Delegation and redirection are separate operations
 
@@ -778,16 +775,17 @@ Internet-Draft                    RAINS                     January 2019
    The RAINS architecture is simple, and vaguely resembles the
    architecture of DNS.  A RAINS Server is an entity that provides
    transient and/or permanent storage for assertions about names and
+   addresses, and a lookup function that finds assertions for a given
+   query about a name or address, either by searching local storage or
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 14]
+
+Trammell & Fehlmann       Expires July 19, 2019                [Page 14]
 
 Internet-Draft                    RAINS                     January 2019
 
 
-   addresses, and a lookup function that finds assertions for a given
-   query about a name or address, either by searching local storage or
    by delegating to another RAINS server.  RAINS servers can take on any
    or all of three roles:
 
@@ -834,16 +832,16 @@ Internet-Draft                    RAINS                     January 2019
    unless it is signed, the validity of an assertion is separated from
    whence the assertion was received.  This means the RAINS protocol
    itself is merely a means for moving RAINS assertions around, and
+   moving RAINS queries to places where they can be answered.  This
+   document defines bindings for carrying RAINS messages over TLS over
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 15]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 15]
 
 Internet-Draft                    RAINS                     January 2019
 
 
-   moving RAINS queries to places where they can be answered.  This
-   document defines bindings for carrying RAINS messages over TLS over
    TCP, but bindings to other transports (e.g.  QUIC [QUIC]) or session
    layers (e.g.  HTTP [RFC7540]) would be trivial to design, and the
    protocol provides a capability mechanism for discovering alternate
@@ -891,14 +889,15 @@ Internet-Draft                    RAINS                     January 2019
    Table 2, object types in Table 4, and signature algorithms in
    Table 10.
 
+   +------+-----------------+------------------------------------------+
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 16]
+
+Trammell & Fehlmann       Expires July 19, 2019                [Page 16]
 
 Internet-Draft                    RAINS                     January 2019
 
 
-   +------+-----------------+------------------------------------------+
    | Code | Name            | Description                              |
    +------+-----------------+------------------------------------------+
    |    0 | signatures      | Signatures on a message or section       |
@@ -946,15 +945,15 @@ Internet-Draft                    RAINS                     January 2019
    |      |                 |                                          |
    |   20 | assertions      | Singular Assertion content of a Shard or |
    |      |                 | Zone                                     |
+   |      |                 |                                          |
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 17]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 17]
 
 Internet-Draft                    RAINS                     January 2019
 
 
-   |      |                 |                                          |
    |   21 | note-type       | Notification type                        |
    |      |                 |                                          |
    |   22 | note-data       | Additional notification data             |
@@ -1005,7 +1004,8 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 18]
+
+Trammell & Fehlmann       Expires July 19, 2019                [Page 18]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -1061,7 +1061,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 19]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 19]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -1117,7 +1117,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 20]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 20]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -1173,13 +1173,14 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 21]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 21]
 
 Internet-Draft                    RAINS                     January 2019
 
 
    The value of the objects (7) key is an array of objects, as defined
-   in Section 5.3.
+   in Section 5.3.  Note that this array MAY be empty; see {assertion-
+   dynamics}.
 
 5.2.2.  Shards
 
@@ -1225,15 +1226,15 @@ Internet-Draft                    RAINS                     January 2019
 
    The value of the range (11) key is a two element array of strings or
    nulls (subject-name A, subject-name B).  A MUST lexicographically
-   sort before B.  If A is null, the shard begins at the beginning of
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 22]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 22]
 
 Internet-Draft                    RAINS                     January 2019
 
 
+   sort before B.  If A is null, the shard begins at the beginning of
    the zone.  If B is null, the shard ends at the end of the zone.  The
    shard MUST NOT contain any Singular Assertions whose subject names
    are equal to or sort before A, or are equal to or sort after B.
@@ -1284,8 +1285,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-
-Trammell & Fehlmann       Expires July 12, 2019                [Page 23]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 23]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -1341,7 +1341,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 24]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 24]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -1389,18 +1389,21 @@ Internet-Draft                    RAINS                     January 2019
    For a given {subject, zone, context, type} tuple, multiple Singular
    Assertions can be valid at a given point in time; the union of the
    object values of all of these Singular Assertions is considered to be
-   the set of valid values at that point in time.
+   the set of valid values for that type at that point in time.
+
+   A Singular Assertion's objects array MAY be empty.  If the only
+   assertion valid for a given {subject, zone, context} tuple at a given
+   point in time is such a Singular Assertion, this is to be interpreted
 
 
 
-
-
-
-
-Trammell & Fehlmann       Expires July 12, 2019                [Page 25]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 25]
 
 Internet-Draft                    RAINS                     January 2019
 
+
+   as a statement that a name exists at that point in time, but that it
+   is not mapped to any object.
 
 5.2.6.  Semantic of nonexistence proofs
 
@@ -1447,17 +1450,17 @@ Internet-Draft                    RAINS                     January 2019
       this name would be signed by the Authority for 'inf.ethz.ch.'.
       Here, the context serves simply as a marker, without enabling an
       alternate signature chain: note that the name
-      'simplon.cab.inf.ethz.ch' could at the same time be validly signed
-      in the global context by the Authority over that name to allow
-      external users access this workstation.  The local context simply
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 26]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 26]
 
 Internet-Draft                    RAINS                     January 2019
 
 
+      'simplon.cab.inf.ethz.ch' could at the same time be validly signed
+      in the global context by the Authority over that name to allow
+      external users access this workstation.  The local context simply
       marks this Assertion as internal.  This allows a client making
       requests of local names to know they are local, and for local
       resolvers to manage visibility of Assertions outside the
@@ -1493,13 +1496,6 @@ Internet-Draft                    RAINS                     January 2019
    itself and in the superordinate zone, the assertion in the
    superordinate zone will take precedence.
 
-5.2.9.  Address Assertions
-
-   Reverse naming services in RAINS will be covered in a future revision
-   of this document; a non-normative, older version of the reverse
-   naming service specification, which gives the broad outline of the
-   design, can be found in Appendix A.
-
 5.3.  Object Types and Encodings
 
    Each Object associated with a given subject name in a Singular
@@ -1509,7 +1505,11 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 27]
+
+
+
+
+Trammell & Fehlmann       Expires July 19, 2019                [Page 27]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -1565,7 +1565,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 28]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 28]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -1621,7 +1621,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 29]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 29]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -1677,7 +1677,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 30]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 30]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -1733,7 +1733,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 31]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 31]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -1789,7 +1789,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 32]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 32]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -1845,7 +1845,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 33]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 33]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -1901,7 +1901,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 34]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 34]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -1957,7 +1957,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 35]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 35]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -2013,7 +2013,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 36]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 36]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -2069,7 +2069,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 37]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 37]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -2125,7 +2125,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 38]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 38]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -2144,13 +2144,6 @@ Internet-Draft                    RAINS                     January 2019
    As with assertion contexts, developing conventions for query contexts
    for different situations will require implementation and deployment
    experience, and is a subject for future work.
-
-5.5.4.  Address Queries
-
-   Reverse naming services in RAINS will be covered in a future revision
-   of this document; a non-normative, older version of the reverse
-   naming service specification, which gives the broad outline of the
-   design, can be found in Appendix A.
 
 5.6.  Notifications
 
@@ -2181,7 +2174,14 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 39]
+
+
+
+
+
+
+
+Trammell & Fehlmann       Expires July 19, 2019                [Page 39]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -2237,7 +2237,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 40]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 40]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -2293,7 +2293,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 41]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 41]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -2349,7 +2349,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 42]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 42]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -2405,7 +2405,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 43]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 43]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -2461,7 +2461,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 44]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 44]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -2517,7 +2517,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 45]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 45]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -2573,7 +2573,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 46]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 46]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -2629,7 +2629,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 47]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 47]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -2685,7 +2685,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 48]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 48]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -2741,7 +2741,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 49]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 49]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -2797,7 +2797,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 50]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 50]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -2853,7 +2853,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 51]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 51]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -2909,7 +2909,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 52]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 52]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -2965,7 +2965,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 53]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 53]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -3021,7 +3021,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 54]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 54]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -3077,7 +3077,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 55]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 55]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -3133,7 +3133,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 56]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 56]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -3189,7 +3189,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 57]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 57]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -3245,7 +3245,7 @@ Internet-Draft                    RAINS                     January 2019
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 58]
+Trammell & Fehlmann       Expires July 19, 2019                [Page 58]
 
 Internet-Draft                    RAINS                     January 2019
 
@@ -3257,11 +3257,6 @@ Internet-Draft                    RAINS                     January 2019
    [RFC0793]  Postel, J., "Transmission Control Protocol", STD 7,
               RFC 793, DOI 10.17487/RFC0793, September 1981,
               <https://www.rfc-editor.org/info/rfc793>.
-
-   [RFC1918]  Rekhter, Y., Moskowitz, B., Karrenberg, D., de Groot, G.,
-              and E. Lear, "Address Allocation for Private Internets",
-              BCP 5, RFC 1918, DOI 10.17487/RFC1918, February 1996,
-              <https://www.rfc-editor.org/info/rfc1918>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -3276,10 +3271,6 @@ Internet-Draft                    RAINS                     January 2019
    [RFC3629]  Yergeau, F., "UTF-8, a transformation format of ISO
               10646", STD 63, RFC 3629, DOI 10.17487/RFC3629, November
               2003, <https://www.rfc-editor.org/info/rfc3629>.
-
-   [RFC4193]  Hinden, R. and B. Haberman, "Unique Local IPv6 Unicast
-              Addresses", RFC 4193, DOI 10.17487/RFC4193, October 2005,
-              <https://www.rfc-editor.org/info/rfc4193>.
 
    [RFC5280]  Cooper, D., Santesson, S., Farrell, S., Boeyen, S.,
               Housley, R., and W. Polk, "Internet X.509 Public Key
@@ -3296,16 +3287,6 @@ Internet-Draft                    RAINS                     January 2019
               Representation (CBOR)", RFC 7049, DOI 10.17487/RFC7049,
               October 2013, <https://www.rfc-editor.org/info/rfc7049>.
 
-
-
-
-
-
-Trammell & Fehlmann       Expires July 12, 2019                [Page 59]
-
-Internet-Draft                    RAINS                     January 2019
-
-
    [RFC8032]  Josefsson, S. and I. Liusvaara, "Edwards-Curve Digital
               Signature Algorithm (EdDSA)", RFC 8032,
               DOI 10.17487/RFC8032, January 2017,
@@ -3315,6 +3296,15 @@ Internet-Draft                    RAINS                     January 2019
               Algorithm (EdDSA) Signatures in the Cryptographic Message
               Syntax (CMS)", RFC 8419, DOI 10.17487/RFC8419, August
               2018, <https://www.rfc-editor.org/info/rfc8419>.
+
+
+
+
+
+Trammell & Fehlmann       Expires July 19, 2019                [Page 59]
+
+Internet-Draft                    RAINS                     January 2019
+
 
    [RFC8446]  Rescorla, E., "The Transport Layer Security (TLS) Protocol
               Version 1.3", RFC 8446, DOI 10.17487/RFC8446, August 2018,
@@ -3339,8 +3329,8 @@ Internet-Draft                    RAINS                     January 2019
 
    [I-D.trammell-optional-security-not]
               Trammell, B., "Optional Security Is Not An Option", draft-
-              trammell-optional-security-not-00 (work in progress),
-              March 2018.
+              trammell-optional-security-not-01 (work in progress),
+              January 2019.
 
    [IAB-UNICODE7]
               IAB, ., "IAB Statement on Identifiers and Unicode 7.0.0",
@@ -3353,15 +3343,6 @@ Internet-Draft                    RAINS                     January 2019
               <https://www.ietf.org/proceedings/92/slides/
               slides-92-lucid-0.pdf>.
 
-
-
-
-
-Trammell & Fehlmann       Expires July 12, 2019                [Page 60]
-
-Internet-Draft                    RAINS                     January 2019
-
-
    [PARSER-BUGS]
               Bratus, S., Patterson, M., and A. Shubina, "The Bugs We
               Have To Kill (USENIX login)", August 2015.
@@ -3369,6 +3350,17 @@ Internet-Draft                    RAINS                     January 2019
    [QUIC]     Iyengar, J. and M. Thomson, "QUIC: A UDP-Based Multiplexed
               and Secure Transport", draft-ietf-quic-transport-17 (work
               in progress), December 2018.
+
+
+
+
+
+
+
+Trammell & Fehlmann       Expires July 19, 2019                [Page 60]
+
+Internet-Draft                    RAINS                     January 2019
+
 
    [RFC4033]  Arends, R., Austein, R., Larson, M., Massey, D., and S.
               Rose, "DNS Security Introduction and Requirements",
@@ -3408,20 +3400,23 @@ Internet-Draft                    RAINS                     January 2019
               DOI 10.17487/RFC7231, June 2014,
               <https://www.rfc-editor.org/info/rfc7231>.
 
-
-
-
-
-
-Trammell & Fehlmann       Expires July 12, 2019                [Page 61]
-
-Internet-Draft                    RAINS                     January 2019
-
-
    [RFC7540]  Belshe, M., Peon, R., and M. Thomson, Ed., "Hypertext
               Transfer Protocol Version 2 (HTTP/2)", RFC 7540,
               DOI 10.17487/RFC7540, May 2015,
               <https://www.rfc-editor.org/info/rfc7540>.
+
+
+
+
+
+
+
+
+
+Trammell & Fehlmann       Expires July 19, 2019                [Page 61]
+
+Internet-Draft                    RAINS                     January 2019
+
 
    [RFC7624]  Barnes, R., Schneier, B., Jennings, C., Hardie, T.,
               Trammell, B., Huitema, C., and D. Borkmann,
@@ -3458,207 +3453,6 @@ Internet-Draft                    RAINS                     January 2019
    [XEP0115]  Hildebrand, J., Saint-Andre, P., Troncon, R., and J.
               Konieczny, "XEP-0115 Entity Capabilities", February 2008.
 
-Appendix A.  Reverse Name Service in RAINS
-
-   Content in this section is taken from the old revision of the RAINS
-   document, and covers reverse service.  It will be reworked and moved
-   into the main document in a future revision of the document.
-
-
-
-
-
-
-Trammell & Fehlmann       Expires July 12, 2019                [Page 62]
-
-Internet-Draft                    RAINS                     January 2019
-
-
-A.1.  Address to Object Mapping
-
-   In contrast to the current domain name system, information about
-   addresses is stored in a completely separate tree, keyed by address
-   and prefix.  An address assertion consists of the following elements:
-
-   o  Context: name of the context in which the assertion is valid; see
-      Appendix A.1.1.
-
-   o  Subject: address about which the assertion is made, consisting of
-      an address family, address, and prefix length.  A subject may be a
-      network address (where the prefix length is less than the address
-      length for the given address family) or a host address (where the
-      prefix length is equal to the address length for the given address
-      family)
-
-   o  Type: the type of information about the Subject contained in the
-      assertion.  Each Assertion is about a single type of data.
-
-   o  Object: the data of the indicated type associated with the Subject
-
-   o  Signatures: one or more signatures generated by the authority for
-      the Assertion.  Signatures contain a time interval during which
-      they are considered valid, as in Section 5.7}}.
-
-   The following object types are available:
-
-   o  Delegation: the authority associated with the subject network
-      address.  The Object contains a public key by which the authority
-      can be identified.  Only available for network address subjects.
-
-   o  Redirection: The name(s) of one or more RAINS servers providing
-      authority service for the authority associated with the subject
-      network address.  The Object contains a set of names.  Only
-      available for network address subjects.
-
-   o  Name: one or more names associated with the subject network
-      address.  The Object contains a set of names.  Only available for
-      host address subjects.
-
-   o  Zone-Registrant: Information about the organization responsible
-      for a network.  Only available for network address subjects.
-
-   Queries for addresses are similar to those for names, and consist of
-   the following information elements:
-
-   o  Context: Context in which the query is made; this must match the
-      assertion context as in Appendix A.1.1.
-
-
-
-Trammell & Fehlmann       Expires July 12, 2019                [Page 63]
-
-Internet-Draft                    RAINS                     January 2019
-
-
-   o  Subject: the address about which the query is made, consisting of
-      an address family, address, and prefix length.
-
-   o  Types: a set of assertion types the querier is interested in, as
-      above.
-
-   o  Valid-Until: an optional client-generated timestamp for the query
-      after which it expires and should not be answered.
-
-   o  Query Token: a client-generated token for the query, which can be
-      used in the answer to refer to the query.
-
-A.1.1.  Context in Address Assertions
-
-   Just as in forward Assertions, Assertion contexts are used in address
-   assertions to determine the scope of an address assertion, and the
-   signature chain used to verify it.
-
-   o  The global addressing context for each address family is
-      identified by the special context name '.'.  For both IPv4 and
-      IPv6 addresses, this is rooted at IANA, which delegates to the
-      RIRs, which then delegates to LIRs and to address-holding
-      registries.
-
-   o  Local contexts associated with a given authority in a forward tree
-      can also make assertions about addresses.  As with contexts in
-      forward assertions, the authority-part and the context-part of a
-      local context name are divided by a context marker ('cx-').  The
-      authority-part directly identifies the authority whose key was
-      used to sign the address assertion; address assertions within a
-      local context are only valid if signed by the identified
-      authority.  Authorities have complete control over how the
-      contexts under their numberspaces are arranged, and over the
-      addresses within those contexts.
-
-   Each local context may have a root address space zone (0/0), but
-   these root address spaces may only delegate addresses that are
-   reserved for local use [RFC1918] [RFC4193].  Local context assertions
-   for other addresses are invalid.
-
-A.2.  Address Assertion body
-
-   Assertions about addresses are similar to assertions about names, but
-   keyed by address and restricted in terms of the objects they can
-   contain.  An Address Assertion body is a map which MUST contain the
-   signatures (0), subject-addr (5), context (6), and objects (7) keys.
-
-
-
-
-
-Trammell & Fehlmann       Expires July 12, 2019                [Page 64]
-
-Internet-Draft                    RAINS                     January 2019
-
-
-   The value of the signatures (0) key is an array of one or more
-   Signatures as defined in Section 5.7.
-
-   The value of the subject-addr (5) key is a three element CBOR array.
-   The first element of the array is the address family encoded as an
-   object type, 2 for IPv6 addresses and 3 for IPv4 addresses.  The
-   second element is the prefix length encoded as an integer, 0-128 for
-   IPv6 and 0-32 for IPv4.  The third element is the address, encoded as
-   in Section 5.3.  Subject addresses with the maximum prefix length for
-   the address family are subject host addresses, and are nameable;
-   subject addresses with less than the maximum prefix length are
-   subject network addresses, and are delegatable.
-
-   The value of the context (6) key is a UTF-8 string containing the
-   name of the context in which the Address Assertion is valid.  See
-   Appendix A.1.1.
-
-   The value of the objects (7) key is an array of objects, as defined
-   in Section 5.3.  Only object types redirection, delegation, and
-   registrant are available for subject network addresses, and only
-   object type name is available for subject host addresses.
-
-A.3.  Address Query body
-
-   Queries for assertions about addresses are similar to queries for
-   assertions about names, but have semantic restrictions similar to
-   those for Address Assertions.
-
-   An Address Query body is a map.  Queries MUST contain the subject-
-   addr (5), context (6), query-types (10), and query-expires (12) keys.
-   Address Queries MAY contain query-opts (13) key.
-
-   The value of the subject-addr (5) key is a three-element CBOR array.
-   The first element of the array is the address family encoded as an
-   object type, 2 for IPv6 addresses and 3 for IPv4 addresses.  The
-   second element is the prefix length encoded as an integer, 0-128 for
-   IPv6 and 0-32 for IPv4.  The third element is the address, encoded as
-   in Section 5.3.
-
-   The value of the context (6) key is a UTF-8 encoded string containing
-   the name of the context for which the Query is valid.  Unlike queries
-   for names, Address Queries can only pertain to a single context.  See
-   Appendix A.1.1 for more.
-
-   The value of the query-types (10) key is an array of integers
-   encoding the type(s) of objects (as in Section 5.3) acceptable in
-   answers to the query.  All values in the query-type array are treated
-   at equal priority: [4,5] means the querier is equally interested in
-
-
-
-Trammell & Fehlmann       Expires July 12, 2019                [Page 65]
-
-Internet-Draft                    RAINS                     January 2019
-
-
-   both redirection and delegation for the subject-addr.  An empty
-   query-types array indicates that objects of any type are acceptable
-   in answers to the query.
-
-   The value of the query-expires (12) key is a CBOR integer counting
-   seconds since the UNIX epoch UTC, identified with tag value 1 and
-   encoded as in section 2.4.1 of [RFC7049].  After the query-expires
-   time, the query will have been considered not answered by the
-   original issuer.
-
-   The value of the query-opts (13) key, if present, is an array of
-   integers in priority order of the querier's preferences in tradeoffs
-   in answering the query, as in Table 8.  See Section 5.5.1 for more.
-
-   An Address Assertion with a more-specific prefix is preferred over a
-   less-specific in response to a Address Query.
-
 Authors' Addresses
 
    Brian Trammell
@@ -3668,6 +3462,16 @@ Authors' Addresses
    Switzerland
 
    Email: ietf@trammell.ch
+
+
+
+
+
+
+
+Trammell & Fehlmann       Expires July 19, 2019                [Page 62]
+
+Internet-Draft                    RAINS                     January 2019
 
 
    Christian Fehlmann
@@ -3693,4 +3497,32 @@ Authors' Addresses
 
 
 
-Trammell & Fehlmann       Expires July 12, 2019                [Page 66]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Trammell & Fehlmann       Expires July 19, 2019                [Page 63]
