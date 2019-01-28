@@ -324,6 +324,7 @@ ul.toc li {
 <link href="#rfc.section.5.2.6" rel="Chapter" title="5.2.6 Semantic of nonexistence proofs">
 <link href="#rfc.section.5.2.7" rel="Chapter" title="5.2.7 Context in Assertions">
 <link href="#rfc.section.5.2.8" rel="Chapter" title="5.2.8 Zone-Reflexive Singular Assertions">
+<link href="#rfc.section.5.2.9" rel="Chapter" title="5.2.9 Address Assertions">
 <link href="#rfc.section.5.3" rel="Chapter" title="5.3 Object Types and Encodings">
 <link href="#rfc.section.5.3.1" rel="Chapter" title="5.3.1 Name Alias">
 <link href="#rfc.section.5.3.2" rel="Chapter" title="5.3.2 IPv6 Address">
@@ -343,6 +344,7 @@ ul.toc li {
 <link href="#rfc.section.5.5.1" rel="Chapter" title="5.5.1 Query Options">
 <link href="#rfc.section.5.5.2" rel="Chapter" title="5.5.2 Confirmation Queries">
 <link href="#rfc.section.5.5.3" rel="Chapter" title="5.5.3 Context in Queries">
+<link href="#rfc.section.5.5.4" rel="Chapter" title="5.5.4 Address Queries">
 <link href="#rfc.section.5.6" rel="Chapter" title="5.6 Notifications">
 <link href="#rfc.section.5.7" rel="Chapter" title="5.7 Signatures">
 <link href="#rfc.section.5.7.1" rel="Chapter" title="5.7.1 Canonicalization">
@@ -379,12 +381,12 @@ ul.toc li {
 <link href="#rfc.authors" rel="Chapter">
 
 
-  <meta name="generator" content="xml2rfc version 2.15.4 - https://tools.ietf.org/tools/xml2rfc" />
+  <meta name="generator" content="xml2rfc version 2.17.0 - https://tools.ietf.org/tools/xml2rfc" />
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Trammell, B. and C. Fehlmann" />
   <meta name="dct.identifier" content="urn:ietf:id:draft-trammell-rains-protocol-latest" />
-  <meta name="dct.issued" scheme="ISO8601" content="2019-01-15" />
+  <meta name="dct.issued" scheme="ISO8601" content="2019-01-28" />
   <meta name="dct.abstract" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design DNS knowing what we do now,&#8221; on the background of a set of properties of an idealized Internet naming service." />
   <meta name="description" content="This document defines an alternate protocol for Internet name resolution, designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol. It attempts to answer the question: &#8220;how would we design DNS knowing what we do now,&#8221; on the background of a set of properties of an idealized Internet naming service." />
 
@@ -408,8 +410,8 @@ ul.toc li {
 <td class="right">ETH Zurich</td>
 </tr>
 <tr>
-<td class="left">Expires: July 19, 2019</td>
-<td class="right">January 15, 2019</td>
+<td class="left">Expires: August 1, 2019</td>
+<td class="right">January 28, 2019</td>
 </tr>
 
     	
@@ -425,7 +427,7 @@ ul.toc li {
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at https://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on July 19, 2019.</p>
+<p>This Internet-Draft will expire on August 1, 2019.</p>
 <h1 id="rfc.copyrightnotice"><a href="#rfc.copyrightnotice">Copyright Notice</a></h1>
 <p>Copyright (c) 2019 IETF Trust and the persons identified as the document authors.  All rights reserved.</p>
 <p>This document is subject to BCP 78 and the IETF Trust's Legal Provisions Relating to IETF Documents (https://trustee.ietf.org/license-info) in effect on the date of publication of this document.  Please review these documents carefully, as they describe your rights and restrictions with respect to this document.  Code Components extracted from this document must include Simplified BSD License text as described in Section 4.e of the Trust Legal Provisions and are provided without warranty as described in the Simplified BSD License.</p>
@@ -521,6 +523,8 @@ ul.toc li {
 </li>
 <li>5.2.8.   <a href="#rfc.section.5.2.8">Zone-Reflexive Singular Assertions</a>
 </li>
+<li>5.2.9.   <a href="#rfc.section.5.2.9">Address Assertions</a>
+</li>
 </ul><li>5.3.   <a href="#rfc.section.5.3">Object Types and Encodings</a>
 </li>
 <ul><li>5.3.1.   <a href="#rfc.section.5.3.1">Name Alias</a>
@@ -558,6 +562,8 @@ ul.toc li {
 <li>5.5.2.   <a href="#rfc.section.5.5.2">Confirmation Queries</a>
 </li>
 <li>5.5.3.   <a href="#rfc.section.5.5.3">Context in Queries</a>
+</li>
+<li>5.5.4.   <a href="#rfc.section.5.5.4">Address Queries</a>
 </li>
 </ul><li>5.6.   <a href="#rfc.section.5.6">Notifications</a>
 </li>
@@ -634,19 +640,21 @@ ul.toc li {
   <h1 id="rfc.section.1">
 <a href="#rfc.section.1">1.</a> <a href="#introduction" id="introduction">Introduction</a>
 </h1>
-<p id="rfc.section.1.p.1">This document defines an experimental protocol for providing Internet name resolution services, as a replacement for DNS, called RAINS (RAINS, Another Internet Naming Service). It is designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol, and was developed as a name resolution system for the SCION (&#8220;Scalability, Control, and Isolation on Next-Generation Networks&#8221;) future Internet architecture <a href="#SCION" class="xref">[SCION]</a>. It attempts to answer the question: &#8220;how would we design the DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service defined in <a href="#pins" class="xref">Section 3</a>.</p>
-<p id="rfc.section.1.p.2">Its architecture (<a href="#architecture" class="xref">Section 4</a>) and information model (<a href="#infomodel" class="xref">Section 5</a>) are largely compatible with the existing Domain Name System. However, it does take several radical departures from DNS as presently defined and implemented:</p>
+<p id="rfc.section.1.p.1">This document defines an experimental protocol for providing Internet name resolution services, as a replacement for the Domain Name System (DNS), called RAINS (a recursive acronym expanding to RAINS, Another Internet Naming Service).  It is designed as a prototype to facilitate conversation about the evolution or replacement of the Domain Name System protocol, and was developed as a name resolution system for the SCION (&#8220;Scalability, Control, and Isolation on Next-Generation Networks&#8221;) future Internet architecture <a href="#SCION" class="xref">[SCION]</a>. It attempts to answer the question: &#8220;how would we design the DNS knowing what we do now,&#8221; on the background of the properties of an ideal naming service defined in <a href="#pins" class="xref">Section 3</a>.</p>
+<p id="rfc.section.1.p.2">Its architecture <a href="#architecture" class="xref">Section 4</a> is largely compatible with DNS: names in RAINS are organized into zones, associated with authorities, and parts of zones can be delegated to subordinate authorities, just as in DNS; RAINS names follow many of the same conventions as DNS names (with the exception that RAINS is Unicode native, and mandates UTF-8 encoding); and RAINS servers provide services broadly equivalent to recursive, caching, and authoritative DNS servers.</p>
+<p id="rfc.section.1.p.3">However, its design does take several radical departures from DNS as presently defined and implemented:</p>
 <p></p>
 
 <ul>
+<li>Its information model and data model are separately defined from the protocol, allowing for more natural layering of RAINS messages atop other session and presentation layer protocols than, for example, DNS over HTTPS <a href="#RFC8484" class="xref">[RFC8484]</a>.</li>
 <li>Delegation from a superordinate zone to a subordinate zone is done solely with cryptography: a superordinate defines the key(s), created by the subordinate, that are valid for signing assertions in the subordinate during a particular time interval. Assertions about names can therefore safely be served from any infrastructure.</li>
 <li>All time references in RAINS are absolute: instead of a time to live, each assertion&#8217;s temporal validity is defined by the temporal validity of the signature(s) on it.</li>
-<li>All assertions have validity within a specific context. A context determines the rules for chaining signatures to verify validity of an assertion. The global context is a special case of context, which uses chains from the global naming root key. The use of context explicitly separates global usage of the DNS from local usage thereof, and allows other application-specific naming constraints to be bound to names; see <a href="#assertion-context" class="xref">Section 5.2.7</a>. Queries are valid in one or more contexts, with specific rules for determining which assertions answer which queries; see <a href="#query-context" class="xref">Section 5.5.3</a>.</li>
-<li>There is explicit information about registrars and registrants available in the naming system at runtime.</li>
-<li>Sets of valid characters and rules for valid names are defined on a per-zone basis, and can be verified at runtime.</li>
-<li>Reverse lookups are done using a completely separate tree, supporting delegations of any prefix length, in accordance with CIDR <a href="#RFC4632" class="xref">[RFC4632]</a> and the IPv6 addressing architecture <a href="#RFC4291" class="xref">[RFC4291]</a>.</li>
+<li>All assertions have validity within a specific context. A context is essentially a namespace owned by some authority. The global context, analogous to the root and everything under it in DNS, is a special case of context whose authority is the root itself. Other contexts can be created by any authority under the global context; context is implemented through the rules for chaining signatures to verify validity of an assertion. The use of context explicitly separates global usage of RAINS from local usage thereof, and allows other application-specific naming constraints to be bound to names; see <a href="#assertion-context" class="xref">Section 5.2.7</a>. Queries are valid in one or more contexts, with specific rules for determining which assertions answer which queries; see <a href="#query-context" class="xref">Section 5.5.3</a>.</li>
+<li>There is explicit information about registrars and registrants available in the naming system at runtime: in other words, RAINS integrates parts of the functionality of WHOIS <a href="#RFC3912" class="xref">[RFC3912]</a> and RDAP <a href="#RFC7482" class="xref">[RFC7482]</a>, allowing inline access to registry and registrar information together with naming queries; see <a href="#obj-registrar" class="xref">Section 5.3.9</a> and <a href="#obj-registrant" class="xref">Section 5.3.10</a>.</li>
+<li>Sets of valid characters and rules for valid names are defined on a per-zone basis, and can be verified at runtime; see <a href="#obj-nameset" class="xref">Section 5.3.6</a>.</li>
+<li>RAINS provides separate namespaces for reverse lookup and a dedicated data type for assertions about addresses, as opposed to rooting reverse lookup in the .arpa top-level domain; see <a href="#revassertion" class="xref">Section 5.2.9</a>.</li>
 </ul>
-<p id="rfc.section.1.p.4">Instead of using a custom binary framing as DNS, RAINS uses Concise Binary Object Representation <a href="#RFC7049" class="xref">[RFC7049]</a>, partially in an effort to make implementations easier to verify and less likely to contain potentially dangerous parser bugs <a href="#PARSER-BUGS" class="xref">[PARSER-BUGS]</a>. As with DNS, CBOR messages can be carried atop any number of substrate protocols. RAINS is presently defined to use TLS over persistent TCP connections (see <a href="#protocol" class="xref">Section 6</a>).</p>
+<p id="rfc.section.1.p.5">Instead of using a custom binary framing as DNS, RAINS uses Concise Binary Object Representation (CBOR) <a href="#RFC7049" class="xref">[RFC7049]</a>, partially in an effort to make implementations easier to verify and less likely to contain potentially dangerous parser bugs <a href="#PARSER-BUGS" class="xref">[PARSER-BUGS]</a>. As with DNS, CBOR messages can be carried atop any number of substrate protocols. RAINS is presently defined to use TLS over persistent TCP connections (see <a href="#protocol" class="xref">Section 6</a>). However, the information model was defined to allow the easy defnition of alternate presentations in the future.</p>
 <h1 id="rfc.section.1.1">
 <a href="#rfc.section.1.1">1.1.</a> <a href="#about-this-document" id="about-this-document">About This Document</a>
 </h1>
@@ -666,6 +674,7 @@ ul.toc li {
 <li>Authority: An entity that has the right to determine which Assertions exist within its Zone</li>
 <li>Delegation: An Assertion proving that an Authority has given the right to make Assertions about names within the part of a namespace identified by a Subject to a subordinate Authority. This subordinate Authority holds a secret key which can generate signatures verifiable using a public key associated with a delegation to the Zone.</li>
 <li>Zone: A portion of a namespace rooted at a given point in the namespace hierarchy. A Zone contains all the Assertions about Subjects tha exist within its part of the namespace.</li>
+<li>Address Assertion: A mapping between a Subject representing an address or address prefix, signed by the Authority for the prefix containing the Subject.  See <a href="#revassertion" class="xref">Section 5.2.9</a>.</li>
 <li>Query: An expression of interest in certain types of objects pertaining to a Subject name in one or more contexts. See <a href="#queries" class="xref">Section 5.5</a>.</li>
 <li>Context: Additional information about the scope in which an Assertion or Query is valid. See <a href="#assertion-context" class="xref">Section 5.2.7</a> and <a href="#query-context" class="xref">Section 5.5.3</a>.</li>
 <li>Shard: A group of assertions common to a zone and valid at a given point in time, scoped to a lexicographic range of Subject names within the Zone, for purposes of proving nonexistence of an Assertion. Shards may be encoded to provide either absolute proof or probabilistic assurance of nonexistence. See <a href="#shards" class="xref">Section 5.2.2</a> and <a href="#p-shards" class="xref">Section 5.2.4</a>.</li>
@@ -1007,6 +1016,11 @@ ul.toc li {
 <td class="left">Singular Assertion (see <a href="#singular-assertions" class="xref">Section 5.2.1</a>)</td>
 </tr>
 <tr>
+<td class="right">-1</td>
+<td class="left">revassertion</td>
+<td class="left">Address Assertion (see <a href="#revassertion" class="xref">Section 5.2.9</a>)</td>
+</tr>
+<tr>
 <td class="right">2</td>
 <td class="left">shard</td>
 <td class="left">Shard (see <a href="#shards" class="xref">Section 5.2.2</a>)</td>
@@ -1027,6 +1041,11 @@ ul.toc li {
 <td class="left">Query (see <a href="#queries" class="xref">Section 5.5</a>)</td>
 </tr>
 <tr>
+<td class="right">-5</td>
+<td class="left">revquery</td>
+<td class="left">Address Query (see <a href="#revquery" class="xref">Section 5.5.4</a>)</td>
+</tr>
+<tr>
 <td class="right">23</td>
 <td class="left">notification</td>
 <td class="left">Notification (see <a href="#notifications" class="xref">Section 5.6</a>)</td>
@@ -1036,7 +1055,7 @@ ul.toc li {
 <h1 id="rfc.section.5.2">
 <a href="#rfc.section.5.2">5.2.</a> <a href="#assertions" id="assertions">Assertions</a>
 </h1>
-<p id="rfc.section.5.2.p.1">Information about names in RAINS is carried by Assertions. An Assertion is a statement about a mapping from a Subject name to one or several Object values, signed by some Authority for the namespace containing the Assertion, with a temporal validity determined by the lifetime of the signature(s) on the Assertion.</p>
+<p id="rfc.section.5.2.p.1">Information about names in RAINS is carried by Assertions. An Assertion is a statement about a mapping from a Subject name (or in the case of an Address Assertion, a subject prefix or address) to one or several Object values, signed by some Authority for the namespace containing the Assertion, with a temporal validity determined by the lifetime of the signature(s) on the Assertion.</p>
 <p id="rfc.section.5.2.p.2">The subject of an Assertion is identified by a name in three parts:</p>
 <p></p>
 
@@ -1169,6 +1188,15 @@ ul.toc li {
 <a href="#rfc.section.5.2.8">5.2.8.</a> <a href="#zone-reflexive-singular-assertions" id="zone-reflexive-singular-assertions">Zone-Reflexive Singular Assertions</a>
 </h1>
 <p id="rfc.section.5.2.8.p.1">A zone may make a Singular Assertion about itself by using the string &#8220;@&#8221; as a subject name. This facility can be used for any object type, but is especially useful for self-signing root zones, and for a zone to make a subsequent key assertion about itself. If a Singular Assertion for an Object about a zone is available both in the zone itself and in the superordinate zone, the assertion in the superordinate zone will take precedence.</p>
+<h1 id="rfc.section.5.2.9">
+<a href="#rfc.section.5.2.9">5.2.9.</a> <a href="#revassertion" id="revassertion">Address Assertions</a>
+</h1>
+<p id="rfc.section.5.2.9.p.1">Address assertions map a subject address or subject address prefix to one or more objects. Address assertions provide the equivalent of reverse DNS (IN PTR) for IPv4 and IPv6 addresses. Information about addresses is stored in a completely separate namespace from information about names, rooted at the prefix containing the entire numberspace for a given address family. An Address Assertion with a valid signature can be used as a positive answer to a query for any address within the subject&#8217;s prefix. It is represented as a CBOR map.</p>
+<p id="rfc.section.5.2.9.p.2">Assertions about addresses are similar to assertions about names, but keyed by address and restricted in terms of the objects they can contain. An Address Assertion body is a CBOR map which MUST contain the signatures (0), subject-addr (5), and objects (7) keys.</p>
+<p id="rfc.section.5.2.9.p.3">The value of the signatures (0) key is an array of one or more Signatures as defined in <a href="#signatures" class="xref">Section 5.7</a>. A signature on an Address Assertion can be verified against any public key to which an address delegation assertion exists for a prefix containing the Address Assertion&#8217;s subject address. This implies that, in contrast to Assertions about names, any authority in the hierarchy may sign Assertions about any address within their prefix, even if they have also delegated part of the prefix to another key.</p>
+<p id="rfc.section.5.2.9.p.4">The value of the subject-addr (5) key is a three element array. The first element of the array is the address family encoded as an object type (see <a href="#obj-types" class="xref">Section 5.3</a>); i.e. 2 for IPv6 addresses and 3 for IPv4 addresses. The second element is the prefix length encoded as an integer, 0-128 for IPv6 and 0-32 for IPv4. The third element is the address, encoded as in <a href="#obj-ip6" class="xref">Section 5.3.2</a> or <a href="#obj-ip4" class="xref">Section 5.3.3</a>.</p>
+<p id="rfc.section.5.2.9.p.5">The value of the objects (7) key is an array of objects, as defined in <a href="#obj-types" class="xref">Section 5.3</a>. If the prefix of the subject-addr value is the maximum prefix length for the address family, then the assertion is a Host Address Assertion, and only the object types redirection, delegation, registrant, and name are valid. Otherwise, it is a Prefix Address Assertion, and only the object types redirection, delegation, and registrant are valid.</p>
+<p id="rfc.section.5.2.9.p.6">Address assertions contain no context, as the context in which they are valid (the global addressing context for the given address family) is implied by the address family of the subject name.</p>
 <h1 id="rfc.section.5.3">
 <a href="#rfc.section.5.3">5.3.</a> <a href="#obj-types" id="obj-types">Object Types and Encodings</a>
 </h1>
@@ -1380,11 +1408,13 @@ ul.toc li {
 <h1 id="rfc.section.5.3.9">
 <a href="#rfc.section.5.3.9">5.3.9.</a> <a href="#obj-registrar" id="obj-registrar">Registrar Information</a>
 </h1>
-<p id="rfc.section.5.3.9.p.1">A registrar (9) object gives the name and other identifying information of the registrar (the organization which caused the name to be added to the namespace) for organization-level names. It is represented as a two element array. The second element is a UTF-8 string of maximum length 256 bytes containing identifying information chosen by the registrar according to the registry&#8217;s policy.</p>
+<p id="rfc.section.5.3.9.p.1">A registrar (9) object gives the name and other identifying information of the registrar (the organization which caused the name to be added to the namespace) for organization-level names. It is represented as a two element array. The second element is a UTF-8 string of maximum length 4096 bytes containing identifying information chosen by the registrar, according to the registry&#8217;s policy.</p>
+<p id="rfc.section.5.3.9.p.2">The protocol does not mandate a format for this string; however, it is RECOMMENDED that authorities place a Registration Data Access Protocol (RDAP) Entity URL or RDAP Entity path segment, as defined in section 3.1.5 of <a href="#RFC7482" class="xref">[RFC7482]</a>, in the registrar information field. A querier can assume that a URL or an entity path segment (i.e. a string beginning with the substring &#8220;entity/&#8221;) is an RDAP reference to the registrar.</p>
 <h1 id="rfc.section.5.3.10">
 <a href="#rfc.section.5.3.10">5.3.10.</a> <a href="#obj-registrant" id="obj-registrant">Registrant Information</a>
 </h1>
-<p id="rfc.section.5.3.10.p.1">A registrant (10) object gives information about the registrant of an organization-level name. It is represented as a two element array. The second element is a UTF-8 string with a maximum length of 4096 bytes containing this information, with a format chosen by the registrant according to the registry&#8217;s policy.</p>
+<p id="rfc.section.5.3.10.p.1">A registrant (10) object gives information about the registrant of an organization-level name. It is represented as a two element array. The second element is a UTF-8 string wcontaining this information, with a format chosen by the registrant according to the registry&#8217;s policy.</p>
+<p id="rfc.section.5.3.10.p.2">The protocol does not mandate a format for this string; however, it is RECOMMENDED that authorities place a Registration Data Access Protocol (RDAP) Entity URL or RDAP Entity path segment, as defined in section 3.1.5 of <a href="#RFC7482" class="xref">[RFC7482]</a>, in the registrant information field. A querier can assume that a URL or an entity path segment (i.e. a string beginning with the substring &#8220;entity/&#8221;) is an RDAP reference to the registrant.</p>
 <h1 id="rfc.section.5.3.11">
 <a href="#rfc.section.5.3.11">5.3.11.</a> <a href="#obj-infrakey" id="obj-infrakey">Infrastructure Key</a>
 </h1>
@@ -1560,6 +1590,15 @@ ul.toc li {
 <p id="rfc.section.5.5.3.p.1">Context is used in Queries as it is in Assertions (see <a href="#assertion-context" class="xref">Section 5.2.7</a>).  The Context section of a query contains the context of desired Assertions; a special &#8220;any&#8221; context (represented by the empty string) indicates that Assertions in any context will be accepted. Assertion contexts in an answer to a Query that is not about the &#8220;any&#8221; context MUST match the context in the Query.</p>
 <p id="rfc.section.5.5.3.p.2">Query contexts can also be used to provide additional information to RAINS servers about the query. For example, context can provide a method for explicit selection of a CDN server not based on either the client&#8217;s or the resolver&#8217;s address (see <a href="#RFC7871" class="xref">[RFC7871]</a>). Here, the CDN creates a context for each of its content zones, and an external service selects appropriate contexts for the client based not just on client source address but passive and active measurement of performance. Queries for names at which content resides can then be made within these contexts, with the priority order of the contexts reflecting the goodness of the zone for the client. Here, a context might be &#8216;zrh.cx&#8211;cdn-zones.some-cdn.com.&#8217; for names of servers hosting content in a CDN&#8217;s Zurich data center. A client could represent its desire to find content nearby by making queries in the zrh.cx&#8211;, fra.cx&#8211; (Frankfurt), and ams.cx&#8211; (Amsterdam) contexts of the &#8216;cdn-zones.some-cdn.com.&#8217; Authority. In all cases, the Assertions themselves will be signed by the Authority for &#8216;cdn-zones.some-cdn.com.&#8217;, accurately representing that it is the CDN, not the owner of the related name in the global context, that is making the Assertion.</p>
 <p id="rfc.section.5.5.3.p.3">As with assertion contexts, developing conventions for query contexts for different situations will require implementation and deployment experience, and is a subject for future work.</p>
+<h1 id="rfc.section.5.5.4">
+<a href="#rfc.section.5.5.4">5.5.4.</a> <a href="#revquery" id="revquery">Address Queries</a>
+</h1>
+<p id="rfc.section.5.5.4.p.1">Queries for assertions about addresses are similar to queries for assertions about names, but have semantic restrictions similar to those for Address Assertions. An Address Query body is a map. Queries MUST contain the subject-addr (5), query-types (10), and query-expires (12) keys. Address Queries MAY contain query-opts (13) key.</p>
+<p id="rfc.section.5.5.4.p.2">The value of the subject-addr (5) key is a three element array. The first element of the array is the address family encoded as an object type (see <a href="#obj-types" class="xref">Section 5.3</a>); i.e. 2 for IPv6 addresses and 3 for IPv4 addresses. The second element is the prefix length encoded as an integer, 0-128 for IPv6 and 0-32 for IPv4. The third element is the address, encoded as in <a href="#obj-ip6" class="xref">Section 5.3.2</a> or <a href="#obj-ip4" class="xref">Section 5.3.3</a>.</p>
+<p id="rfc.section.5.5.4.p.3">The value of the query-types (10) key is an array of integers encoding the type(s) of objects (as in <a href="#obj-types" class="xref">Section 5.3</a>) acceptable in answers to the query. All values in the query-type array are treated at equal priority: [4,5] means the querier is equally interested in both redirection and delegation for the subject-addr. An empty query-types array indicates that objects of any type are acceptable in answers to the query. As with Address Assertions, only object types redirection, delegation, registrant, and name are valid on Address Queries.</p>
+<p id="rfc.section.5.5.4.p.4">The value of the query-expires (12) key is a CBOR integer counting seconds since the UNIX epoch UTC, identified with tag value 1 and encoded as in section 2.4.1 of <a href="#RFC7049" class="xref">[RFC7049]</a>. After the query-expires time, the query will have been considered not answered by the original issuer.</p>
+<p id="rfc.section.5.5.4.p.5">The value of the query-opts (13) key, if present, is an array of integers in priority order of the querier&#8217;s preferences in tradeoffs in answering the query, as in <a href="#tabqopts" class="xref">Table 8</a>. See <a href="#query-opts" class="xref">Section 5.5.1</a> for more.</p>
+<p id="rfc.section.5.5.4.p.6">When answering Address Queries, an Address Assertion with a more-specific prefix is preferred over a less-specific in response to a Address Query.</p>
 <h1 id="rfc.section.5.6">
 <a href="#rfc.section.5.6">5.6.</a> <a href="#notifications" id="notifications">Notifications</a>
 </h1>
@@ -2044,6 +2083,11 @@ ul.toc li {
 <a>Bormann, C.</a> and <a>P. Hoffman</a>, "<a href="https://tools.ietf.org/html/rfc7049">Concise Binary Object Representation (CBOR)</a>", RFC 7049, DOI 10.17487/RFC7049, October 2013.</td>
 </tr>
 <tr>
+<td class="reference"><b id="RFC7482">[RFC7482]</b></td>
+<td class="top">
+<a>Newton, A.</a> and <a>S. Hollenbeck</a>, "<a href="https://tools.ietf.org/html/rfc7482">Registration Data Access Protocol (RDAP) Query Format</a>", RFC 7482, DOI 10.17487/RFC7482, March 2015.</td>
+</tr>
+<tr>
 <td class="reference"><b id="RFC8032">[RFC8032]</b></td>
 <td class="top">
 <a>Josefsson, S.</a> and <a>I. Liusvaara</a>, "<a href="https://tools.ietf.org/html/rfc8032">Edwards-Curve Digital Signature Algorithm (EdDSA)</a>", RFC 8032, DOI 10.17487/RFC8032, January 2017.</td>
@@ -2100,22 +2144,17 @@ ul.toc li {
 <tr>
 <td class="reference"><b id="QUIC">[QUIC]</b></td>
 <td class="top">
-<a>Iyengar, J.</a> and <a>M. Thomson</a>, "<a href="https://tools.ietf.org/html/draft-ietf-quic-transport-17">QUIC: A UDP-Based Multiplexed and Secure Transport</a>", Internet-Draft draft-ietf-quic-transport-17, December 2018.</td>
+<a>Iyengar, J.</a> and <a>M. Thomson</a>, "<a href="https://tools.ietf.org/html/draft-ietf-quic-transport-18">QUIC: A UDP-Based Multiplexed and Secure Transport</a>", Internet-Draft draft-ietf-quic-transport-18, January 2019.</td>
+</tr>
+<tr>
+<td class="reference"><b id="RFC3912">[RFC3912]</b></td>
+<td class="top">
+<a>Daigle, L.</a>, "<a href="https://tools.ietf.org/html/rfc3912">WHOIS Protocol Specification</a>", RFC 3912, DOI 10.17487/RFC3912, September 2004.</td>
 </tr>
 <tr>
 <td class="reference"><b id="RFC4033">[RFC4033]</b></td>
 <td class="top">
 <a>Arends, R.</a>, <a>Austein, R.</a>, <a>Larson, M.</a>, <a>Massey, D.</a> and <a>S. Rose</a>, "<a href="https://tools.ietf.org/html/rfc4033">DNS Security Introduction and Requirements</a>", RFC 4033, DOI 10.17487/RFC4033, March 2005.</td>
-</tr>
-<tr>
-<td class="reference"><b id="RFC4291">[RFC4291]</b></td>
-<td class="top">
-<a>Hinden, R.</a> and <a>S. Deering</a>, "<a href="https://tools.ietf.org/html/rfc4291">IP Version 6 Addressing Architecture</a>", RFC 4291, DOI 10.17487/RFC4291, February 2006.</td>
-</tr>
-<tr>
-<td class="reference"><b id="RFC4632">[RFC4632]</b></td>
-<td class="top">
-<a>Fuller, V.</a> and <a>T. Li</a>, "<a href="https://tools.ietf.org/html/rfc4632">Classless Inter-domain Routing (CIDR): The Internet Address Assignment and Aggregation Plan</a>", BCP 122, RFC 4632, DOI 10.17487/RFC4632, August 2006.</td>
 </tr>
 <tr>
 <td class="reference"><b id="RFC5226">[RFC5226]</b></td>
@@ -2171,6 +2210,11 @@ ul.toc li {
 <td class="reference"><b id="RFC8094">[RFC8094]</b></td>
 <td class="top">
 <a>Reddy, T.</a>, <a>Wing, D.</a> and <a>P. Patil</a>, "<a href="https://tools.ietf.org/html/rfc8094">DNS over Datagram Transport Layer Security (DTLS)</a>", RFC 8094, DOI 10.17487/RFC8094, February 2017.</td>
+</tr>
+<tr>
+<td class="reference"><b id="RFC8484">[RFC8484]</b></td>
+<td class="top">
+<a>Hoffman, P.</a> and <a>P. McManus</a>, "<a href="https://tools.ietf.org/html/rfc8484">DNS Queries over HTTPS (DoH)</a>", RFC 8484, DOI 10.17487/RFC8484, October 2018.</td>
 </tr>
 <tr>
 <td class="reference"><b id="SCION">[SCION]</b></td>
