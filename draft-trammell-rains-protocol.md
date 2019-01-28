@@ -152,9 +152,12 @@ and implemented:
 - There is explicit information about registrars and registrants available in
   the naming system at runtime: in other words, RAINS integrates parts of the
   functionality of WHOIS {{?RFC3912}} and RDAP {{?RFC7482}}, allowing inline
-  access to registry and registrar information together with naming queries.
+  access to registry and registrar information together with naming queries; see {{obj-registrar}} and {{obj-registrant}}.
 - Sets of valid characters and rules for valid names are defined on a per-zone
-  basis, and can be verified at runtime.
+  basis, and can be verified at runtime; see {{obj-nameset}}.
+- RAINS provides separate namespaces for reverse lookup and a dedicated data
+  type for assertions about addresses, as opposed to rooting reverse lookup in
+  the .arpa top-level domain; see {{revassertion}}.
 
 Instead of using a custom binary framing as DNS, RAINS uses Concise Binary
 Object Representation (CBOR) {{!RFC7049}}, partially in an effort to make
@@ -197,6 +200,9 @@ In addition, the following terms are used in this document as defined:
 - Zone: A portion of a namespace rooted at a given point in the namespace
   hierarchy. A Zone contains all the Assertions about Subjects tha exist within
   its part of the namespace. 
+- Address Assertion: A mapping between a Subject representing an address or
+  address prefix, signed by the Authority for the prefix containing the Subject.
+  See {{revassertion}}.
 - Query: An expression of interest in certain types of objects pertaining to a
   Subject name in one or more contexts. See {{queries}}.
 - Context: Additional information about the scope in which an Assertion or Query
@@ -717,19 +723,21 @@ message section body, a CBOR map defined as in the subsections {{assertions}},
 | Code | Name         | Description                                       |
 |-----:|--------------|---------------------------------------------------|
 | 1    | assertion    | Singular Assertion (see {{singular-assertions}})  |
+| -1   | revassertion | Address Assertion (see {{revassertion}})
 | 2    | shard        | Shard (see {{shards}})                            |
 | 3    | p-shard      | P-Shard (see {{p-shards}})                        |
 | 4    | zone         | Zone (see {{zones}})                              |
 | 5    | query        | Query (see {{queries}})                           |
+| -5   | revquery     | Address Query (see {{revquery}})
 | 23   | notification | Notification (see {{notifications}})              |
 
 ## Assertions {#assertions}
 
 Information about names in RAINS is carried by Assertions. An Assertion is a
-statement about a mapping from a Subject name to one or several Object values,
-signed by some Authority for the namespace containing the Assertion, with a
-temporal validity determined by the lifetime of the signature(s) on the
-Assertion.
+statement about a mapping from a Subject name (or in the case of an Address
+Assertion, a subject prefix or address) to one or several Object values, signed
+by some Authority for the namespace containing the Assertion, with a temporal
+validity determined by the lifetime of the signature(s) on the Assertion.
 
 The subject of an Assertion is identified by a name in three parts:
 
@@ -1049,12 +1057,54 @@ require implementation and deployment experience, and is a subject for future
 work.
 
 ### Zone-Reflexive Singular Assertions
+
 A zone may make a Singular Assertion about itself by using the string "@" as a
 subject name. This facility can be used for any object type, but is especially
 useful for self-signing root zones, and for a zone to make a subsequent key
 assertion about itself. If a Singular Assertion for an Object about a zone is
 available both in the zone itself and in the superordinate zone, the assertion
 in the superordinate zone will take precedence.
+
+### Address Assertions {#revassertion}
+
+Address assertions map a subject address or subject address prefix to one or
+more objects. Address assertions provide the equivalent of reverse DNS (IN PTR)
+for IPv4 and IPv6 addresses. Information about addresses is stored in a
+completely separate namespace from information about names, rooted at the prefix
+containing the entire numberspace for a given address family. An Address
+Assertion with a valid signature can be used as a positive answer to a query for
+any address within the subject's prefix. It is represented as a CBOR map. 
+
+Assertions about addresses are similar to assertions about names, but keyed by
+address and restricted in terms of the objects they can contain. An Address
+Assertion body is a CBOR map which MUST contain the signatures (0), subject-addr
+(5), and objects (7) keys.
+
+The value of the signatures (0) key is an array of one or more Signatures as
+defined in {{signatures}}. A signature on an Address Assertion can be verified
+against any public key to which an address delegation assertion exists for a
+prefix containing the Address Assertion's subject address. This implies that, in
+contrast to Assertions about names, any authority in the hierarchy may sign
+Assertions about any address within their prefix, even if they have also
+delegated part of the prefix to another key.
+
+The value of the subject-addr (5) key is a three element array. The first
+element of the array is the address family encoded as an object type (see
+{{obj-types}}); i.e. 2 for IPv6 addresses and 3 for IPv4 addresses. The second
+element is the prefix length encoded as an integer, 0-128 for IPv6 and 0-32 for
+IPv4. The third element is the address, encoded as in {{obj-ip6}} or
+{{obj-ip4}}.
+
+The value of the objects (7) key is an array of objects, as defined in
+{{obj-types}}. If the prefix of the subject-addr value is the maximum prefix
+length for the address family, then the assertion is a Host Address Assertion,
+and only the object types redirection, delegation, registrant, and name are
+valid. Otherwise, it is a Prefix Address Assertion, and only the object types
+redirection, delegation, and registrant are valid.
+
+Address assertions contain no context, as the context in which they are valid
+(the global addressing context for the given address family) is implied by the
+address family of the subject name.
 
 ## Object Types and Encodings {#obj-types}
 
@@ -1495,6 +1545,42 @@ owner of the related name in the global context, that is making the Assertion.
 As with assertion contexts, developing conventions for query contexts for
 different situations will require implementation and deployment experience,
 and is a subject for future work.
+
+### Address Queries {#revquery}
+
+Queries for assertions about addresses are similar to queries for assertions
+about names, but have semantic restrictions similar to those for Address
+Assertions. An Address Query body is a map. Queries MUST contain the
+subject-addr (5), query-types (10), and query-expires (12) keys. Address Queries
+MAY contain query-opts (13) key.
+
+The value of the subject-addr (5) key is a three element array. The first
+element of the array is the address family encoded as an object type (see
+{{obj-types}}); i.e. 2 for IPv6 addresses and 3 for IPv4 addresses. The second
+element is the prefix length encoded as an integer, 0-128 for IPv6 and 0-32 for
+IPv4. The third element is the address, encoded as in {{obj-ip6}} or
+{{obj-ip4}}.
+
+The value of the query-types (10) key is an array of integers encoding the
+type(s) of objects (as in {{obj-types}}) acceptable in answers to the query. All
+values in the query-type array are treated at equal priority: \[4,5] means the
+querier is equally interested in both redirection and delegation for the
+subject-addr. An empty query-types array indicates that objects of any type are
+acceptable in answers to the query. As with Address Assertions, only object
+types redirection, delegation, registrant, and name are valid on Address
+Queries.
+
+The value of the query-expires (12) key is a CBOR integer
+counting seconds since the UNIX epoch UTC, identified with tag value 1 and
+encoded as in section 2.4.1 of {{!RFC7049}}. After the query-expires time, the
+query will have been considered not answered by the original issuer.
+
+The value of the query-opts (13) key, if present, is an array of integers in
+priority order of the querier's preferences in tradeoffs in answering the
+query, as in {{tabqopts}}. See {{query-opts}} for more.
+
+When answering Address Queries, an Address Assertion with a more-specific prefix
+is preferred over a less-specific in response to a Address Query.
 
 ## Notifications {#notifications}
 
