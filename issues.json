@@ -1,6 +1,54 @@
 [
 
   {
+    "url": "https://api.github.com/repos/britram/rains-prototype/issues/52",
+    "repository_url": "https://api.github.com/repos/britram/rains-prototype",
+    "labels_url": "https://api.github.com/repos/britram/rains-prototype/issues/52/labels{/name}",
+    "comments_url": "https://api.github.com/repos/britram/rains-prototype/issues/52/comments",
+    "events_url": "https://api.github.com/repos/britram/rains-prototype/issues/52/events",
+    "html_url": "https://github.com/britram/rains-prototype/issues/52",
+    "id": 400202275,
+    "node_id": "MDU6SXNzdWU0MDAyMDIyNzU=",
+    "number": 52,
+    "title": "make a distinction between subordinate zone names and other names",
+    "user": {
+      "login": "britram",
+      "id": 1884116,
+      "node_id": "MDQ6VXNlcjE4ODQxMTY=",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/1884116?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/britram",
+      "html_url": "https://github.com/britram",
+      "followers_url": "https://api.github.com/users/britram/followers",
+      "following_url": "https://api.github.com/users/britram/following{/other_user}",
+      "gists_url": "https://api.github.com/users/britram/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/britram/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/britram/subscriptions",
+      "organizations_url": "https://api.github.com/users/britram/orgs",
+      "repos_url": "https://api.github.com/users/britram/repos",
+      "events_url": "https://api.github.com/users/britram/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/britram/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "labels": [
+
+    ],
+    "state": "open",
+    "locked": false,
+    "assignee": null,
+    "assignees": [
+
+    ],
+    "milestone": null,
+    "comments": 0,
+    "created_at": "2019-01-17T10:15:14Z",
+    "updated_at": "2019-01-17T10:15:14Z",
+    "closed_at": null,
+    "author_association": "OWNER",
+    "body": "There are some implicit restrictions on the self-consistency of the namespace that should be made explicit in the document:\r\n\r\n(1) A name in a zone for which a `:deleg:` exists is a _subordinate zone name_; if a `:deleg:` exists then a `:redir:` should/must also exist.\r\n(2) When processing a `:redir:` for an subordinate zone name, only `:name:` `:srv:` and `:ip4:`/`:ip6:` objects are considered."
+  },
+  {
     "url": "https://api.github.com/repos/britram/rains-prototype/issues/51",
     "repository_url": "https://api.github.com/repos/britram/rains-prototype",
     "labels_url": "https://api.github.com/repos/britram/rains-prototype/issues/51/labels{/name}",
@@ -1409,7 +1457,10 @@
     "closed_at": "2018-08-28T09:15:01Z",
     "author_association": "CONTRIBUTOR",
     "body": "\"Shards are lexicographically complete within the range described in the shard-range value: a mapping for a subject-name that should be between the two values given in the range but is not is asserted to not exist.\"\r\n\r\nreplace with\r\n\r\n\"Shards are lexicographically complete within the range described in the shard-range value: a subject-name within the shard-range that is not contained in the shard is asserted to not exist.\""
-  },
+  }
+
+,
+
   {
     "url": "https://api.github.com/repos/britram/rains-prototype/issues/22",
     "repository_url": "https://api.github.com/repos/britram/rains-prototype",
@@ -1457,10 +1508,7 @@
     "closed_at": "2018-08-28T09:15:01Z",
     "author_association": "CONTRIBUTOR",
     "body": "\"Authorities have complete control over how the contexts under their namespaces are arranged, and over the names within those contexts.\"\r\n\r\nAddress assertions are about network addresses. Should it not be control over addresses instead of names under their namespaces?"
-  }
-
-,
-
+  },
   {
     "url": "https://api.github.com/repos/britram/rains-prototype/issues/21",
     "repository_url": "https://api.github.com/repos/britram/rains-prototype",
