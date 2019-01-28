@@ -1,0 +1,224 @@
+
+
+
+
+Network Working Group                                        B. Trammell
+Internet-Draft                                                ETH Zurich
+Intended status: Experimental                           January 28, 2019
+Expires: August 1, 2019
+
+
+                       RAINS Parameters for SCION
+                   draft-trammell-rains-scion-latest
+
+Abstract
+
+   This document defines additional functionality atop the RAINS naming
+   service specific to the SCION Internet architecture.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on August 1, 2019.
+
+Copyright Notice
+
+   Copyright (c) 2019 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (https://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Simplified BSD License text as described in Section 4.e of
+   the Trust Legal Provisions and are provided without warranty as
+   described in the Simplified BSD License.
+
+
+
+
+
+
+Trammell                 Expires August 1, 2019                 [Page 1]
+
+Internet-Draft                    RAINS                     January 2019
+
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
+   2.  SCION Address Objects . . . . . . . . . . . . . . . . . . . .   2
+     2.1.  Address to name mappings for SCION addresses  . . . . . .   3
+   3.  References  . . . . . . . . . . . . . . . . . . . . . . . . .   3
+     3.1.  Normative References  . . . . . . . . . . . . . . . . . .   3
+     3.2.  Informative References  . . . . . . . . . . . . . . . . .   3
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .   3
+
+1.  Introduction
+
+   RAINS, Another Internet Naming Service (RAINS) [RAINS] is a clean-
+   slate Internet naming service defined to meet a set of identified
+   properties of an ideal Internet naming service.  RAINS was defined in
+   the context of the SCION [SCION] architecture.  This document updates
+   the RAINS protocol specification with SCION-specific extstions.
+
+2.  SCION Address Objects
+
+   SCION addresses are based on IPv4 and IPv6 addresses, adding an
+   Isolation Domain (ISD) and Autonomous System (AS) number.  These two
+   additional address components are used to select paths between a
+   source and destination of traffic.  RAINS for SCION adds two
+   additional object data types to those listed in section 5.12 of
+   [RAINS] to support SCION addresses.
+
+          +------+-------------+-------------------------------+
+          | Code | Name        | Description                   |
+          +------+-------------+-------------------------------+
+          |   23 | scion6-addr | SCION IPv6 address of subject |
+          |      |             |                               |
+          |   22 | scion4-addr | SCION IPv4 address of subject |
+          +------+-------------+-------------------------------+
+
+   A scion6-addr (23) object contains a SCION address associated with a
+   name.  It is represented as a four element array.  The second element
+   is an ISD number as an integer less than or equal to 2^16-1.  The
+   third element is an AS number as an integer less than or equal to
+   2^48-1.  The fourth element is a byte array of length 16 containing
+   an IPv6 address in network byte order.
+
+   A scion4-addr (22) object contains a SCION address associated with a
+   name.  It is represented as a four element array.  The second element
+   is an ISD number as an integer less than or equal to 2^16-1.  The
+   third element is an AS number as an integer less than or equal to
+   2^32-1.  The fourth element is a byte array of length 4 containing an
+   IPv4 address in network byte order.
+
+
+
+Trammell                 Expires August 1, 2019                 [Page 2]
+
+Internet-Draft                    RAINS                     January 2019
+
+
+2.1.  Address to name mappings for SCION addresses
+
+   Since the IP address part of a SCION address is scoped to the global
+   IP address space, reverse lookups for SCION addresses work as reverse
+   lookups for IP addresses of the equivalent address family.  The ISD
+   and AS number are not used in the address space delegation tree or in
+   the query lookup procedure.  Despite this fact, the delegation trees
+   for lookup of addresses in the IPv6 and SCION address families is
+   kept separate, as an organization may want a name to be bound only to
+   their SCION or to their IP space, respectively.
+
+   When the subject-addr (5) key for an address assertion contains
+   object type scion6-addr (23), the value is a three element CBOR
+   array.  The first element of the array is the address family encoded
+   as an object type, here 23.  The second element is the prefix length
+   encoded as an integer, 0-128.  The third element is the IPv6 part of
+   the address, encoded as a byte array of length 16 in network byte
+   order.
+
+   When the subject-addr (5) key for an address assertion contains
+   object type scion6-addr (22), the value is a three element CBOR
+   array.  The first element of the array is the address family encoded
+   as an object type, here 22.  The second element is the prefix length
+   encoded as an integer, 0-32.  The third element is the IPv4 part of
+   the address, encoded as a byte array of length 4 in network byte
+   order.
+
+3.  References
+
+3.1.  Normative References
+
+   [RAINS]    Trammell, B. and C. Fehlmann, "RAINS (Another Internet
+              Naming Service) Protocol Specification", draft-trammell-
+              rains-protocol-04 (work in progress), January 2019.
+
+3.2.  Informative References
+
+   [SCION]    Barrera, D., Reischuk, R., Szalachowski, P., and A.
+              Perrig, "SCION Five Years Later - Revisiting Scalability,
+              Control, and Isolation Next-Generation Networks (arXiv
+              1508.01651v1)", August 2015.
+
+Author's Address
+
+
+
+
+
+
+
+
+Trammell                 Expires August 1, 2019                 [Page 3]
+
+Internet-Draft                    RAINS                     January 2019
+
+
+   Brian Trammell
+   ETH Zurich
+   Universitaetstrasse 6
+   Zurich  8092
+   Switzerland
+
+   Email: ietf@trammell.ch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Trammell                 Expires August 1, 2019                 [Page 4]
