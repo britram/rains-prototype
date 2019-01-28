@@ -108,20 +108,28 @@ background of a set of properties of an idealized Internet naming service.
 # Introduction
 
 This document defines an experimental protocol for providing Internet name
-resolution services, as a replacement for DNS, called RAINS (RAINS, Another
-Internet Naming Service). It is designed as a prototype to facilitate
-conversation about the evolution or replacement of the Domain Name System
-protocol, and was developed as a name resolution system for the SCION
-("Scalability, Control, and Isolation on Next-Generation Networks") future
-Internet architecture {{SCION}}. It attempts to answer the question: "how would
-we design the DNS knowing what we do now," on the background of the properties
-of an ideal naming service defined in {{pins}}.
+resolution services, as a replacement for the Domain Name System (DNS), called
+RAINS (a recursive acronym expanding to RAINS, Another Internet Naming Service).
+It is designed as a prototype to facilitate conversation about the evolution or
+replacement of the Domain Name System protocol, and was developed as a name
+resolution system for the SCION ("Scalability, Control, and Isolation on
+Next-Generation Networks") future Internet architecture {{SCION}}. It attempts
+to answer the question: "how would we design the DNS knowing what we do now," on
+the background of the properties of an ideal naming service defined in {{pins}}.
 
-Its architecture ({{architecture}}) and information model
-({{infomodel}}) are largely compatible with the existing Domain Name
-System. However, it does take several radical departures from DNS as presently
-defined and implemented:
+Its architecture {{architecture}} is largely compatible with DNS: names in RAINS
+are organized into zones, associated with authorities, and parts of zones can be
+delegated to subordinate authorities, just as in DNS; RAINS names follow many of
+the same conventions as DNS names (with the exception that RAINS is Unicode
+native, and mandates UTF-8 encoding); and RAINS servers provide services broadly
+equivalent to recursive, caching, and authoritative DNS servers. 
 
+However, its design does take several radical departures from DNS as presently defined
+and implemented:
+
+- Its information model and data model are separately defined from the protocol,
+  allowing for more natural layering of RAINS messages atop other session and
+  presentation layer protocols than, for example, DNS over HTTPS {{?RFC8484}}.
 - Delegation from a superordinate zone to a subordinate zone is done solely with
   cryptography: a superordinate defines the key(s), created by the subordinate,
   that are valid for signing assertions in the subordinate during a particular
@@ -130,28 +138,32 @@ defined and implemented:
 - All time references in RAINS are absolute: instead of a time to live, each
   assertion's temporal validity is defined by the temporal validity of the
   signature(s) on it.
-- All assertions have validity within a specific context. A context determines
-  the rules for chaining signatures to verify validity of an assertion. The
-  global context is a special case of context, which uses chains from the global
-  naming root key. The use of context explicitly separates global usage of the
-  DNS from local usage thereof, and allows other application-specific naming
-  constraints to be bound to names; see {{assertion-context}}. Queries are valid
-  in one or more contexts, with specific rules for determining which assertions
-  answer which queries; see {{query-context}}.
+- All assertions have validity within a specific context. A context is
+  essentially a namespace owned by some authority. The global context, analogous
+  to the root and everything under it in DNS, is a special case of context whose
+  authority is the root itself. Other contexts can be created by any authority
+  under the global context; context is implemented through the rules for
+  chaining signatures to verify validity of an assertion. The use of context
+  explicitly separates global usage of RAINS from local usage thereof, and
+  allows other application-specific naming constraints to be bound to names; see
+  {{assertion-context}}. Queries are valid in one or more contexts, with
+  specific rules for determining which assertions answer which queries; see
+  {{query-context}}.
 - There is explicit information about registrars and registrants available in
-  the naming system at runtime.
+  the naming system at runtime: in other words, RAINS integrates parts of the
+  functionality of WHOIS {{?RFC3912}} and RDAP {{?RFC7482}}, allowing inline
+  access to registry and registrar information together with naming queries.
 - Sets of valid characters and rules for valid names are defined on a per-zone
   basis, and can be verified at runtime.
-- Reverse lookups are done using a completely separate tree, supporting
-  delegations of any prefix length, in accordance with CIDR {{?RFC4632}} and
-  the IPv6 addressing architecture {{?RFC4291}}.
 
 Instead of using a custom binary framing as DNS, RAINS uses Concise Binary
-Object Representation {{!RFC7049}}, partially in an effort to make
+Object Representation (CBOR) {{!RFC7049}}, partially in an effort to make
 implementations easier to verify and less likely to contain potentially
-dangerous parser bugs {{PARSER-BUGS}}. As with DNS, CBOR messages can be
-carried atop any number of substrate protocols. RAINS is presently defined to
-use TLS over persistent TCP connections (see {{protocol}}).
+dangerous parser bugs {{PARSER-BUGS}}. As with DNS, CBOR messages can be carried
+atop any number of substrate protocols. RAINS is presently defined to use TLS
+over persistent TCP connections (see {{protocol}}). However, the information
+model was defined to allow the easy defnition of alternate presentations in the
+future.
 
 ## About This Document
 
@@ -1243,17 +1255,29 @@ The service-info type replaces the DNS SRV RRTYPE.
 A registrar (9) object gives the name and other identifying information of the
 registrar (the organization which caused the name to be added to the namespace)
 for organization-level names. It is represented as a two element array. The
-second element is a UTF-8 string of maximum length 256 bytes containing
-identifying information chosen by the registrar according to the registry's
-policy.
+second element is a UTF-8 string of maximum length 4096 bytes containing
+identifying information chosen by the registrar, according to the registry's
+policy. 
+
+The protocol does not mandate a format for this string; however, it is RECOMMENDED that authorities place a Registration Data Access Protocol
+(RDAP) Entity URL or RDAP Entity path segment, as defined in section 3.1.5 of
+{{!RFC7482}}, in the registrar information field. A querier can assume that a
+URL or an entity path segment (i.e. a string beginning with the substring
+"entity/") is an RDAP reference to the registrar.
 
 ### Registrant Information {#obj-registrant}
 
 A registrant (10) object gives information about the registrant of an
 organization-level name. It is represented as a two element array. The second
-element is a UTF-8 string with a maximum length of 4096 bytes containing this
-information, with a format chosen by the registrant according to the registry's
-policy.
+element is a UTF-8 string wcontaining this information, with a format chosen by
+the registrant according to the registry's policy.
+
+The protocol does not mandate a format for this string; however, it is
+RECOMMENDED that authorities place a Registration Data Access Protocol (RDAP)
+Entity URL or RDAP Entity path segment, as defined in section 3.1.5 of
+{{!RFC7482}}, in the registrant information field. A querier can assume that a
+URL or an entity path segment (i.e. a string beginning with the substring
+"entity/") is an RDAP reference to the registrant.
 
 ### Infrastructure Key {#obj-infrakey}
 
