@@ -1,6 +1,60 @@
 [
 
   {
+    "url": "https://api.github.com/repos/britram/rains-prototype/issues/53",
+    "repository_url": "https://api.github.com/repos/britram/rains-prototype",
+    "labels_url": "https://api.github.com/repos/britram/rains-prototype/issues/53/labels{/name}",
+    "comments_url": "https://api.github.com/repos/britram/rains-prototype/issues/53/comments",
+    "events_url": "https://api.github.com/repos/britram/rains-prototype/issues/53/events",
+    "html_url": "https://github.com/britram/rains-prototype/pull/53",
+    "id": 403832890,
+    "node_id": "MDExOlB1bGxSZXF1ZXN0MjQ4MTU0MTY3",
+    "number": 53,
+    "title": "simplify and add back reverse lookup",
+    "user": {
+      "login": "britram",
+      "id": 1884116,
+      "node_id": "MDQ6VXNlcjE4ODQxMTY=",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/1884116?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/britram",
+      "html_url": "https://github.com/britram",
+      "followers_url": "https://api.github.com/users/britram/followers",
+      "following_url": "https://api.github.com/users/britram/following{/other_user}",
+      "gists_url": "https://api.github.com/users/britram/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/britram/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/britram/subscriptions",
+      "organizations_url": "https://api.github.com/users/britram/orgs",
+      "repos_url": "https://api.github.com/users/britram/repos",
+      "events_url": "https://api.github.com/users/britram/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/britram/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "labels": [
+
+    ],
+    "state": "closed",
+    "locked": false,
+    "assignee": null,
+    "assignees": [
+
+    ],
+    "milestone": null,
+    "comments": 0,
+    "created_at": "2019-01-28T14:12:18Z",
+    "updated_at": "2019-01-28T14:14:41Z",
+    "closed_at": "2019-01-28T14:14:41Z",
+    "author_association": "OWNER",
+    "pull_request": {
+      "url": "https://api.github.com/repos/britram/rains-prototype/pulls/53",
+      "html_url": "https://github.com/britram/rains-prototype/pull/53",
+      "diff_url": "https://github.com/britram/rains-prototype/pull/53.diff",
+      "patch_url": "https://github.com/britram/rains-prototype/pull/53.patch"
+    },
+    "body": ""
+  },
+  {
     "url": "https://api.github.com/repos/britram/rains-prototype/issues/52",
     "repository_url": "https://api.github.com/repos/britram/rains-prototype",
     "labels_url": "https://api.github.com/repos/britram/rains-prototype/issues/52/labels{/name}",
@@ -1409,7 +1463,10 @@
     "closed_at": "2018-08-28T09:15:02Z",
     "author_association": "CONTRIBUTOR",
     "body": "Sec 5.6: \"Shards and Assertions in the content array SHOULD be sorted by shard range or name in ascending lexicographic order.\"\r\n\r\nI would make it explicit how it is sorted because for me it is not clear. Is it this way?\r\nassertions are sorted before shards. \r\nassertions are sorted lexicographically ascending by subject-name\r\nshards are sorted lexicographically ascending firstly by range begin and secondly by range end?"
-  },
+  }
+
+,
+
   {
     "url": "https://api.github.com/repos/britram/rains-prototype/issues/23",
     "repository_url": "https://api.github.com/repos/britram/rains-prototype",
@@ -1457,10 +1514,7 @@
     "closed_at": "2018-08-28T09:15:01Z",
     "author_association": "CONTRIBUTOR",
     "body": "\"Shards are lexicographically complete within the range described in the shard-range value: a mapping for a subject-name that should be between the two values given in the range but is not is asserted to not exist.\"\r\n\r\nreplace with\r\n\r\n\"Shards are lexicographically complete within the range described in the shard-range value: a subject-name within the shard-range that is not contained in the shard is asserted to not exist.\""
-  }
-
-,
-
+  },
   {
     "url": "https://api.github.com/repos/britram/rains-prototype/issues/22",
     "repository_url": "https://api.github.com/repos/britram/rains-prototype",
